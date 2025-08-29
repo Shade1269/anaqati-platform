@@ -61,7 +61,7 @@ nav a:hover {
 /* Hero section */
 .hero {
   position: relative;
-  background-image: url('images/hero.png');
+  backgrond-image:url('hero.png');
   background-size: cover;
   background-position: center;
   min-height: 80vh;
