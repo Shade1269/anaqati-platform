@@ -1,0 +1,8 @@
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  // TODO: Integrate with Tabby to create a payment session
+  console.log('Creating Tabby session...', req.body);
+  return res.status(200).json({ sessionUrl: '' });
+}
