@@ -72,17 +72,27 @@ returns integer language plpgsql security definer set search_path=exhibitions,pu
 declare n integer;
 begin
   if not exhibitions.is_admin() then raise exception 'غير مصرّح'; end if;
-  update exhibitions.commissions set status=p_status::exhibitions.commission_status
-   where branch_id=p_branch_id and status<>'cancelled';
-  get diagnostics n = row_count;
+  -- نحدّث فقط الصفوف اللي حالتها فعلاً مختلفة، ونلتقطها لإشعار المتغيّر منها فقط
+  drop table if exists _chg;
+  create temporary table _chg on commit drop as
+  with upd as (
+    update exhibitions.commissions
+       set status = p_status::exhibitions.commission_status
+     where branch_id = p_branch_id
+       and status <> 'cancelled'
+       and status <> p_status::exhibitions.commission_status
+    returning id, beneficiary_id, commission_sar
+  )
+  select * from upd;
+  select count(*) into n from _chg;
   perform exhibitions._audit('commission_'||p_status,'commissions',p_branch_id,null,jsonb_build_object('count',n));
-  -- إشعار المستفيدين عند الاعتماد
+  -- إشعار المستفيدين فقط للعمولات اللي تغيّرت حالتها الآن (يمنع التكرار عند إعادة الاستدعاء)
   if p_status in ('approved','paid') then
     insert into exhibitions.notifications(recipient_id,type,title,body,ref_table,ref_id)
       select beneficiary_id,'commission',
         case when p_status='paid' then 'تم صرف العمولة' else 'تم اعتماد العمولة' end,
         'عمولة معرض بقيمة '||commission_sar::text||' ر.س','commissions',id
-      from exhibitions.commissions where branch_id=p_branch_id and beneficiary_id is not null and status<>'cancelled';
+      from _chg where beneficiary_id is not null;
   end if;
   return n;
 end $$;
