@@ -1,0 +1,7 @@
+{
+  "installCommand": "npm --prefix exhibitions-system/web install",
+  "buildCommand": "npm --prefix exhibitions-system/web run build",
+  "outputDirectory": "exhibitions-system/web/dist",
+  "framework": null,
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
