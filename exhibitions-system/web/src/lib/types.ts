@@ -128,3 +128,25 @@ export interface StockItemInput {
   product_id: string;
   qty: number;
 }
+
+export interface NotificationRow {
+  id: string;
+  title: string;
+  body: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface AuditRow {
+  id: string;
+  action: string;
+  entity: string | null;
+  entity_id?: string | null;
+  actor_id?: string | null;
+  created_at: string;
+  details?: unknown;
+}
+
+export interface AttendanceStatus {
+  status: 'present' | 'absent';
+}

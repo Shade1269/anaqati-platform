@@ -10,6 +10,7 @@ import type {
   ProductForEmployee,
   SaleItemInput,
   StockItemInput,
+  NotificationRow,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -94,6 +95,12 @@ export const employeeApi = {
       p_declared_cash: declaredCash,
       p_declared_card: declaredCard,
     }),
+
+  notifications: (token: string) =>
+    rpc<NotificationRow[]>('employee_notifications', { p_token: token }),
+
+  markRead: (token: string, id: string) =>
+    rpc<null>('employee_mark_read', { p_token: token, p_id: id }),
 };
 
 /* --------------------------- Admin / IM RPCs ----------------------------- */
@@ -196,4 +203,29 @@ export const adminApi = {
       p_employee_id: employeeId,
       p_period_month: periodMonth,
     }),
+
+  setCommissionStatus: (
+    branchId: string,
+    status: 'approved' | 'paid' | 'cancelled'
+  ) =>
+    rpc<number>('set_commission_status', {
+      p_branch_id: branchId,
+      p_status: status,
+    }),
+
+  recordAttendance: (
+    employeeId: string,
+    workDate: string,
+    status: 'present' | 'absent',
+    branchId: string | null
+  ) =>
+    rpc<null>('record_attendance', {
+      p_employee_id: employeeId,
+      p_work_date: workDate,
+      p_status: status,
+      p_branch_id: branchId,
+    }),
+
+  markNotificationRead: (id: string) =>
+    rpc<null>('mark_notification_read', { p_id: id }),
 };

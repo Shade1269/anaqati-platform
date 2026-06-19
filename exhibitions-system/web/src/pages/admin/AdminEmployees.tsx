@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
+import { Users, Plus, Copy, Check, KeyRound } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminApi } from '../../lib/api';
 import type { Permissions } from '../../lib/types';
 import {
-  Empty,
-  ErrorBox,
-  PageTitle,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  Field,
+  Input,
+  PageHeader,
+  Select,
   Spinner,
-  SuccessBox,
+  StatusBadge,
+  Table,
+  useToast,
 } from '../../components/ui';
 
 interface ProfileRow {
@@ -26,34 +34,39 @@ const emptyEmp = {
   hire_date: '',
 };
 
+const roleLabels: Record<string, string> = {
+  admin: 'أدمن',
+  inventory_manager: 'مدير مخزون',
+  employee: 'موظف',
+};
+
 export default function AdminEmployees() {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [emp, setEmp] = useState({ ...emptyEmp });
   const [saving, setSaving] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
+  const [copied, setCopied] = useState(false);
+  const toast = useToast();
 
   async function load() {
     setLoading(true);
-    const { data, error: e } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('id,full_name,role,status,permissions')
       .order('full_name');
-    if (e) setError(e.message);
+    if (error) toast.error(error.message);
     else setProfiles((data as ProfileRow[]) || []);
     setLoading(false);
   }
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function createEmployee(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     setGeneratedCode('');
     setSaving(true);
     try {
@@ -65,149 +78,192 @@ export default function AdminEmployees() {
         emp.hire_date || null
       );
       setGeneratedCode(res.access_code);
-      setSuccess('تم إنشاء الموظف');
+      toast.success('تم إنشاء الموظف');
       setEmp({ ...emptyEmp });
       load();
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setSaving(false);
     }
+  }
+
+  function copyCode() {
+    navigator.clipboard?.writeText(generatedCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
   }
 
   const imUsers = profiles.filter((p) => p.role === 'inventory_manager');
 
   return (
     <div>
-      <PageTitle title="الموظفون" subtitle="إنشاء موظفين وإدارة صلاحيات مديري المخزون" />
-      <ErrorBox message={error} />
-      <SuccessBox message={success} />
+      <PageHeader
+        title="الموظفون"
+        subtitle="إنشاء موظفين وإدارة الأدوار والصلاحيات"
+        icon={<Users size={22} />}
+      />
 
       {generatedCode && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          <span>
-            كود الوصول للموظف: <strong className="font-mono">{generatedCode}</strong>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-primary/8 px-4 py-3 text-sm">
+          <span className="flex items-center gap-2 text-text">
+            <KeyRound size={16} className="text-primary-hover" />
+            كود الوصول:{' '}
+            <strong className="font-mono text-gold tracking-widest">
+              {generatedCode}
+            </strong>
           </span>
-          <button
-            className="btn-ghost"
-            onClick={() => navigator.clipboard?.writeText(generatedCode)}
+          <Button
+            size="sm"
+            variant="outline"
+            icon={copied ? <Check size={14} /> : <Copy size={14} />}
+            onClick={copyCode}
           >
-            نسخ
-          </button>
+            {copied ? 'تم النسخ' : 'نسخ'}
+          </Button>
         </div>
       )}
 
-      <form
-        onSubmit={createEmployee}
-        className="card mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-      >
-        <div>
-          <label className="label">الاسم الكامل</label>
-          <input
-            className="input"
-            value={emp.full_name}
-            onChange={(e) => setEmp({ ...emp, full_name: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="label">الجوال</label>
-          <input
-            className="input"
-            value={emp.phone}
-            onChange={(e) => setEmp({ ...emp, phone: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="label">الراتب الشهري</label>
-          <input
-            type="number"
-            step="0.01"
-            className="input"
-            value={emp.monthly_salary}
-            onChange={(e) =>
-              setEmp({ ...emp, monthly_salary: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label className="label">كود الوصول (اختياري)</label>
-          <input
-            className="input"
-            placeholder="يُولَّد تلقائيًا إن تُرك فارغًا"
-            value={emp.access_code}
-            onChange={(e) => setEmp({ ...emp, access_code: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="label">تاريخ التعيين</label>
-          <input
-            type="date"
-            className="input"
-            value={emp.hire_date}
-            onChange={(e) => setEmp({ ...emp, hire_date: e.target.value })}
-          />
-        </div>
-        <div className="flex items-end">
-          <button className="btn-primary w-full" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : 'إنشاء موظف'}
-          </button>
-        </div>
+      <form onSubmit={createEmployee} className="mb-6">
+        <Card>
+          <CardHeader title="موظف جديد" icon={<Plus size={18} />} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Field label="الاسم الكامل">
+              <Input
+                value={emp.full_name}
+                onChange={(e) => setEmp({ ...emp, full_name: e.target.value })}
+                required
+              />
+            </Field>
+            <Field label="الجوال">
+              <Input
+                value={emp.phone}
+                onChange={(e) => setEmp({ ...emp, phone: e.target.value })}
+                required
+              />
+            </Field>
+            <Field label="الراتب الشهري">
+              <Input
+                type="number"
+                step="0.01"
+                value={emp.monthly_salary}
+                onChange={(e) => setEmp({ ...emp, monthly_salary: e.target.value })}
+              />
+            </Field>
+            <Field label="كود الوصول (اختياري)">
+              <Input
+                placeholder="يُولَّد تلقائيًا"
+                value={emp.access_code}
+                onChange={(e) => setEmp({ ...emp, access_code: e.target.value })}
+              />
+            </Field>
+            <Field label="تاريخ التعيين">
+              <Input
+                type="date"
+                value={emp.hire_date}
+                onChange={(e) => setEmp({ ...emp, hire_date: e.target.value })}
+              />
+            </Field>
+            <div className="flex items-end">
+              <Button type="submit" className="w-full" loading={saving}>
+                إنشاء موظف
+              </Button>
+            </div>
+          </div>
+        </Card>
       </form>
 
-      <h2 className="mb-3 text-lg font-bold text-slate-800">
+      <h2 className="mb-3 text-base font-bold text-text">
         مديرو المخزون والصلاحيات
       </h2>
       {loading ? (
         <Spinner />
       ) : imUsers.length === 0 ? (
-        <Empty message="لا يوجد مديرو مخزون" />
+        <EmptyState message="لا يوجد مديرو مخزون" />
       ) : (
-        <div className="space-y-4">
+        <div className="mb-8 space-y-4">
           {imUsers.map((p) => (
-            <ImRow key={p.id} profile={p} onChanged={load} setError={setError} setSuccess={setSuccess} />
+            <ImRow key={p.id} profile={p} onChanged={load} />
           ))}
         </div>
       )}
 
-      <h2 className="mb-3 mt-8 text-lg font-bold text-slate-800">كل الملفات</h2>
+      <h2 className="mb-3 text-base font-bold text-text">كل الملفات</h2>
       {!loading && (
-        <div className="card overflow-x-auto">
-          <table className="table-base">
-            <thead>
-              <tr>
-                <th>الاسم</th>
-                <th>الدور</th>
-                <th>الحالة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {profiles.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.full_name}</td>
-                  <td>{p.role}</td>
-                  <td>{p.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          head={
+            <>
+              <th>الاسم</th>
+              <th>الدور</th>
+              <th>الحالة</th>
+              <th></th>
+            </>
+          }
+        >
+          {profiles.map((p) => (
+            <ProfileActionRow key={p.id} profile={p} onChanged={load} />
+          ))}
+        </Table>
       )}
     </div>
+  );
+}
+
+function ProfileActionRow({
+  profile,
+  onChanged,
+}: {
+  profile: ProfileRow;
+  onChanged: () => void;
+}) {
+  const [role, setRole] = useState(profile.role);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  async function saveRole(newRole: string) {
+    setRole(newRole);
+    setBusy(true);
+    try {
+      await adminApi.setUserRole(profile.id, newRole, profile.status || 'active');
+      toast.success('تم تحديث الدور');
+      onChanged();
+    } catch (err) {
+      toast.error((err as Error).message);
+      setRole(profile.role);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <tr>
+      <td className="font-semibold">{profile.full_name}</td>
+      <td className="text-muted">{roleLabels[profile.role] || profile.role}</td>
+      <td>
+        <StatusBadge status={profile.status} />
+      </td>
+      <td>
+        <Select
+          className="w-40"
+          value={role}
+          disabled={busy}
+          onChange={(e) => saveRole(e.target.value)}
+        >
+          <option value="employee">موظف</option>
+          <option value="inventory_manager">مدير مخزون</option>
+          <option value="admin">أدمن</option>
+        </Select>
+      </td>
+    </tr>
   );
 }
 
 function ImRow({
   profile,
   onChanged,
-  setError,
-  setSuccess,
 }: {
   profile: ProfileRow;
   onChanged: () => void;
-  setError: (s: string) => void;
-  setSuccess: (s: string) => void;
 }) {
   const p = profile.permissions || {};
   const [perms, setPerms] = useState({
@@ -219,11 +275,10 @@ function ImRow({
   });
   const [status, setStatus] = useState(profile.status);
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   async function savePerms() {
     setBusy(true);
-    setError('');
-    setSuccess('');
     try {
       await adminApi.setImPermissions(
         profile.id,
@@ -233,10 +288,10 @@ function ImRow({
         perms.wholesale,
         perms.returns
       );
-      setSuccess('تم حفظ الصلاحيات');
+      toast.success('تم حفظ الصلاحيات');
       onChanged();
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setBusy(false);
     }
@@ -244,14 +299,12 @@ function ImRow({
 
   async function saveStatus() {
     setBusy(true);
-    setError('');
-    setSuccess('');
     try {
       await adminApi.setUserRole(profile.id, profile.role, status);
-      setSuccess('تم تحديث الحالة');
+      toast.success('تم تحديث الحالة');
       onChanged();
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setBusy(false);
     }
@@ -261,39 +314,39 @@ function ImRow({
     setPerms((s) => ({ ...s, [key]: !s[key] }));
 
   return (
-    <div className="card">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="font-bold text-slate-800">{profile.full_name}</span>
+    <Card>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <span className="font-bold text-text">{profile.full_name}</span>
         <div className="flex items-center gap-2">
-          <select
-            className="input w-auto"
+          <Select
+            className="w-36"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
             <option value="active">مفعّل</option>
             <option value="suspended">موقوف</option>
             <option value="pending">قيد المراجعة</option>
-          </select>
-          <button className="btn-ghost" onClick={saveStatus} disabled={busy}>
+          </Select>
+          <Button variant="ghost" size="sm" onClick={saveStatus} disabled={busy}>
             تحديث الحالة
-          </button>
+          </Button>
         </div>
       </div>
       <div className="flex flex-wrap gap-4 text-sm">
-        <Check label="استلام بضاعة" checked={perms.addStock} onChange={toggle('addStock')} />
-        <Check label="مراجعة الطلبات" checked={perms.approve} onChange={toggle('approve')} />
-        <Check label="التحويلات" checked={perms.transfers} onChange={toggle('transfers')} />
-        <Check label="الجملة" checked={perms.wholesale} onChange={toggle('wholesale')} />
-        <Check label="المرتجعات" checked={perms.returns} onChange={toggle('returns')} />
+        <Check2 label="استلام بضاعة" checked={perms.addStock} onChange={toggle('addStock')} />
+        <Check2 label="مراجعة الطلبات" checked={perms.approve} onChange={toggle('approve')} />
+        <Check2 label="التحويلات" checked={perms.transfers} onChange={toggle('transfers')} />
+        <Check2 label="الجملة" checked={perms.wholesale} onChange={toggle('wholesale')} />
+        <Check2 label="المرتجعات" checked={perms.returns} onChange={toggle('returns')} />
       </div>
-      <button className="btn-primary mt-3" onClick={savePerms} disabled={busy}>
-        {busy ? '...' : 'حفظ الصلاحيات'}
-      </button>
-    </div>
+      <Button className="mt-3" size="sm" onClick={savePerms} loading={busy}>
+        حفظ الصلاحيات
+      </Button>
+    </Card>
   );
 }
 
-function Check({
+function Check2({
   label,
   checked,
   onChange,
@@ -305,7 +358,7 @@ function Check({
   return (
     <label className="flex cursor-pointer items-center gap-2">
       <input type="checkbox" checked={checked} onChange={onChange} />
-      <span className="text-slate-600">{label}</span>
+      <span className="text-muted">{label}</span>
     </label>
   );
 }

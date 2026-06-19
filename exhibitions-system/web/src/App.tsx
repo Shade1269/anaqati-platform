@@ -9,6 +9,7 @@ import EmployeePos from './pages/employee/EmployeePos';
 import EmployeeRequestStock from './pages/employee/EmployeeRequestStock';
 import EmployeeWithdraw from './pages/employee/EmployeeWithdraw';
 import EmployeeSettlement from './pages/employee/EmployeeSettlement';
+import EmployeeNotifications from './pages/employee/EmployeeNotifications';
 
 // Admin / IM
 import AdminLogin from './pages/admin/AdminLogin';
@@ -23,6 +24,7 @@ import AdminFinance from './pages/admin/AdminFinance';
 import AdminWholesale from './pages/admin/AdminWholesale';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminReceiveStock from './pages/admin/AdminReceiveStock';
+import AdminAudit from './pages/admin/AdminAudit';
 
 export default function App() {
   return (
@@ -38,6 +40,7 @@ export default function App() {
         <Route path="request-stock" element={<EmployeeRequestStock />} />
         <Route path="withdraw" element={<EmployeeWithdraw />} />
         <Route path="settlement" element={<EmployeeSettlement />} />
+        <Route path="notifications" element={<EmployeeNotifications />} />
       </Route>
 
       {/* Admin / IM */}
@@ -54,6 +57,7 @@ export default function App() {
         <Route path="wholesale" element={<AdminWholesale />} />
         <Route path="inventory" element={<AdminInventory />} />
         <Route path="receive-stock" element={<AdminReceiveStock />} />
+        <Route path="audit" element={<AdminAudit />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

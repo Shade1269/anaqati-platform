@@ -1,15 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
+import { RefreshCw, TrendingUp, Target, Wallet, Package } from 'lucide-react';
 import { employeeApi } from '../../lib/api';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
 import { useCurrentBranch } from '../../context/useCurrentBranch';
 import type { EmployeeDashboard as Dash } from '../../lib/types';
 import {
-  Empty,
-  ErrorBox,
-  PageTitle,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  ErrorBanner,
+  PageHeader,
   ProgressBar,
   Spinner,
   StatCard,
+  Table,
 } from '../../components/ui';
 import { sar } from '../../lib/format';
 
@@ -38,19 +43,22 @@ export default function EmployeeDashboard() {
     load();
   }, [load]);
 
+  const target = data?.branch_target;
+
   return (
     <div>
-      <PageTitle
+      <PageHeader
         title="لوحة التحكم"
         subtitle="ملخص يومك الحالي في المعرض"
+        icon={<TrendingUp size={22} />}
         action={
-          <button className="btn-ghost" onClick={load}>
+          <Button variant="ghost" icon={<RefreshCw size={16} />} onClick={load}>
             تحديث
-          </button>
+          </Button>
         }
       />
 
-      <ErrorBox message={error} />
+      <ErrorBanner message={error} />
 
       {loading && <Spinner />}
 
@@ -60,63 +68,56 @@ export default function EmployeeDashboard() {
             <StatCard
               label="مبيعات اليوم"
               value={sar(data.sales_today)}
-              tone="emerald"
+              icon={<Wallet size={20} />}
+              tone="success"
             />
-            {data.branch_target && (
+            {target && (
               <>
                 <StatCard
                   label="هدف المعرض"
-                  value={sar(data.branch_target.target)}
-                  tone="indigo"
+                  value={sar(target.target)}
+                  icon={<Target size={20} />}
+                  tone="info"
                 />
                 <StatCard
                   label="المُحقَّق"
-                  value={sar(data.branch_target.achieved)}
-                  tone="amber"
+                  value={sar(target.achieved)}
+                  icon={<TrendingUp size={20} />}
+                  tone="gold"
                 />
               </>
             )}
           </div>
 
-          {data.branch_target && (
-            <div className="card">
-              <h2 className="mb-3 font-semibold text-slate-700">
-                التقدّم نحو الهدف
-              </h2>
-              <ProgressBar
-                value={data.branch_target.achieved}
-                max={data.branch_target.target}
-              />
-            </div>
+          {target && (
+            <Card>
+              <CardHeader title="التقدّم نحو الهدف" icon={<Target size={18} />} />
+              <ProgressBar value={target.achieved} max={target.target} />
+            </Card>
           )}
 
-          <div className="card">
-            <h2 className="mb-3 font-semibold text-slate-700">
-              العُهدة الحالية
-            </h2>
+          <div>
+            <CardHeader title="العُهدة الحالية" icon={<Package size={18} />} />
             {data.consignment.length === 0 ? (
-              <Empty message="لا توجد بضاعة في عُهدتك" />
+              <EmptyState message="لا توجد بضاعة في عُهدتك" icon={<Package size={26} />} />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="table-base">
-                  <thead>
-                    <tr>
-                      <th>المنتج</th>
-                      <th>الكود</th>
-                      <th>الكمية</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.consignment.map((c) => (
-                      <tr key={c.product_id}>
-                        <td>{c.name}</td>
-                        <td>{c.code}</td>
-                        <td className="font-semibold">{c.qty}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                head={
+                  <>
+                    <th>المنتج</th>
+                    <th>الكود</th>
+                    <th>الكمية</th>
+                  </>
+                }
+              >
+                {data.consignment.map((c) => (
+                  <tr key={c.product_id}>
+                    <td>{c.name}</td>
+                    <td className="text-muted">{c.code}</td>
+                    <td className="font-bold text-gold">{c.qty}</td>
+                  </tr>
+                ))}
+              </Table>
             )}
           </div>
         </div>

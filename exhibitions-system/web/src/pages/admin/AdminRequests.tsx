@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
+import { ClipboardList, Check, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminApi } from '../../lib/api';
 import {
-  Empty,
-  ErrorBox,
-  PageTitle,
+  Button,
+  Card,
+  EmptyState,
+  PageHeader,
   Spinner,
-  SuccessBox,
+  useToast,
 } from '../../components/ui';
+import { fmtDateTime } from '../../lib/format';
 
 interface RequestItem {
   product_id: string;
@@ -28,24 +31,21 @@ interface StockRequest {
 export default function AdminRequests() {
   const [requests, setRequests] = useState<StockRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  // editable approved quantities per request: { [requestId]: { [productId]: qty } }
   const [edits, setEdits] = useState<Record<string, Record<string, number>>>({});
   const [busyId, setBusyId] = useState('');
+  const toast = useToast();
 
   async function load() {
     setLoading(true);
-    setError('');
-    const { data, error: e } = await supabase
+    const { data, error } = await supabase
       .from('stock_requests')
       .select(
         'id,branch_id,status,created_at,branch:branches(name),items:stock_request_items(product_id,qty_requested,qty_approved,product:products_public(name,product_code))'
       )
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
-    if (e) {
-      setError(e.message);
+    if (error) {
+      toast.error(error.message);
       setLoading(false);
       return;
     }
@@ -55,8 +55,7 @@ export default function AdminRequests() {
     rows.forEach((r) => {
       initial[r.id] = {};
       r.items.forEach((it) => {
-        initial[r.id][it.product_id] =
-          it.qty_approved ?? it.qty_requested;
+        initial[r.id][it.product_id] = it.qty_approved ?? it.qty_requested;
       });
     });
     setEdits(initial);
@@ -65,23 +64,21 @@ export default function AdminRequests() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function review(r: StockRequest, action: 'approve' | 'reject') {
-    setBusyId(r.id);
-    setError('');
-    setSuccess('');
+    setBusyId(r.id + action);
     try {
       const approvals = r.items.map((it) => ({
         product_id: it.product_id,
-        qty_approved:
-          action === 'approve' ? edits[r.id]?.[it.product_id] ?? 0 : 0,
+        qty_approved: action === 'approve' ? edits[r.id]?.[it.product_id] ?? 0 : 0,
       }));
       await adminApi.reviewStockRequest(r.id, action, approvals);
-      setSuccess(action === 'approve' ? 'تمت الموافقة على الطلب' : 'تم رفض الطلب');
+      toast.success(action === 'approve' ? 'تمت الموافقة على الطلب' : 'تم رفض الطلب');
       load();
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setBusyId('');
     }
@@ -91,26 +88,28 @@ export default function AdminRequests() {
 
   return (
     <div>
-      <PageTitle title="طلبات البضاعة" subtitle="مراجعة الطلبات المعلّقة" />
-      <ErrorBox message={error} />
-      <SuccessBox message={success} />
+      <PageHeader
+        title="طلبات البضاعة"
+        subtitle="مراجعة الطلبات المعلّقة"
+        icon={<ClipboardList size={22} />}
+      />
 
       {requests.length === 0 ? (
-        <Empty message="لا توجد طلبات معلّقة" />
+        <EmptyState message="لا توجد طلبات معلّقة" icon={<ClipboardList size={26} />} />
       ) : (
         <div className="space-y-4">
           {requests.map((r) => (
-            <div key={r.id} className="card">
+            <Card key={r.id}>
               <div className="mb-3 flex items-center justify-between">
-                <span className="font-bold text-slate-800">
+                <span className="font-bold text-text">
                   معرض: {r.branch?.name || r.branch_id}
                 </span>
-                <span className="text-xs text-slate-400">
-                  {new Date(r.created_at).toLocaleString('ar')}
+                <span className="text-xs text-muted">
+                  {fmtDateTime(r.created_at)}
                 </span>
               </div>
-              <div className="overflow-x-auto">
-                <table className="table-base">
+              <div className="overflow-x-auto rounded-lg border border-white/10">
+                <table className="ax-table">
                   <thead>
                     <tr>
                       <th>المنتج</th>
@@ -124,7 +123,7 @@ export default function AdminRequests() {
                         <td>
                           {it.product?.name || it.product_id}{' '}
                           {it.product?.product_code && (
-                            <span className="text-slate-400">
+                            <span className="text-muted">
                               ({it.product.product_code})
                             </span>
                           )}
@@ -134,7 +133,7 @@ export default function AdminRequests() {
                           <input
                             type="number"
                             min={0}
-                            className="input w-24"
+                            className="ax-input w-24"
                             value={edits[r.id]?.[it.product_id] ?? 0}
                             onChange={(e) =>
                               setEdits((prev) => ({
@@ -156,22 +155,24 @@ export default function AdminRequests() {
                 </table>
               </div>
               <div className="mt-3 flex gap-2">
-                <button
-                  className="btn-emerald"
+                <Button
+                  variant="success"
+                  icon={<Check size={16} />}
+                  loading={busyId === r.id + 'approve'}
                   onClick={() => review(r, 'approve')}
-                  disabled={busyId === r.id}
                 >
                   موافقة
-                </button>
-                <button
-                  className="btn-danger"
+                </Button>
+                <Button
+                  variant="danger"
+                  icon={<X size={16} />}
+                  loading={busyId === r.id + 'reject'}
                   onClick={() => review(r, 'reject')}
-                  disabled={busyId === r.id}
                 >
                   رفض
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

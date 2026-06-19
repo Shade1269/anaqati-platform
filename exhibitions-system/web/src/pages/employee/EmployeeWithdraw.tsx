@@ -1,31 +1,23 @@
 import { useState } from 'react';
+import { PackageMinus } from 'lucide-react';
 import { employeeApi } from '../../lib/api';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
 import { useCurrentBranch } from '../../context/useCurrentBranch';
 import { useEmployeeProducts } from './useEmployeeProducts';
 import ProductLinePicker, { type Line } from '../../components/ProductLinePicker';
-import { ErrorBox, PageTitle, Spinner, SuccessBox } from '../../components/ui';
+import { Button, Card, PageHeader, Spinner, useToast } from '../../components/ui';
 
 export default function EmployeeWithdraw() {
   const { session } = useEmployeeAuth();
   const branchId = useCurrentBranch();
   const { products, loading, error: loadError } = useEmployeeProducts();
+  const toast = useToast();
   const [lines, setLines] = useState<Line[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   async function submit() {
-    if (!session || !branchId) {
-      setError('اختر المعرض أولًا');
-      return;
-    }
-    if (lines.length === 0) {
-      setError('أضف منتجًا واحدًا على الأقل');
-      return;
-    }
-    setError('');
-    setSuccess('');
+    if (!session || !branchId) return toast.error('اختر المعرض أولًا');
+    if (lines.length === 0) return toast.error('أضف منتجًا واحدًا على الأقل');
     setSubmitting(true);
     try {
       await employeeApi.withdrawConsignment(
@@ -33,10 +25,10 @@ export default function EmployeeWithdraw() {
         branchId,
         lines.map((l) => ({ product_id: l.product_id, qty: l.qty }))
       );
-      setSuccess('تم سحب البضاعة إلى عُهدتك الشخصية');
+      toast.success('تم سحب البضاعة إلى عُهدتك الشخصية');
       setLines([]);
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -46,26 +38,22 @@ export default function EmployeeWithdraw() {
 
   return (
     <div>
-      <PageTitle
+      <PageHeader
         title="سحب عُهدة"
         subtitle="انقل بضاعة من المعرض إلى عُهدتك الشخصية"
+        icon={<PackageMinus size={22} />}
       />
-      <ErrorBox message={loadError || error} />
-      <SuccessBox message={success} />
-      <div className="card mt-4 space-y-5">
-        <ProductLinePicker
-          products={products}
-          lines={lines}
-          onChange={setLines}
-        />
-        <button
-          className="btn-primary w-full"
-          onClick={submit}
-          disabled={submitting}
-        >
-          {submitting ? 'جارٍ الحفظ...' : 'تأكيد السحب'}
-        </button>
-      </div>
+      {loadError && (
+        <div className="mb-4 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {loadError}
+        </div>
+      )}
+      <Card className="space-y-5">
+        <ProductLinePicker products={products} lines={lines} onChange={setLines} />
+        <Button className="w-full" loading={submitting} onClick={submit}>
+          تأكيد السحب
+        </Button>
+      </Card>
     </div>
   );
 }

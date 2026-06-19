@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, UserRound } from 'lucide-react';
 import { employeeApi } from '../../lib/api';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
-import { ErrorBox } from '../../components/ui';
+import { Button, Field, Input, ErrorBanner } from '../../components/ui';
 
 export default function EmployeeLogin() {
   const [phone, setPhone] = useState('');
@@ -28,46 +29,43 @@ export default function EmployeeLogin() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-emerald-50 px-4">
-      <form onSubmit={onSubmit} className="card w-full max-w-md space-y-4">
+    <div className="relative flex min-h-screen items-center justify-center px-4">
+      <div className="pointer-events-none absolute -top-32 left-10 h-80 w-80 rounded-full bg-info/10 blur-3xl" />
+      <form
+        onSubmit={onSubmit}
+        className="ax-card relative w-full max-w-md space-y-5 p-7"
+      >
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-800">دخول الموظف</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            ادخل برقم الجوال وكود الوصول
-          </p>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary-hover">
+            <UserRound size={24} />
+          </div>
+          <h1 className="text-2xl font-extrabold text-text">دخول الموظف</h1>
+          <p className="mt-1 text-sm text-muted">ادخل برقم الجوال وكود الوصول</p>
         </div>
 
-        <ErrorBox message={error} />
+        <ErrorBanner message={error} />
 
-        <div>
-          <label className="label">رقم الجوال</label>
-          <input
-            className="input"
+        <Field label="رقم الجوال">
+          <Input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="05xxxxxxxx"
             required
           />
-        </div>
-        <div>
-          <label className="label">كود الوصول</label>
-          <input
-            className="input"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            required
-          />
-        </div>
+        </Field>
+        <Field label="كود الوصول">
+          <Input value={code} onChange={(e) => setCode(e.target.value)} required />
+        </Field>
 
-        <button className="btn-emerald w-full" disabled={loading}>
-          {loading ? 'جارٍ الدخول...' : 'دخول'}
-        </button>
+        <Button type="submit" loading={loading} className="w-full">
+          دخول
+        </Button>
 
         <Link
           to="/"
-          className="block text-center text-sm text-slate-500 hover:underline"
+          className="flex items-center justify-center gap-1 text-sm text-muted hover:text-text"
         >
-          ← العودة للرئيسية
+          <ArrowRight size={14} /> العودة للرئيسية
         </Link>
       </form>
     </div>

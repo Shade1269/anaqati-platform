@@ -1,6 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   Black Axis — premium dark design system (HSL tokens)
+   ============================================================ */
+:root {
+  --bg: 230 14% 6%; /* #0B0C10 deep near-black */
+  --bg-2: 230 13% 8%;
+  --surface: 232 13% 10%; /* #15161D card */
+  --surface-2: 231 16% 13%; /* #1B1D26 elevated */
+  --surface-3: 231 14% 16%;
+  --border: 0 0% 100%; /* used with alpha */
+
+  --primary: 42 53% 54%; /* #C9A24B gold */
+  --primary-hover: 42 60% 62%; /* #D8B463 */
+  --primary-fg: 36 40% 8%;
+
+  --text: 240 18% 93%; /* #ECECF1 */
+  --muted: 222 8% 64%; /* #9CA0AD */
+
+  --success: 152 38% 48%;
+  --danger: 350 60% 58%;
+  --warning: 42 70% 56%;
+  --info: 234 55% 65%;
+
+  --radius-xl: 1rem;
+  --radius-lg: 0.625rem;
+}
 
 html,
 body,
@@ -8,52 +37,199 @@ body,
   height: 100%;
 }
 
-body {
-  @apply bg-slate-100 text-slate-800 antialiased;
-  direction: rtl;
+* {
+  border-color: hsl(var(--border) / 0.08);
 }
 
-/* RTL-friendly number / currency inputs stay LTR for digits but aligned right */
-input[type='number'] {
+body {
+  background:
+    radial-gradient(1200px 600px at 100% -10%, hsl(var(--primary) / 0.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, hsl(var(--info) / 0.05), transparent 55%),
+    hsl(var(--bg));
+  color: hsl(var(--text));
+  font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--surface-3));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+  background-clip: padding-box;
+}
+
+/* keep numeric inputs LTR but right-aligned */
+input[type='number'],
+input[type='date'],
+input[type='month'] {
   direction: ltr;
   text-align: right;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: hsl(var(--muted) / 0.7);
+}
+
 @layer components {
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  /* Buttons */
+  .ax-btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50;
   }
-  .btn-primary {
-    @apply btn bg-indigo-600 text-white hover:bg-indigo-700;
+  .ax-btn-primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-fg));
+    box-shadow: 0 6px 18px -8px hsl(var(--primary) / 0.7);
   }
-  .btn-emerald {
-    @apply btn bg-emerald-600 text-white hover:bg-emerald-700;
+  .ax-btn-primary:hover:not(:disabled) {
+    background: hsl(var(--primary-hover));
   }
-  .btn-ghost {
-    @apply btn bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50;
+  .ax-btn-outline {
+    border: 1px solid hsl(var(--primary) / 0.45);
+    color: hsl(var(--primary-hover));
+    background: hsl(var(--primary) / 0.06);
   }
-  .btn-danger {
-    @apply btn bg-rose-600 text-white hover:bg-rose-700;
+  .ax-btn-outline:hover:not(:disabled) {
+    background: hsl(var(--primary) / 0.14);
   }
-  .card {
-    @apply rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100;
+  .ax-btn-ghost {
+    color: hsl(var(--text));
+    background: hsl(var(--surface-2));
+    border: 1px solid hsl(var(--border) / 0.08);
   }
-  .input {
-    @apply w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200;
+  .ax-btn-ghost:hover:not(:disabled) {
+    background: hsl(var(--surface-3));
   }
-  .label {
-    @apply mb-1 block text-sm font-medium text-slate-600;
+  .ax-btn-danger {
+    background: hsl(var(--danger));
+    color: white;
   }
-  .table-base {
+  .ax-btn-danger:hover:not(:disabled) {
+    background: hsl(var(--danger) / 0.85);
+  }
+  .ax-btn-success {
+    background: hsl(var(--success));
+    color: white;
+  }
+  .ax-btn-success:hover:not(:disabled) {
+    background: hsl(var(--success) / 0.85);
+  }
+
+  /* Card */
+  .ax-card {
+    background: linear-gradient(180deg, hsl(var(--surface-2)), hsl(var(--surface)));
+    border: 1px solid hsl(var(--border) / 0.08);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 1px 0 hsl(var(--border) / 0.04) inset,
+      0 24px 48px -32px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Inputs */
+  .ax-input,
+  .ax-select {
+    @apply w-full rounded-lg px-3 py-2.5 text-sm outline-none transition;
+    background: hsl(var(--bg-2));
+    color: hsl(var(--text));
+    border: 1px solid hsl(var(--border) / 0.1);
+  }
+  .ax-input:focus,
+  .ax-select:focus {
+    border-color: hsl(var(--primary) / 0.6);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+  }
+  .ax-select option {
+    background: hsl(var(--surface-2));
+    color: hsl(var(--text));
+  }
+  .ax-label {
+    @apply mb-1.5 block text-xs font-semibold;
+    color: hsl(var(--muted));
+  }
+
+  /* Table */
+  .ax-table {
     @apply w-full border-collapse text-sm;
   }
-  .table-base th {
-    @apply bg-slate-50 px-3 py-2 text-right font-semibold text-slate-600;
+  .ax-table thead th {
+    @apply px-4 py-3 text-right text-xs font-bold uppercase tracking-wide;
+    color: hsl(var(--muted));
+    background: hsl(var(--bg-2));
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
-  .table-base td {
-    @apply border-t border-slate-100 px-3 py-2 text-right;
+  .ax-table tbody td {
+    @apply px-4 py-3 text-right;
+    border-top: 1px solid hsl(var(--border) / 0.06);
+    color: hsl(var(--text));
   }
-  .badge {
-    @apply inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium;
+  .ax-table tbody tr {
+    transition: background 0.12s;
+  }
+  .ax-table tbody tr:nth-child(even) {
+    background: hsl(var(--border) / 0.02);
+  }
+  .ax-table tbody tr:hover {
+    background: hsl(var(--primary) / 0.06);
+  }
+
+  .ax-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  .text-muted {
+    color: hsl(var(--muted));
+  }
+  .text-gold {
+    color: hsl(var(--primary-hover));
+  }
+}
+
+@layer utilities {
+  @keyframes ax-grow {
+    from {
+      width: 0;
+    }
+  }
+  .animate-grow {
+    animation: ax-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes ax-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-up {
+    animation: ax-fade-up 0.25s ease-out;
+  }
+  @keyframes ax-toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  .animate-toast {
+    animation: ax-toast-in 0.2s ease-out;
   }
 }
