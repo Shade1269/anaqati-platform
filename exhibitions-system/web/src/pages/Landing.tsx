@@ -13,7 +13,7 @@ export default function Landing() {
           ⬩
         </div>
         <p className="mb-2 text-sm font-bold uppercase tracking-[0.3em] text-gold">
-          Black Axis
+          منصّة إدارة المعارض
         </p>
         <h1 className="text-4xl font-extrabold text-text sm:text-5xl">
           نظام إدارة المعارض والمخزون

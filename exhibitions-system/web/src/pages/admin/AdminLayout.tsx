@@ -22,6 +22,7 @@ import {
   UserCheck,
   Truck,
   Waves,
+  Palette,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
@@ -84,6 +85,7 @@ const management: Item[] = [
   { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} />, show: adminOnly },
   { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} />, show: adminOnly },
   { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} />, show: adminOnly },
+  { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} />, show: adminOnly },
 ];
 
 const accounting: Item[] = [
@@ -169,12 +171,15 @@ export default function AdminLayout() {
   if (acct.length) sections.push({ title: 'المحاسبة', items: acct });
 
   const unread = notifs.filter((n) => !n.is_read).length;
+  const brand = profile.tenant?.brand_name || profile.tenant?.name || 'Black Axis';
+  const logoUrl = profile.tenant?.logo_url || null;
 
   return (
     <>
       <DashboardShell
-        brand="Black Axis"
+        brand={brand}
         brandSub={role === 'admin' ? 'لوحة الأدمن' : 'إدارة المخزون'}
+        logoUrl={logoUrl}
         sections={sections}
         userName={profile.full_name}
         roleLabel={role === 'admin' ? 'أدمن' : 'مدير مخزون'}

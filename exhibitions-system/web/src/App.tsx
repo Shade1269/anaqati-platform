@@ -37,6 +37,13 @@ import AccountingTrialBalance from './pages/admin/accounting/AccountingTrialBala
 import AccountingLedger from './pages/admin/accounting/AccountingLedger';
 import AccountingJournal from './pages/admin/accounting/AccountingJournal';
 import AccountingCashFlow from './pages/admin/accounting/AccountingCashFlow';
+import AdminBranding from './pages/admin/AdminBranding';
+
+// Platform owner (white-label SaaS)
+import OwnerLogin from './pages/platform/OwnerLogin';
+import PlatformLayout from './pages/platform/PlatformLayout';
+import PlatformTenants from './pages/platform/PlatformTenants';
+import RequirePlatform from './pages/platform/RequirePlatform';
 
 export default function App() {
   return (
@@ -71,6 +78,7 @@ export default function App() {
         <Route path="suppliers" element={<RequireAdmin><AdminSuppliers /></RequireAdmin>} />
         <Route path="finance" element={<RequireAdmin><AdminFinance /></RequireAdmin>} />
         <Route path="audit" element={<RequireAdmin><AdminAudit /></RequireAdmin>} />
+        <Route path="branding" element={<RequireAdmin><AdminBranding /></RequireAdmin>} />
 
         {/* Operations — accessible to inventory_manager per permissions */}
         <Route path="requests" element={<AdminRequests />} />
@@ -86,6 +94,19 @@ export default function App() {
         <Route path="accounting/ledger" element={<RequireAdmin><AccountingLedger /></RequireAdmin>} />
         <Route path="accounting/journal" element={<RequireAdmin><AccountingJournal /></RequireAdmin>} />
         <Route path="accounting/cashflow" element={<RequireAdmin><AccountingCashFlow /></RequireAdmin>} />
+      </Route>
+
+      {/* Platform owner (private entrance + panel) */}
+      <Route path="/owner" element={<OwnerLogin />} />
+      <Route
+        path="/platform"
+        element={
+          <RequirePlatform>
+            <PlatformLayout />
+          </RequirePlatform>
+        }
+      >
+        <Route index element={<PlatformTenants />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

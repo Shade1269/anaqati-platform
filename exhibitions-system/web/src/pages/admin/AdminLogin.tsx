@@ -47,7 +47,8 @@ export default function AdminLogin() {
 
       const profile = await refreshProfile(fullName.trim() || 'مستخدم');
       if (!profile) throw new Error('تعذّر تحميل الملف الشخصي');
-      navigate('/admin/dashboard');
+      // Platform owner is routed to the platform panel; tenant admin/IM stay here.
+      navigate(profile.is_platform_admin ? '/platform' : '/admin/dashboard');
     } catch (err) {
       setError((err as Error).message);
     } finally {
