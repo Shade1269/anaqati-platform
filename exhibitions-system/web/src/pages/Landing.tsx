@@ -1,55 +1,72 @@
 import { Link } from 'react-router-dom';
+import { ArrowLeft, Building2, UserRound } from 'lucide-react';
 
 export default function Landing() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-indigo-50 via-slate-50 to-emerald-50 px-4">
-      <div className="w-full max-w-3xl text-center">
-        <h1 className="text-4xl font-extrabold text-slate-800">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
+      {/* ambient glow */}
+      <div className="pointer-events-none absolute -top-40 right-0 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-96 w-96 rounded-full bg-info/10 blur-3xl" />
+
+      <div className="relative w-full max-w-4xl text-center">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-3xl font-extrabold text-primary-hover">
+          ⬩
+        </div>
+        <p className="mb-2 text-sm font-bold uppercase tracking-[0.3em] text-gold">
+          Black Axis
+        </p>
+        <h1 className="text-4xl font-extrabold text-text sm:text-5xl">
           نظام إدارة المعارض والمخزون
         </h1>
-        <p className="mt-3 text-slate-500">
-          إدارة البضاعة من الموردين إلى المستودعات إلى المعارض المؤقتة والبيع
-          عبر الموظفين المتنقّلين
+        <p className="mx-auto mt-4 max-w-xl text-muted">
+          منصة متكاملة لإدارة البضاعة من المورّدين إلى المستودعات إلى المعارض
+          المؤقتة، والبيع عبر الموظفين المتنقّلين.
         </p>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2">
-          <Link
+        <div className="mt-12 grid gap-6 sm:grid-cols-2">
+          <EntryCard
             to="/admin/login"
-            className="group rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-2xl">
-              🏢
-            </div>
-            <h2 className="mt-4 text-xl font-bold text-slate-800">
-              دخول الإدارة
-            </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              الأدمن ومدير المخزون — تسجيل دخول بالبريد وكلمة المرور
-            </p>
-            <span className="mt-4 inline-block font-semibold text-indigo-600 group-hover:underline">
-              ادخل ←
-            </span>
-          </Link>
-
-          <Link
+            icon={<Building2 size={26} />}
+            title="دخول الإدارة"
+            desc="الأدمن ومدير المخزون — دخول بالبريد وكلمة المرور"
+          />
+          <EntryCard
             to="/employee/login"
-            className="group rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl">
-              🧑‍💼
-            </div>
-            <h2 className="mt-4 text-xl font-bold text-slate-800">
-              دخول الموظف
-            </h2>
-            <p className="mt-2 text-sm text-slate-500">
-              تسجيل دخول برقم الجوال وكود الوصول
-            </p>
-            <span className="mt-4 inline-block font-semibold text-emerald-600 group-hover:underline">
-              ادخل ←
-            </span>
-          </Link>
+            icon={<UserRound size={26} />}
+            title="دخول الموظف"
+            desc="تسجيل دخول برقم الجوال وكود الوصول"
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+function EntryCard({
+  to,
+  icon,
+  title,
+  desc,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="ax-card group p-8 text-right transition-all duration-200 hover:-translate-y-1 hover:border-primary/40"
+    >
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary-hover transition group-hover:bg-primary/25">
+        {icon}
+      </div>
+      <h2 className="mt-5 text-xl font-bold text-text">{title}</h2>
+      <p className="mt-2 text-sm text-muted">{desc}</p>
+      <span className="mt-5 inline-flex items-center gap-2 font-bold text-gold">
+        ادخل
+        <ArrowLeft size={16} className="transition group-hover:-translate-x-1" />
+      </span>
+    </Link>
   );
 }

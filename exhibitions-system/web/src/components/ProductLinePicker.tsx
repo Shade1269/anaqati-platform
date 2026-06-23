@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
+import { Plus, Search, Trash2 } from 'lucide-react';
 import { sar } from '../lib/format';
+import { Input } from './ui';
 
 export interface LineProduct {
   id: string;
@@ -46,16 +48,11 @@ export default function ProductLinePicker({
   function addProduct(id: string) {
     if (lines.some((l) => l.product_id === id)) return;
     const p = byId[id];
-    onChange([
-      ...lines,
-      { product_id: id, qty: 1, unit_price: p?.price_ref ?? 0 },
-    ]);
+    onChange([...lines, { product_id: id, qty: 1, unit_price: p?.price_ref ?? 0 }]);
   }
 
   function update(id: string, patch: Partial<Line>) {
-    onChange(
-      lines.map((l) => (l.product_id === id ? { ...l, ...patch } : l))
-    );
+    onChange(lines.map((l) => (l.product_id === id ? { ...l, ...patch } : l)));
   }
 
   function remove(id: string) {
@@ -65,16 +62,23 @@ export default function ProductLinePicker({
   return (
     <div className="space-y-4">
       <div>
-        <label className="label">اختر منتجًا للإضافة</label>
-        <input
-          className="input"
-          placeholder="ابحث بالاسم أو الكود..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="mt-2 max-h-44 overflow-auto rounded-lg border border-slate-200">
+        <div className="relative">
+          <Search
+            size={16}
+            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"
+          />
+          <Input
+            className="pr-9"
+            placeholder="ابحث عن منتج بالاسم أو الكود..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="mt-2 max-h-48 overflow-auto rounded-lg border border-white/10 bg-bg-2">
           {filtered.length === 0 && (
-            <p className="px-3 py-3 text-sm text-slate-400">لا توجد منتجات</p>
+            <p className="px-3 py-4 text-center text-sm text-muted">
+              لا توجد منتجات مطابقة
+            </p>
           )}
           {filtered.map((p) => {
             const added = lines.some((l) => l.product_id === p.id);
@@ -84,13 +88,14 @@ export default function ProductLinePicker({
                 type="button"
                 disabled={added}
                 onClick={() => addProduct(p.id)}
-                className="flex w-full items-center justify-between border-b border-slate-100 px-3 py-2 text-right text-sm last:border-0 hover:bg-indigo-50 disabled:opacity-40"
+                className="flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2.5 text-right text-sm transition last:border-0 hover:bg-primary/8 disabled:opacity-40"
               >
-                <span>
-                  <span className="font-medium">{p.name}</span>{' '}
-                  <span className="text-slate-400">({p.code})</span>
+                <span className="flex items-center gap-2">
+                  <Plus size={14} className="text-primary-hover" />
+                  <span className="font-medium text-text">{p.name}</span>
+                  <span className="text-muted">({p.code})</span>
                 </span>
-                <span className="text-slate-500">
+                <span className="text-muted">
                   {p.price_ref != null ? sar(p.price_ref) : '—'}
                 </span>
               </button>
@@ -100,8 +105,8 @@ export default function ProductLinePicker({
       </div>
 
       {lines.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="table-base">
+        <div className="overflow-x-auto rounded-lg border border-white/10">
+          <table className="ax-table">
             <thead>
               <tr>
                 <th>المنتج</th>
@@ -119,13 +124,13 @@ export default function ProductLinePicker({
                   <tr key={l.product_id}>
                     <td>
                       {p?.name}{' '}
-                      <span className="text-slate-400">({p?.code})</span>
+                      <span className="text-muted">({p?.code})</span>
                     </td>
                     <td>
                       <input
                         type="number"
                         min={1}
-                        className="input w-24"
+                        className="ax-input w-20"
                         value={l.qty}
                         onChange={(e) =>
                           update(l.product_id, {
@@ -140,7 +145,7 @@ export default function ProductLinePicker({
                           type="number"
                           min={0}
                           step="0.01"
-                          className="input w-28"
+                          className="ax-input w-28"
                           value={l.unit_price ?? 0}
                           onChange={(e) =>
                             update(l.product_id, {
@@ -150,14 +155,16 @@ export default function ProductLinePicker({
                         />
                       </td>
                     )}
-                    {withPrice && <td>{sar(lineTotal)}</td>}
+                    {withPrice && (
+                      <td className="font-semibold text-gold">{sar(lineTotal)}</td>
+                    )}
                     <td>
                       <button
                         type="button"
                         onClick={() => remove(l.product_id)}
-                        className="text-rose-600 hover:underline"
+                        className="rounded-lg p-1.5 text-danger transition hover:bg-danger/10"
                       >
-                        حذف
+                        <Trash2 size={16} />
                       </button>
                     </td>
                   </tr>

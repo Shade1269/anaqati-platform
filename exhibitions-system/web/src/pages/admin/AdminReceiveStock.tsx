@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { PackagePlus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminApi } from '../../lib/api';
 import type { ProductPublic, Supplier, Warehouse } from '../../lib/types';
@@ -7,10 +8,13 @@ import ProductLinePicker, {
   type LineProduct,
 } from '../../components/ProductLinePicker';
 import {
-  ErrorBox,
-  PageTitle,
+  Button,
+  Card,
+  Field,
+  PageHeader,
+  Select,
   Spinner,
-  SuccessBox,
+  useToast,
 } from '../../components/ui';
 
 export default function AdminReceiveStock() {
@@ -18,8 +22,7 @@ export default function AdminReceiveStock() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const toast = useToast();
 
   const [warehouseId, setWarehouseId] = useState('');
   const [supplierId, setSupplierId] = useState('');
@@ -32,18 +35,16 @@ export default function AdminReceiveStock() {
         .from('products_public')
         .select('id,product_code,name,category_id,sale_price_ref,is_active')
         .order('name'),
-      supabase
-        .from('warehouses')
-        .select('id,name,location,is_active')
-        .order('name'),
+      supabase.from('warehouses').select('id,name,location,is_active').order('name'),
       supabase.from('suppliers').select('id,name,phone,notes').order('name'),
     ]).then(([p, w, s]) => {
-      if (p.error) setError(p.error.message);
+      if (p.error) toast.error(p.error.message);
       setProducts((p.data as ProductPublic[]) || []);
       setWarehouses((w.data as Warehouse[]) || []);
       setSuppliers((s.data as Supplier[]) || []);
       setLoading(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const lineProducts: LineProduct[] = useMemo(
@@ -58,16 +59,8 @@ export default function AdminReceiveStock() {
   );
 
   async function submit() {
-    if (!warehouseId || !supplierId) {
-      setError('اختر المستودع والمورد');
-      return;
-    }
-    if (lines.length === 0) {
-      setError('أضف منتجًا واحدًا على الأقل');
-      return;
-    }
-    setError('');
-    setSuccess('');
+    if (!warehouseId || !supplierId) return toast.error('اختر المستودع والمورد');
+    if (lines.length === 0) return toast.error('أضف منتجًا واحدًا على الأقل');
     setSubmitting(true);
     try {
       await adminApi.receiveStock(
@@ -75,10 +68,10 @@ export default function AdminReceiveStock() {
         supplierId,
         lines.map((l) => ({ product_id: l.product_id, qty: l.qty }))
       );
-      setSuccess('تم استلام البضاعة في المستودع');
+      toast.success('تم استلام البضاعة في المستودع');
       setLines([]);
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -88,16 +81,16 @@ export default function AdminReceiveStock() {
 
   return (
     <div>
-      <PageTitle title="استلام بضاعة" subtitle="إدخال بضاعة من مورد إلى مستودع" />
-      <ErrorBox message={error} />
-      <SuccessBox message={success} />
+      <PageHeader
+        title="استلام بضاعة"
+        subtitle="إدخال بضاعة من مورد إلى مستودع"
+        icon={<PackagePlus size={22} />}
+      />
 
-      <div className="card space-y-5">
+      <Card className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="label">المستودع</label>
-            <select
-              className="input"
+          <Field label="المستودع">
+            <Select
               value={warehouseId}
               onChange={(e) => setWarehouseId(e.target.value)}
             >
@@ -107,12 +100,10 @@ export default function AdminReceiveStock() {
                   {w.name}
                 </option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">المورد</label>
-            <select
-              className="input"
+            </Select>
+          </Field>
+          <Field label="المورد">
+            <Select
               value={supplierId}
               onChange={(e) => setSupplierId(e.target.value)}
             >
@@ -122,20 +113,16 @@ export default function AdminReceiveStock() {
                   {s.name}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
         </div>
 
-        <ProductLinePicker
-          products={lineProducts}
-          lines={lines}
-          onChange={setLines}
-        />
+        <ProductLinePicker products={lineProducts} lines={lines} onChange={setLines} />
 
-        <button className="btn-primary w-full" onClick={submit} disabled={submitting}>
-          {submitting ? 'جارٍ الحفظ...' : 'استلام البضاعة'}
-        </button>
-      </div>
+        <Button className="w-full" loading={submitting} onClick={submit}>
+          استلام البضاعة
+        </Button>
+      </Card>
     </div>
   );
 }

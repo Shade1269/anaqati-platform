@@ -1,20 +1,38 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
-  NavLink,
-  Outlet,
-  useNavigate,
-} from 'react-router-dom';
+  LayoutDashboard,
+  ShoppingBag,
+  PackagePlus,
+  PackageMinus,
+  Wallet,
+  Bell,
+  Undo2,
+} from 'lucide-react';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
 import { employeeApi } from '../../lib/api';
-import type { Branch } from '../../lib/types';
+import type { Branch, NotificationRow } from '../../lib/types';
 import { getStoredBranchId } from '../../context/useBranchSelection';
+import { Select, Dialog } from '../../components/ui';
+import {
+  DashboardShell,
+  type NavSection,
+} from '../../components/shell/DashboardShell';
+import { NotificationsPanel } from '../../components/shell/NotificationsPanel';
 
-const links = [
-  { to: '/employee/dashboard', label: 'لوحة التحكم' },
-  { to: '/employee/pos', label: 'نقطة البيع' },
-  { to: '/employee/request-stock', label: 'طلب بضاعة' },
-  { to: '/employee/withdraw', label: 'سحب عُهدة' },
-  { to: '/employee/settlement', label: 'تسليم العُهدة' },
+const sz = 18;
+const sections: NavSection[] = [
+  {
+    items: [
+      { to: '/employee/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
+      { to: '/employee/pos', label: 'نقطة البيع', icon: <ShoppingBag size={sz} /> },
+      { to: '/employee/returns', label: 'إرجاع المبيعات', icon: <Undo2 size={sz} /> },
+      { to: '/employee/request-stock', label: 'طلب بضاعة', icon: <PackagePlus size={sz} /> },
+      { to: '/employee/withdraw', label: 'سحب عُهدة', icon: <PackageMinus size={sz} /> },
+      { to: '/employee/settlement', label: 'تسليم العُهدة', icon: <Wallet size={sz} /> },
+      { to: '/employee/notifications', label: 'الإشعارات', icon: <Bell size={sz} /> },
+    ],
+  },
 ];
 
 export default function EmployeeLayout() {
@@ -22,6 +40,22 @@ export default function EmployeeLayout() {
   const navigate = useNavigate();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchId, setBranchId] = useState<string | null>(getStoredBranchId());
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState<NotificationRow[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  const loadNotifs = useCallback(async () => {
+    if (!session) return;
+    setNotifLoading(true);
+    try {
+      const data = await employeeApi.notifications(session.token);
+      setNotifs(data || []);
+    } catch {
+      /* ignore */
+    } finally {
+      setNotifLoading(false);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (!session) {
@@ -32,86 +66,92 @@ export default function EmployeeLayout() {
       .listBranches(session.token)
       .then((bs) => {
         setBranches(bs);
-        if (!getStoredBranchId() && bs.length > 0) {
-          chooseBranch(bs[0].id);
-        }
+        if (!getStoredBranchId() && bs.length > 0) chooseBranch(bs[0].id);
       })
       .catch(() => {});
+    loadNotifs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   function chooseBranch(id: string) {
     localStorage.setItem('employee_branch_id', id);
     setBranchId(id);
-    // force dependent pages to re-read via a navigation refresh signal
     window.dispatchEvent(new Event('branch-changed'));
+  }
+
+  async function markRead(id: string) {
+    if (!session) return;
+    try {
+      await employeeApi.markRead(session.token, id);
+    } catch {
+      /* ignore */
+    }
+    setNotifs((s) => s.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
   }
 
   if (!session) return null;
 
-  return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-bold text-emerald-600">
-              {session.full_name}
-            </span>
-            <span className="badge bg-emerald-100 text-emerald-700">موظف</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <select
-              className="input w-auto"
-              value={branchId ?? ''}
-              onChange={(e) => chooseBranch(e.target.value)}
-            >
-              <option value="" disabled>
-                اختر المعرض
-              </option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            <button
-              className="btn-ghost"
-              onClick={() => {
-                signOut();
-                navigate('/');
-              }}
-            >
-              خروج
-            </button>
-          </div>
-        </div>
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-2">
-          {links.map((l) => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              className={({ isActive }) =>
-                `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ${
-                  isActive
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`
-              }
-            >
-              {l.label}
-            </NavLink>
-          ))}
-        </nav>
-      </header>
+  const unread = notifs.filter((n) => !n.is_read).length;
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        {!branchId && (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            اختر المعرض من الأعلى للبدء.
-          </div>
-        )}
+  return (
+    <>
+      <DashboardShell
+        brand="Black Axis"
+        brandSub="تطبيق الموظف"
+        sections={sections}
+        userName={session.full_name}
+        roleLabel="موظف"
+        roleTone="success"
+        onLogout={() => {
+          signOut();
+          navigate('/');
+        }}
+        notifications={{
+          unread,
+          onClick: () => {
+            setNotifOpen(true);
+            loadNotifs();
+          },
+        }}
+        topExtra={
+          <Select
+            className="w-44"
+            value={branchId ?? ''}
+            onChange={(e) => chooseBranch(e.target.value)}
+          >
+            <option value="" disabled>
+              اختر المعرض
+            </option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </Select>
+        }
+        banner={
+          !branchId ? (
+            <div className="mb-5 rounded-lg border border-warning/30 bg-warning/8 px-4 py-2.5 text-sm font-medium text-warning">
+              اختر المعرض من الأعلى للبدء.
+            </div>
+          ) : undefined
+        }
+      >
         <Outlet />
-      </main>
-    </div>
+      </DashboardShell>
+
+      <Dialog
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        title="الإشعارات"
+        size="md"
+      >
+        <NotificationsPanel
+          loading={notifLoading}
+          items={notifs}
+          onMarkRead={markRead}
+        />
+      </Dialog>
+    </>
   );
 }

@@ -1,54 +1,125 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Package,
+  Tags,
+  Store,
+  Users,
+  ClipboardList,
+  ShoppingCart,
+  Boxes,
+  PackagePlus,
+  Wallet,
+  ScrollText,
+  ShieldAlert,
+  Calculator,
+  TrendingUp,
+  Scale,
+  ListChecks,
+  BookOpen,
+  NotebookPen,
+} from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import { Spinner } from '../../components/ui';
-import type { Permissions } from '../../lib/types';
+import { supabase } from '../../lib/supabase';
+import { adminApi } from '../../lib/api';
+import type { NotificationRow, Permissions } from '../../lib/types';
+import { Spinner, Dialog, Button } from '../../components/ui';
+import {
+  DashboardShell,
+  type NavSection,
+} from '../../components/shell/DashboardShell';
+import { NotificationsPanel } from '../../components/shell/NotificationsPanel';
 
-interface NavItem {
+interface Item {
   to: string;
   label: string;
-  /** which roles see it; if undefined => admin only */
-  show: (role: string, perms: Permissions | null) => boolean;
+  icon: React.ReactNode;
+  end?: boolean;
+  show: (role: string, p: Permissions | null) => boolean;
 }
 
 const adminOnly = (role: string) => role === 'admin';
+const sz = 18;
 
-const navItems: NavItem[] = [
-  { to: '/admin/dashboard', label: 'لوحة التحكم', show: adminOnly },
-  { to: '/admin/products', label: 'المنتجات', show: adminOnly },
-  { to: '/admin/catalog', label: 'الكتالوج', show: adminOnly },
-  { to: '/admin/branches', label: 'المعارض', show: adminOnly },
-  { to: '/admin/employees', label: 'الموظفون', show: adminOnly },
-  { to: '/admin/finance', label: 'المالية', show: adminOnly },
+const operations: Item[] = [
   {
     to: '/admin/inventory',
     label: 'المخزون',
-    show: (role) => role === 'admin' || role === 'inventory_manager',
+    icon: <Boxes size={sz} />,
+    show: (r) => r === 'admin' || r === 'inventory_manager',
   },
   {
     to: '/admin/receive-stock',
     label: 'استلام بضاعة',
-    show: (role, p) =>
-      role === 'admin' || (role === 'inventory_manager' && !!p?.can_add_stock),
+    icon: <PackagePlus size={sz} />,
+    show: (r, p) => r === 'admin' || (r === 'inventory_manager' && !!p?.can_add_stock),
   },
   {
     to: '/admin/requests',
     label: 'طلبات البضاعة',
-    show: (role, p) =>
-      role === 'admin' ||
-      (role === 'inventory_manager' && !!p?.can_approve_requests),
+    icon: <ClipboardList size={sz} />,
+    show: (r, p) =>
+      r === 'admin' || (r === 'inventory_manager' && !!p?.can_approve_requests),
   },
   {
     to: '/admin/wholesale',
     label: 'الجملة',
-    show: (role, p) =>
-      role === 'admin' ||
-      (role === 'inventory_manager' && !!p?.can_issue_wholesale),
+    icon: <ShoppingCart size={sz} />,
+    show: (r, p) =>
+      r === 'admin' || (r === 'inventory_manager' && !!p?.can_issue_wholesale),
   },
+];
+
+const management: Item[] = [
+  { to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} />, show: adminOnly },
+  { to: '/admin/products', label: 'المنتجات', icon: <Package size={sz} />, show: adminOnly },
+  { to: '/admin/catalog', label: 'الكتالوج', icon: <Tags size={sz} />, show: adminOnly },
+  { to: '/admin/branches', label: 'المعارض', icon: <Store size={sz} />, show: adminOnly },
+  { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} />, show: adminOnly },
+  { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} />, show: adminOnly },
+  { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} />, show: adminOnly },
+];
+
+const accounting: Item[] = [
+  { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true, show: adminOnly },
+  { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} />, show: adminOnly },
 ];
 
 export default function AdminLayout() {
   const { loading, authed, profile, signOut } = useAdminAuth();
   const navigate = useNavigate();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState<NotificationRow[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  const loadNotifs = useCallback(async () => {
+    setNotifLoading(true);
+    const { data } = await supabase
+      .from('notifications')
+      .select('id,title,body,is_read,created_at')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setNotifs((data as NotificationRow[]) || []);
+    setNotifLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (authed && profile) loadNotifs();
+  }, [authed, profile, loadNotifs]);
+
+  async function markRead(id: string) {
+    try {
+      await adminApi.markNotificationRead(id);
+    } catch {
+      /* ignore */
+    }
+    setNotifs((s) => s.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+  }
 
   if (loading) return <Spinner label="جارٍ التحقق..." />;
 
@@ -58,63 +129,84 @@ export default function AdminLayout() {
   }
 
   const role = profile.role;
-  const roleLabel = role === 'admin' ? 'أدمن' : 'مدير مخزون';
-  const visible = navItems.filter((n) => n.show(role, profile.permissions));
+
+  if (role !== 'admin' && role !== 'inventory_manager') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-danger/15 text-danger">
+          <ShieldAlert size={28} />
+        </div>
+        <h1 className="text-xl font-bold text-text">لا تملك صلاحية الوصول</h1>
+        <p className="max-w-sm text-sm text-muted">
+          حسابك غير مُصرَّح له بالدخول إلى لوحة الإدارة. تواصل مع المسؤول.
+        </p>
+        <Button
+          variant="ghost"
+          onClick={async () => {
+            await signOut();
+            navigate('/');
+          }}
+        >
+          خروج
+        </Button>
+      </div>
+    );
+  }
+
+  const perms = profile.permissions;
+  const sections: NavSection[] = [];
+  const mgmt = management.filter((i) => i.show(role, perms));
+  const ops = operations.filter((i) => i.show(role, perms));
+  const acct = accounting.filter((i) => i.show(role, perms));
+  if (mgmt.length) sections.push({ title: 'الإدارة', items: mgmt });
+  if (ops.length) sections.push({ title: 'العمليات', items: ops });
+  if (acct.length) sections.push({ title: 'المحاسبة', items: acct });
+
+  const unread = notifs.filter((n) => !n.is_read).length;
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-bold text-indigo-600">
-              {profile.full_name}
-            </span>
-            <span className="badge bg-indigo-100 text-indigo-700">
-              {roleLabel}
-            </span>
-            {profile.status && profile.status !== 'active' && (
-              <span className="badge bg-amber-100 text-amber-700">
-                {profile.status}
-              </span>
-            )}
-          </div>
-          <button
-            className="btn-ghost"
-            onClick={async () => {
-              await signOut();
-              navigate('/');
-            }}
-          >
-            خروج
-          </button>
-        </div>
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-2">
-          {visible.map((l) => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              className={({ isActive }) =>
-                `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ${
-                  isActive
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`
-              }
-            >
-              {l.label}
-            </NavLink>
-          ))}
-        </nav>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        {role === 'inventory_manager' && (
-          <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500">
-            وضع مدير المخزون: التكلفة والأرباح مخفية تمامًا.
-          </div>
-        )}
+    <>
+      <DashboardShell
+        brand="Black Axis"
+        brandSub={role === 'admin' ? 'لوحة الأدمن' : 'إدارة المخزون'}
+        sections={sections}
+        userName={profile.full_name}
+        roleLabel={role === 'admin' ? 'أدمن' : 'مدير مخزون'}
+        roleTone={role === 'admin' ? 'gold' : 'info'}
+        onLogout={async () => {
+          await signOut();
+          navigate('/');
+        }}
+        notifications={{
+          unread,
+          onClick: () => {
+            setNotifOpen(true);
+            loadNotifs();
+          },
+        }}
+        banner={
+          role === 'inventory_manager' ? (
+            <div className="mb-5 rounded-lg border border-info/30 bg-info/8 px-4 py-2.5 text-xs font-medium text-info">
+              وضع مدير المخزون: التكلفة والأرباح مخفية تمامًا.
+            </div>
+          ) : undefined
+        }
+      >
         <Outlet />
-      </main>
-    </div>
+      </DashboardShell>
+
+      <Dialog
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        title="الإشعارات"
+        size="md"
+      >
+        <NotificationsPanel
+          loading={notifLoading}
+          items={notifs}
+          onMarkRead={markRead}
+        />
+      </Dialog>
+    </>
   );
 }

@@ -1,139 +1,177 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  LayoutDashboard,
+  Store,
+  CheckCircle2,
+  Wallet,
+  BarChart3,
+  Banknote,
+  TrendingUp,
+} from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { adminApi } from '../../lib/api';
+import { adminApi, accountingApi } from '../../lib/api';
 import type { Branch, BranchPnl, CommissionResult } from '../../lib/types';
 import {
-  Empty,
-  ErrorBox,
-  PageTitle,
+  Button,
+  Dialog,
+  EmptyState,
+  ErrorBanner,
+  PageHeader,
   Spinner,
+  StatCard,
+  StatusBadge,
+  Table,
+  useToast,
 } from '../../components/ui';
 import { sar } from '../../lib/format';
 
 export default function AdminDashboard() {
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [salesToday, setSalesToday] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const [pnl, setPnl] = useState<Record<string, BranchPnl>>({});
-  const [commission, setCommission] = useState<Record<string, CommissionResult>>(
-    {}
-  );
-  const [busyId, setBusyId] = useState('');
+  const [active, setActive] = useState<Branch | null>(null);
+  const [cash, setCash] = useState<number | null>(null);
+  const [netProfit, setNetProfit] = useState<number | null>(null);
 
   useEffect(() => {
-    supabase
-      .from('branches')
-      .select('id,name,location,status,target_amount_sar')
-      .order('name')
-      .then(({ data, error: e }) => {
-        if (e) setError(e.message);
-        else setBranches((data as Branch[]) || []);
-        setLoading(false);
-      });
+    async function load() {
+      const [b, s] = await Promise.all([
+        supabase
+          .from('branches')
+          .select('id,name,location,status,target_amount_sar')
+          .order('name'),
+        supabase
+          .from('sales')
+          .select('total_sar,created_at')
+          .gte('created_at', new Date().toISOString().slice(0, 10)),
+      ]);
+      if (b.error) setError(b.error.message);
+      else setBranches((b.data as Branch[]) || []);
+      if (!s.error && s.data) {
+        const sum = (s.data as { total_sar: number }[]).reduce(
+          (acc, r) => acc + (Number(r.total_sar) || 0),
+          0
+        );
+        setSalesToday(sum);
+      } else {
+        setSalesToday(0);
+      }
+      setLoading(false);
+    }
+    load();
+    // Accounting quick figures (admin-only RPCs); fail silently.
+    accountingApi
+      .financialSummary()
+      .then((f) => setCash(f.cash))
+      .catch(() => setCash(null));
+    accountingApi
+      .incomeStatement()
+      .then((s) => setNetProfit(s.net_profit))
+      .catch(() => setNetProfit(null));
   }, []);
 
-  async function loadPnl(id: string) {
-    setError('');
-    setBusyId(id + ':pnl');
-    try {
-      const r = await adminApi.branchPnl(id);
-      setPnl((p) => ({ ...p, [id]: r }));
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusyId('');
-    }
-  }
-
-  async function loadCommission(id: string) {
-    setError('');
-    setBusyId(id + ':com');
-    try {
-      const r = await adminApi.computeBranchCommission(id);
-      setCommission((c) => ({ ...c, [id]: r }));
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusyId('');
-    }
-  }
+  const activeCount = useMemo(
+    () => branches.filter((b) => b.status !== 'closed').length,
+    [branches]
+  );
 
   if (loading) return <Spinner />;
 
   return (
     <div>
-      <PageTitle title="لوحة التحكم" subtitle="نظرة عامة على المعارض وأرباحها" />
-      <ErrorBox message={error} />
+      <PageHeader
+        title="لوحة التحكم"
+        subtitle="نظرة عامة على المعارض والأرباح"
+        icon={<LayoutDashboard size={22} />}
+      />
+      <ErrorBanner message={error} />
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="إجمالي المعارض"
+          value={branches.length}
+          icon={<Store size={20} />}
+          tone="info"
+        />
+        <StatCard
+          label="المعارض النشطة"
+          value={activeCount}
+          icon={<CheckCircle2 size={20} />}
+          tone="success"
+        />
+        <StatCard
+          label="مبيعات اليوم"
+          value={sar(salesToday ?? 0)}
+          icon={<Wallet size={20} />}
+          tone="gold"
+        />
+        <StatCard
+          label="إجمالي الأهداف"
+          value={sar(
+            branches.reduce((a, b) => a + (b.target_amount_sar || 0), 0)
+          )}
+          icon={<BarChart3 size={20} />}
+          tone="warning"
+        />
+      </div>
+
+      {(cash !== null || netProfit !== null) && (
+        <div className="mb-6 grid gap-4 sm:grid-cols-2">
+          <StatCard
+            label="الخزينة (نقدًا)"
+            value={sar(cash ?? 0)}
+            icon={<Banknote size={20} />}
+            tone="gold"
+          />
+          <StatCard
+            label="صافي ربح هذا الشهر"
+            value={sar(netProfit ?? 0)}
+            icon={<TrendingUp size={20} />}
+            tone={(netProfit ?? 0) >= 0 ? 'success' : 'danger'}
+          />
+        </div>
+      )}
 
       {branches.length === 0 ? (
-        <Empty message="لا توجد معارض بعد" />
+        <EmptyState message="لا توجد معارض بعد" icon={<Store size={26} />} />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {branches.map((b) => {
-            const p = pnl[b.id];
-            const c = commission[b.id];
-            return (
-              <div key={b.id} className="card space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-bold text-slate-800">{b.name}</h2>
-                  <span className="badge bg-slate-100 text-slate-600">
-                    {b.status}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-500">
-                  {b.location || '—'} · الهدف: {sar(b.target_amount_sar || 0)}
-                </p>
+        <Table
+          head={
+            <>
+              <th>المعرض</th>
+              <th>الموقع</th>
+              <th>الهدف</th>
+              <th>الحالة</th>
+              <th></th>
+            </>
+          }
+        >
+          {branches.map((b) => (
+            <tr key={b.id}>
+              <td className="font-semibold">{b.name}</td>
+              <td className="text-muted">{b.location || '—'}</td>
+              <td className="text-gold">{sar(b.target_amount_sar || 0)}</td>
+              <td>
+                <StatusBadge status={b.status} />
+              </td>
+              <td>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<BarChart3 size={14} />}
+                  onClick={() => setActive(b)}
+                >
+                  الأرباح والعمولة
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </Table>
+      )}
 
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className="btn-primary"
-                    onClick={() => loadPnl(b.id)}
-                    disabled={busyId === b.id + ':pnl'}
-                  >
-                    {busyId === b.id + ':pnl' ? '...' : 'حساب الربح'}
-                  </button>
-                  <button
-                    className="btn-ghost"
-                    onClick={() => loadCommission(b.id)}
-                    disabled={busyId === b.id + ':com'}
-                  >
-                    {busyId === b.id + ':com' ? '...' : 'حساب العمولة'}
-                  </button>
-                </div>
-
-                {p && (
-                  <div className="rounded-lg bg-slate-50 p-3 text-sm">
-                    <Row label="صافي المبيعات" value={sar(p.net_sales)} />
-                    <Row label="التكلفة" value={sar(p.cost)} />
-                    <Row label="المصروفات" value={sar(p.expenses)} />
-                    <Row label="العمولات" value={sar(p.commissions)} />
-                    <div className="mt-2 border-t border-slate-200 pt-2">
-                      <Row
-                        label="صافي الربح"
-                        value={sar(p.net_profit)}
-                        strong
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {c && (
-                  <div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
-                    <Row
-                      label="الحالة"
-                      value={c.reached ? 'تحقق الهدف' : 'لم يتحقق'}
-                    />
-                    <Row label="المُحقَّق" value={sar(c.achieved)} />
-                    <Row label="الهدف" value={sar(c.target)} />
-                    <Row label="العمولة" value={sar(c.commission)} strong />
-                    {c.mode && <Row label="النمط" value={c.mode} />}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {active && (
+        <BranchPnlDialog branch={active} onClose={() => setActive(null)} />
       )}
     </div>
   );
@@ -149,9 +187,132 @@ function Row({
   strong?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-0.5">
-      <span className="text-slate-500">{label}</span>
-      <span className={strong ? 'font-bold' : 'font-medium'}>{value}</span>
+    <div className="flex items-center justify-between border-b border-white/5 py-2 last:border-0">
+      <span className="text-muted">{label}</span>
+      <span className={strong ? 'font-bold text-gold' : 'font-semibold text-text'}>
+        {value}
+      </span>
     </div>
+  );
+}
+
+function BranchPnlDialog({
+  branch,
+  onClose,
+}: {
+  branch: Branch;
+  onClose: () => void;
+}) {
+  const toast = useToast();
+  const [pnl, setPnl] = useState<BranchPnl | null>(null);
+  const [com, setCom] = useState<CommissionResult | null>(null);
+  const [busy, setBusy] = useState('');
+
+  useEffect(() => {
+    adminApi
+      .branchPnl(branch.id)
+      .then(setPnl)
+      .catch((e) => toast.error((e as Error).message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branch.id]);
+
+  async function computeCommission() {
+    setBusy('com');
+    try {
+      setCom(await adminApi.computeBranchCommission(branch.id));
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function setStatus(status: 'approved' | 'paid' | 'cancelled') {
+    setBusy(status);
+    try {
+      const n = await adminApi.setCommissionStatus(branch.id, status);
+      toast.success(`تم تحديث ${n} عمولة إلى الحالة المطلوبة`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  return (
+    <Dialog open onClose={onClose} title={`الأرباح — ${branch.name}`} size="md">
+      <div className="space-y-5">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">
+            قائمة الأرباح والخسائر
+          </p>
+          {!pnl ? (
+            <Spinner />
+          ) : (
+            <div className="rounded-lg bg-bg-2 p-4 text-sm">
+              <Row label="صافي المبيعات" value={sar(pnl.net_sales)} />
+              <Row label="التكلفة" value={sar(pnl.cost)} />
+              <Row label="المصروفات" value={sar(pnl.expenses)} />
+              <Row label="العمولات" value={sar(pnl.commissions)} />
+              <Row label="صافي الربح" value={sar(pnl.net_profit)} strong />
+            </div>
+          )}
+        </div>
+
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted">
+              العمولة
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              loading={busy === 'com'}
+              onClick={computeCommission}
+            >
+              حساب العمولة
+            </Button>
+          </div>
+          {com && (
+            <div className="rounded-lg bg-bg-2 p-4 text-sm">
+              <Row
+                label="الحالة"
+                value={com.reached ? 'تحقق الهدف' : 'لم يتحقق'}
+              />
+              <Row label="المُحقَّق" value={sar(com.achieved)} />
+              <Row label="الهدف" value={sar(com.target)} />
+              <Row label="العمولة" value={sar(com.commission)} strong />
+              {com.mode && <Row label="النمط" value={com.mode} />}
+            </div>
+          )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              variant="success"
+              size="sm"
+              loading={busy === 'approved'}
+              onClick={() => setStatus('approved')}
+            >
+              اعتماد العمولة
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              loading={busy === 'paid'}
+              onClick={() => setStatus('paid')}
+            >
+              تعليم كمدفوع
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              loading={busy === 'cancelled'}
+              onClick={() => setStatus('cancelled')}
+            >
+              إلغاء
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Dialog>
   );
 }

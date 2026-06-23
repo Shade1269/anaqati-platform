@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Boxes, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { ProductPublic } from '../../lib/types';
 import {
-  Empty,
-  ErrorBox,
-  PageTitle,
+  EmptyState,
+  ErrorBanner,
+  Input,
+  PageHeader,
   Spinner,
+  Table,
+  Badge,
 } from '../../components/ui';
 
 interface InventoryRow {
@@ -15,11 +19,12 @@ interface InventoryRow {
   quantity: number;
 }
 
-const locTypeLabel: Record<string, string> = {
-  warehouse: 'مستودع',
-  branch: 'معرض',
-  employee_consignment: 'عُهدة موظف',
-};
+const locTypeLabel: Record<string, { label: string; tone: 'info' | 'gold' | 'success' }> =
+  {
+    warehouse: { label: 'مستودع', tone: 'info' },
+    branch: { label: 'معرض', tone: 'gold' },
+    employee_consignment: { label: 'عُهدة موظف', tone: 'success' },
+  };
 
 export default function AdminInventory() {
   const [inventory, setInventory] = useState<InventoryRow[]>([]);
@@ -30,9 +35,7 @@ export default function AdminInventory() {
 
   useEffect(() => {
     Promise.all([
-      supabase
-        .from('inventory')
-        .select('product_id,location_type,location_id,quantity'),
+      supabase.from('inventory').select('product_id,location_type,location_id,quantity'),
       supabase
         .from('products_public')
         .select('id,product_code,name,category_id,sale_price_ref,is_active'),
@@ -65,15 +68,20 @@ export default function AdminInventory() {
 
   return (
     <div>
-      <PageTitle
+      <PageHeader
         title="المخزون"
         subtitle="الكميات حسب الموقع (بدون تكلفة)"
+        icon={<Boxes size={22} />}
       />
-      <ErrorBox message={error} />
+      <ErrorBanner message={error} />
 
-      <div className="mb-4">
-        <input
-          className="input max-w-sm"
+      <div className="relative mb-4 max-w-sm">
+        <Search
+          size={16}
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted"
+        />
+        <Input
+          className="pr-9"
           placeholder="ابحث بالمنتج أو الكود..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -81,33 +89,37 @@ export default function AdminInventory() {
       </div>
 
       {rows.length === 0 ? (
-        <Empty message="لا توجد كميات" />
+        <EmptyState message="لا توجد كميات" icon={<Boxes size={26} />} />
       ) : (
-        <div className="card overflow-x-auto">
-          <table className="table-base">
-            <thead>
-              <tr>
-                <th>المنتج</th>
-                <th>الكود</th>
-                <th>نوع الموقع</th>
-                <th>الكمية</th>
+        <Table
+          head={
+            <>
+              <th>المنتج</th>
+              <th>الكود</th>
+              <th>نوع الموقع</th>
+              <th>الكمية</th>
+            </>
+          }
+        >
+          {rows.map((r, i) => {
+            const p = byId[r.product_id];
+            const loc = locTypeLabel[r.location_type];
+            return (
+              <tr key={`${r.product_id}-${r.location_id}-${i}`}>
+                <td className="font-semibold">{p?.name || r.product_id}</td>
+                <td className="font-mono text-muted">{p?.product_code || '—'}</td>
+                <td>
+                  {loc ? (
+                    <Badge tone={loc.tone}>{loc.label}</Badge>
+                  ) : (
+                    r.location_type
+                  )}
+                </td>
+                <td className="font-bold text-gold">{r.quantity}</td>
               </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => {
-                const p = byId[r.product_id];
-                return (
-                  <tr key={`${r.product_id}-${r.location_id}-${i}`}>
-                    <td>{p?.name || r.product_id}</td>
-                    <td>{p?.product_code || '—'}</td>
-                    <td>{locTypeLabel[r.location_type] || r.location_type}</td>
-                    <td className="font-semibold">{r.quantity}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+            );
+          })}
+        </Table>
       )}
     </div>
   );

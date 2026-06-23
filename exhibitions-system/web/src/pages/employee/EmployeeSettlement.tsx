@@ -1,24 +1,29 @@
 import { useState } from 'react';
+import { Wallet } from 'lucide-react';
 import { employeeApi } from '../../lib/api';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
-import { ErrorBox, PageTitle, SuccessBox } from '../../components/ui';
+import {
+  Button,
+  Card,
+  Field,
+  Input,
+  PageHeader,
+  useToast,
+} from '../../components/ui';
 import { sar } from '../../lib/format';
 
 export default function EmployeeSettlement() {
   const { session } = useEmployeeAuth();
+  const toast = useToast();
   const [cash, setCash] = useState('');
   const [card, setCard] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const total = (Number(cash) || 0) + (Number(card) || 0);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!session) return;
-    setError('');
-    setSuccess('');
     setSubmitting(true);
     try {
       await employeeApi.submitSettlement(
@@ -26,11 +31,11 @@ export default function EmployeeSettlement() {
         Number(cash) || 0,
         Number(card) || 0
       );
-      setSuccess('تم إرسال التسليم للمراجعة');
+      toast.success('تم إرسال التسليم للمراجعة');
       setCash('');
       setCard('');
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -38,41 +43,38 @@ export default function EmployeeSettlement() {
 
   return (
     <div>
-      <PageTitle
+      <PageHeader
         title="تسليم العُهدة"
         subtitle="أدخل المبالغ المُصرَّح بها لتسليمها"
+        icon={<Wallet size={22} />}
       />
-      <ErrorBox message={error} />
-      <SuccessBox message={success} />
-      <form onSubmit={submit} className="card mt-4 max-w-md space-y-4">
-        <div>
-          <label className="label">النقد (كاش)</label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            className="input"
-            value={cash}
-            onChange={(e) => setCash(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="label">الشبكة (بطاقة)</label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            className="input"
-            value={card}
-            onChange={(e) => setCard(e.target.value)}
-          />
-        </div>
-        <div className="text-lg font-bold text-slate-800">
-          الإجمالي: <span className="text-emerald-600">{sar(total)}</span>
-        </div>
-        <button className="btn-emerald w-full" disabled={submitting}>
-          {submitting ? 'جارٍ الإرسال...' : 'تأكيد التسليم'}
-        </button>
+      <form onSubmit={submit}>
+        <Card className="max-w-md space-y-4">
+          <Field label="النقد (كاش)">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={cash}
+              onChange={(e) => setCash(e.target.value)}
+            />
+          </Field>
+          <Field label="الشبكة (بطاقة)">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={card}
+              onChange={(e) => setCard(e.target.value)}
+            />
+          </Field>
+          <div className="rounded-lg bg-bg-2 px-4 py-3 text-lg font-bold text-text">
+            الإجمالي: <span className="text-gold">{sar(total)}</span>
+          </div>
+          <Button type="submit" className="w-full" loading={submitting}>
+            تأكيد التسليم
+          </Button>
+        </Card>
       </form>
     </div>
   );

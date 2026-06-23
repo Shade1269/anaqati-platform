@@ -1,22 +1,30 @@
 import { useMemo, useState } from 'react';
+import { ShoppingBag } from 'lucide-react';
 import { employeeApi } from '../../lib/api';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
 import { useCurrentBranch } from '../../context/useCurrentBranch';
 import { useEmployeeProducts } from './useEmployeeProducts';
 import ProductLinePicker, { type Line } from '../../components/ProductLinePicker';
-import { ErrorBox, PageTitle, Spinner, SuccessBox } from '../../components/ui';
+import {
+  Button,
+  Card,
+  Field,
+  PageHeader,
+  Select,
+  Spinner,
+  useToast,
+} from '../../components/ui';
 import { sar } from '../../lib/format';
 
 export default function EmployeePos() {
   const { session } = useEmployeeAuth();
   const branchId = useCurrentBranch();
   const { products, loading, error: loadError } = useEmployeeProducts();
+  const toast = useToast();
 
   const [lines, setLines] = useState<Line[]>([]);
   const [payment, setPayment] = useState<'cash' | 'card'>('cash');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const total = useMemo(
     () => lines.reduce((s, l) => s + (l.unit_price ?? 0) * l.qty, 0),
@@ -24,16 +32,8 @@ export default function EmployeePos() {
   );
 
   async function submit() {
-    if (!session || !branchId) {
-      setError('اختر المعرض أولًا');
-      return;
-    }
-    if (lines.length === 0) {
-      setError('أضف منتجًا واحدًا على الأقل');
-      return;
-    }
-    setError('');
-    setSuccess('');
+    if (!session || !branchId) return toast.error('اختر المعرض أولًا');
+    if (lines.length === 0) return toast.error('أضف منتجًا واحدًا على الأقل');
     setSubmitting(true);
     try {
       const res = await employeeApi.createSale(
@@ -46,10 +46,10 @@ export default function EmployeePos() {
           unit_sale_price: l.unit_price ?? 0,
         }))
       );
-      setSuccess(`تم تسجيل البيع. الإجمالي: ${sar(res.total)}`);
+      toast.success(`تم تسجيل البيع — الإجمالي ${sar(res.total)}`);
       setLines([]);
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -59,11 +59,18 @@ export default function EmployeePos() {
 
   return (
     <div>
-      <PageTitle title="نقطة البيع" subtitle="سجّل عملية بيع جديدة" />
-      <ErrorBox message={loadError || error} />
-      <SuccessBox message={success} />
+      <PageHeader
+        title="نقطة البيع"
+        subtitle="سجّل عملية بيع جديدة"
+        icon={<ShoppingBag size={22} />}
+      />
+      {loadError && (
+        <div className="mb-4 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {loadError}
+        </div>
+      )}
 
-      <div className="card mt-4 space-y-5">
+      <Card className="space-y-5">
         <ProductLinePicker
           products={products}
           lines={lines}
@@ -71,31 +78,31 @@ export default function EmployeePos() {
           withPrice
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-4">
-          <div className="flex items-center gap-3">
-            <label className="label mb-0">طريقة الدفع</label>
-            <select
-              className="input w-auto"
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-4">
+          <Field label="طريقة الدفع">
+            <Select
+              className="w-40"
               value={payment}
               onChange={(e) => setPayment(e.target.value as 'cash' | 'card')}
             >
               <option value="cash">نقدًا</option>
               <option value="card">شبكة</option>
-            </select>
-          </div>
-          <div className="text-lg font-bold text-slate-800">
-            الإجمالي: <span className="text-emerald-600">{sar(total)}</span>
+            </Select>
+          </Field>
+          <div className="text-lg font-bold text-text">
+            الإجمالي: <span className="text-gold">{sar(total)}</span>
           </div>
         </div>
 
-        <button
-          className="btn-emerald w-full"
+        <Button
+          variant="primary"
+          className="w-full"
+          loading={submitting}
           onClick={submit}
-          disabled={submitting}
         >
-          {submitting ? 'جارٍ الحفظ...' : 'تأكيد البيع'}
-        </button>
-      </div>
+          تأكيد البيع
+        </Button>
+      </Card>
     </div>
   );
 }

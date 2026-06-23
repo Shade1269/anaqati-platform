@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import { ErrorBox, SuccessBox } from '../../components/ui';
+import { Button, Field, Input, ErrorBanner } from '../../components/ui';
 
 export default function AdminLogin() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -27,7 +28,6 @@ export default function AdminLogin() {
           password,
         });
         if (signErr) throw new Error(signErr.message);
-        // If email confirmation is required there will be no active session.
         const { data: sess } = await supabase.auth.getSession();
         if (!sess.session) {
           setInfo(
@@ -56,90 +56,85 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-indigo-50 px-4">
-      <form onSubmit={onSubmit} className="card w-full max-w-md space-y-4">
+    <div className="relative flex min-h-screen items-center justify-center px-4">
+      <div className="pointer-events-none absolute -top-32 right-10 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+      <form
+        onSubmit={onSubmit}
+        className="ax-card relative w-full max-w-md space-y-5 p-7"
+      >
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-800">دخول الإدارة</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            للأدمن ومدير المخزون
-          </p>
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary-hover">
+            <Building2 size={24} />
+          </div>
+          <h1 className="text-2xl font-extrabold text-text">دخول الإدارة</h1>
+          <p className="mt-1 text-sm text-muted">للأدمن ومدير المخزون</p>
         </div>
 
-        <div className="flex rounded-lg bg-slate-100 p-1 text-sm">
-          <button
-            type="button"
-            onClick={() => setMode('login')}
-            className={`flex-1 rounded-md py-2 font-medium ${
-              mode === 'login' ? 'bg-white shadow' : 'text-slate-500'
-            }`}
-          >
-            تسجيل الدخول
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('signup')}
-            className={`flex-1 rounded-md py-2 font-medium ${
-              mode === 'signup' ? 'bg-white shadow' : 'text-slate-500'
-            }`}
-          >
-            حساب جديد
-          </button>
+        <div className="flex rounded-lg bg-bg-2 p-1 text-sm">
+          {(['login', 'signup'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={`flex-1 rounded-md py-2 font-semibold transition ${
+                mode === m
+                  ? 'bg-primary text-[hsl(var(--primary-fg))]'
+                  : 'text-muted'
+              }`}
+            >
+              {m === 'login' ? 'تسجيل الدخول' : 'حساب جديد'}
+            </button>
+          ))}
         </div>
 
-        <ErrorBox message={error} />
-        <SuccessBox message={info} />
+        <ErrorBanner message={error} />
+        {info && (
+          <div className="rounded-lg border border-info/40 bg-info/10 px-4 py-3 text-sm text-info">
+            {info}
+          </div>
+        )}
 
         {mode === 'signup' && (
-          <div>
-            <label className="label">الاسم الكامل</label>
-            <input
-              className="input"
+          <Field label="الاسم الكامل">
+            <Input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
             />
-          </div>
+          </Field>
         )}
 
-        <div>
-          <label className="label">البريد الإلكتروني</label>
-          <input
+        <Field label="البريد الإلكتروني">
+          <Input
             type="email"
-            className="input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-        </div>
-        <div>
-          <label className="label">كلمة المرور</label>
-          <input
+        </Field>
+        <Field label="كلمة المرور">
+          <Input
             type="password"
-            className="input"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
           />
-        </div>
+        </Field>
 
-        <button className="btn-primary w-full" disabled={loading}>
-          {loading
-            ? 'جارٍ المعالجة...'
-            : mode === 'signup'
-            ? 'إنشاء حساب'
-            : 'دخول'}
-        </button>
+        <Button type="submit" loading={loading} className="w-full">
+          {mode === 'signup' ? 'إنشاء حساب' : 'دخول'}
+        </Button>
 
-        <p className="text-center text-xs text-slate-400">
+        <p className="text-center text-xs text-muted">
           أول مستخدم يُسجَّل يصبح أدمن تلقائيًا.
         </p>
 
         <Link
           to="/"
-          className="block text-center text-sm text-slate-500 hover:underline"
+          className="flex items-center justify-center gap-1 text-sm text-muted hover:text-text"
         >
-          ← العودة للرئيسية
+          <ArrowRight size={14} /> العودة للرئيسية
         </Link>
       </form>
     </div>

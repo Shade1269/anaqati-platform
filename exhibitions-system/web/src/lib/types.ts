@@ -128,3 +128,125 @@ export interface StockItemInput {
   product_id: string;
   qty: number;
 }
+
+export interface NotificationRow {
+  id: string;
+  title: string;
+  body: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface AuditRow {
+  id: string;
+  action: string;
+  entity: string | null;
+  entity_id?: string | null;
+  actor_id?: string | null;
+  created_at: string;
+  details?: unknown;
+}
+
+export interface AttendanceStatus {
+  status: 'present' | 'absent';
+}
+
+/* ----------------------------- Accounting ----------------------------- */
+
+export interface FinancialSummary {
+  cash: number;
+  card: number;
+  inventory_value: number;
+  employee_receivable: number;
+  suppliers_payable: number;
+  commissions_payable: number;
+}
+
+export interface IncomeLine {
+  code: string;
+  name: string;
+  type: string;
+  amount: number;
+}
+
+export interface IncomeStatement {
+  revenue: number;
+  expenses: number;
+  net_profit: number;
+  lines: IncomeLine[];
+}
+
+export interface BalanceSheetLine {
+  code: string;
+  name: string;
+  balance: number;
+}
+
+export interface BalanceSheet {
+  assets: BalanceSheetLine[];
+  total_assets: number;
+  liabilities: BalanceSheetLine[];
+  total_liabilities: number;
+  equity: BalanceSheetLine[];
+  total_equity: number;
+  net_income: number;
+}
+
+export interface TrialBalanceRow {
+  code: string;
+  name: string;
+  type: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export interface LedgerRow {
+  date: string;
+  memo: string | null;
+  debit: number;
+  credit: number;
+  source: string | null;
+}
+
+export interface AccountRow {
+  code: string;
+  name: string;
+  type: string;
+}
+
+export interface JournalLine {
+  account_code: string;
+  debit: number;
+  credit: number;
+}
+
+export interface JournalEntry {
+  id: string;
+  entry_date: string;
+  memo: string | null;
+  source_table: string | null;
+  journal_lines: JournalLine[];
+}
+
+export interface ManualJournalLine {
+  account: string;
+  debit: number;
+  credit: number;
+}
+
+export interface EmployeeSaleItem {
+  sale_item_id: string;
+  product_id: string;
+  name: string;
+  qty: number;
+  unit_price: number;
+}
+
+export interface EmployeeRecentSale {
+  sale_id: string;
+  created_at: string;
+  total: number;
+  status: string;
+  items: EmployeeSaleItem[];
+}

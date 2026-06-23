@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ShoppingCart } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminApi } from '../../lib/api';
 import type { ProductPublic, Warehouse } from '../../lib/types';
@@ -7,10 +8,14 @@ import ProductLinePicker, {
   type LineProduct,
 } from '../../components/ProductLinePicker';
 import {
-  ErrorBox,
-  PageTitle,
+  Button,
+  Card,
+  Field,
+  Input,
+  PageHeader,
+  Select,
   Spinner,
-  SuccessBox,
+  useToast,
 } from '../../components/ui';
 import { sar } from '../../lib/format';
 
@@ -18,8 +23,7 @@ export default function AdminWholesale() {
   const [products, setProducts] = useState<ProductPublic[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const toast = useToast();
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -34,16 +38,14 @@ export default function AdminWholesale() {
         .from('products_public')
         .select('id,product_code,name,category_id,sale_price_ref,is_active')
         .order('name'),
-      supabase
-        .from('warehouses')
-        .select('id,name,location,is_active')
-        .order('name'),
+      supabase.from('warehouses').select('id,name,location,is_active').order('name'),
     ]).then(([p, w]) => {
-      if (p.error) setError(p.error.message);
+      if (p.error) toast.error(p.error.message);
       setProducts((p.data as ProductPublic[]) || []);
       setWarehouses((w.data as Warehouse[]) || []);
       setLoading(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const lineProducts: LineProduct[] = useMemo(
@@ -63,16 +65,8 @@ export default function AdminWholesale() {
   );
 
   async function submit() {
-    if (!warehouseId) {
-      setError('اختر المستودع');
-      return;
-    }
-    if (lines.length === 0) {
-      setError('أضف منتجًا واحدًا على الأقل');
-      return;
-    }
-    setError('');
-    setSuccess('');
+    if (!warehouseId) return toast.error('اختر المستودع');
+    if (lines.length === 0) return toast.error('أضف منتجًا واحدًا على الأقل');
     setSubmitting(true);
     try {
       const res = await adminApi.createWholesaleOrder(
@@ -86,12 +80,12 @@ export default function AdminWholesale() {
           unit_price: l.unit_price ?? 0,
         }))
       );
-      setSuccess(`تم إنشاء طلب الجملة. الإجمالي: ${sar(res.total)}`);
+      toast.success(`تم إنشاء طلب الجملة — الإجمالي ${sar(res.total)}`);
       setLines([]);
       setCustomerName('');
       setCustomerPhone('');
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -101,32 +95,28 @@ export default function AdminWholesale() {
 
   return (
     <div>
-      <PageTitle title="الجملة" subtitle="إنشاء طلب بيع بالجملة" />
-      <ErrorBox message={error} />
-      <SuccessBox message={success} />
+      <PageHeader
+        title="الجملة"
+        subtitle="إنشاء طلب بيع بالجملة"
+        icon={<ShoppingCart size={22} />}
+      />
 
-      <div className="card space-y-5">
+      <Card className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <label className="label">اسم العميل</label>
-            <input
-              className="input"
+          <Field label="اسم العميل">
+            <Input
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
             />
-          </div>
-          <div>
-            <label className="label">جوال العميل</label>
-            <input
-              className="input"
+          </Field>
+          <Field label="جوال العميل">
+            <Input
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
             />
-          </div>
-          <div>
-            <label className="label">المستودع</label>
-            <select
-              className="input"
+          </Field>
+          <Field label="المستودع">
+            <Select
               value={warehouseId}
               onChange={(e) => setWarehouseId(e.target.value)}
             >
@@ -136,19 +126,14 @@ export default function AdminWholesale() {
                   {w.name}
                 </option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">طريقة الدفع</label>
-            <select
-              className="input"
-              value={payment}
-              onChange={(e) => setPayment(e.target.value)}
-            >
+            </Select>
+          </Field>
+          <Field label="طريقة الدفع">
+            <Select value={payment} onChange={(e) => setPayment(e.target.value)}>
               <option value="cash">نقدًا</option>
               <option value="card">شبكة</option>
-            </select>
-          </div>
+            </Select>
+          </Field>
         </div>
 
         <ProductLinePicker
@@ -158,15 +143,15 @@ export default function AdminWholesale() {
           withPrice
         />
 
-        <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-          <span className="text-lg font-bold">
-            الإجمالي: <span className="text-emerald-600">{sar(total)}</span>
+        <div className="flex items-center justify-between border-t border-white/10 pt-4">
+          <span className="text-lg font-bold text-text">
+            الإجمالي: <span className="text-gold">{sar(total)}</span>
           </span>
-          <button className="btn-emerald" onClick={submit} disabled={submitting}>
-            {submitting ? 'جارٍ الحفظ...' : 'إنشاء الطلب'}
-          </button>
+          <Button loading={submitting} onClick={submit}>
+            إنشاء الطلب
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
