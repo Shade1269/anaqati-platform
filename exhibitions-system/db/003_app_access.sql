@@ -24,7 +24,7 @@ begin
   select id into v_id from exhibitions.profiles where auth_user_id=auth.uid();
   if v_id is null then
     select exists(select 1 from exhibitions.profiles where role='admin') into v_has_admin;
-    v_role := case when v_has_admin then 'inventory_manager' else 'admin' end;
+    v_role := (case when v_has_admin then 'inventory_manager' else 'admin' end)::exhibitions.user_role;
     insert into exhibitions.profiles(auth_user_id,full_name,role,status)
       values(auth.uid(), coalesce(nullif(p_full_name,''),'مستخدم'), v_role, 'active') returning id into v_id;
     if v_role='inventory_manager' then

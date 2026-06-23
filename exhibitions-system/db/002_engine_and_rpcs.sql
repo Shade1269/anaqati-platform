@@ -205,10 +205,10 @@ begin
   end loop;
 
   update exhibitions.stock_requests set
-    status = case when v_any=0 then 'rejected'
+    status = (case when v_any=0 then 'rejected'
       when exists(select 1 from exhibitions.stock_request_items
         where request_id=p_request_id and coalesce(qty_approved,0) < qty_requested) then 'partial'
-      else 'fulfilled' end,
+      else 'fulfilled' end)::exhibitions.request_status,
     reviewed_by=v_actor, reviewed_at=now()
    where id=p_request_id;
 
@@ -307,7 +307,7 @@ begin
   select total_declared_sar,employee_id into v_total,v_emp from exhibitions.consignment_settlements where id=p_settlement_id;
   v_conf := coalesce(p_confirmed_amount,v_total);
   update exhibitions.consignment_settlements set
-    status = case when p_action='accept' then 'accepted' else 'rejected' end,
+    status = (case when p_action='accept' then 'accepted' else 'rejected' end)::exhibitions.settlement_status,
     admin_confirmed_amount_sar = v_conf,
     shortage_sar = v_total - v_conf,
     shortage_reason = p_shortage_reason,
