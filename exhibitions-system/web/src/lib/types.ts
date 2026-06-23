@@ -9,12 +9,49 @@ export interface Permissions {
   [key: string]: boolean | undefined;
 }
 
+export interface TenantBranding {
+  id: string;
+  name: string;
+  brand_name: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  status: string | null;
+  subscription_status: string | null;
+  subscription_expires_at: string | null;
+}
+
 export interface MyProfile {
   id: string;
   full_name: string;
   role: Role;
   status: string;
   permissions: Permissions | null;
+  tenant_id: string | null;
+  is_platform_admin: boolean;
+  tenant: TenantBranding | null;
+}
+
+/* ----------------------------- Platform (white-label SaaS) ----------------------------- */
+
+export interface PlatformTenant {
+  id: string;
+  name: string;
+  brand_name: string | null;
+  primary_color: string | null;
+  status: string | null;
+  subscription_status: string | null;
+  subscription_expires_at: string | null;
+  created_at: string | null;
+  employees: number;
+  branches: number;
+  sales_total: number;
+  admin_email: string | null;
+}
+
+export interface CreateTenantResult {
+  tenant_id: string;
+  admin_email: string;
+  profile_id: string;
 }
 
 export interface EmployeeSession {

@@ -18,6 +18,7 @@ export interface NavSection {
 interface Props {
   brand: string;
   brandSub?: string;
+  logoUrl?: string | null;
   accent?: 'gold' | 'emerald';
   sections: NavSection[];
   userName: string;
@@ -36,6 +37,7 @@ interface Props {
 export function DashboardShell({
   brand,
   brandSub,
+  logoUrl,
   sections,
   userName,
   roleLabel,
@@ -51,8 +53,12 @@ export function DashboardShell({
   const sidebar = (
     <>
       <div className="flex items-center gap-3 px-5 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-lg font-extrabold text-primary-hover">
-          ⬩
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-primary/15 text-lg font-extrabold text-primary-hover">
+          {logoUrl ? (
+            <img src={logoUrl} alt={brand} className="h-full w-full object-cover" />
+          ) : (
+            '⬩'
+          )}
         </div>
         <div>
           <p className="text-sm font-extrabold tracking-wide text-text">{brand}</p>

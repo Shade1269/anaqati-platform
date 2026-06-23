@@ -28,6 +28,8 @@ import type {
   ReconcileCloseResult,
   CashFlow,
   ClosePeriodResult,
+  PlatformTenant,
+  CreateTenantResult,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -391,5 +393,69 @@ export const adminApi = {
     rpc<ReconcileCloseResult>('reconcile_and_close_branch', {
       p_branch_id: id,
       p_counts: counts,
+    }),
+
+  /* --------------------------- Branding (tenant admin) --------------------------- */
+
+  updateTenantBranding: (
+    tenantId: string,
+    brandName: string,
+    logoUrl: string | null,
+    primaryColor: string
+  ) =>
+    rpc<null>('update_tenant_branding', {
+      p_tenant_id: tenantId,
+      p_brand_name: brandName,
+      p_logo_url: logoUrl,
+      p_primary_color: primaryColor,
+    }),
+};
+
+/* --------------------------- Platform owner RPCs ----------------------------- */
+
+export const platformApi = {
+  listTenants: () => rpc<PlatformTenant[]>('platform_list_tenants', {}),
+
+  createTenant: (payload: {
+    name: string;
+    adminEmail: string;
+    adminPassword: string;
+    brandName: string;
+    primaryColor: string;
+    subscriptionExpires: string | null;
+  }) =>
+    rpc<CreateTenantResult>('create_tenant', {
+      p_name: payload.name,
+      p_admin_email: payload.adminEmail,
+      p_admin_password: payload.adminPassword,
+      p_brand_name: payload.brandName,
+      p_primary_color: payload.primaryColor,
+      p_subscription_expires: payload.subscriptionExpires,
+    }),
+
+  setTenantStatus: (
+    tenantId: string,
+    status: 'active' | 'suspended',
+    subStatus?: 'trial' | 'active' | 'expired' | null,
+    expires?: string | null
+  ) =>
+    rpc<null>('set_tenant_status', {
+      p_tenant_id: tenantId,
+      p_status: status,
+      p_subscription_status: subStatus ?? null,
+      p_expires: expires ?? null,
+    }),
+
+  updateTenantBranding: (
+    tenantId: string,
+    brandName: string,
+    logoUrl: string | null,
+    primaryColor: string
+  ) =>
+    rpc<null>('update_tenant_branding', {
+      p_tenant_id: tenantId,
+      p_brand_name: brandName,
+      p_logo_url: logoUrl,
+      p_primary_color: primaryColor,
     }),
 };
