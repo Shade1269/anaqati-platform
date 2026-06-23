@@ -23,6 +23,9 @@ import {
   Truck,
   Waves,
   Palette,
+  Settings,
+  ShoppingBag,
+  ClipboardList as ClipboardListIcon,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
@@ -86,6 +89,12 @@ const management: Item[] = [
   { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} />, show: adminOnly },
   { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} />, show: adminOnly },
   { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} />, show: adminOnly },
+];
+
+const store: Item[] = [
+  { to: '/admin/store/settings', label: 'إعدادات المتجر', icon: <Settings size={sz} />, show: adminOnly },
+  { to: '/admin/store/products', label: 'منتجات المتجر', icon: <ShoppingBag size={sz} />, show: adminOnly },
+  { to: '/admin/store/orders', label: 'طلبات المتجر', icon: <ClipboardListIcon size={sz} />, show: adminOnly },
 ];
 
 const accounting: Item[] = [
@@ -166,8 +175,10 @@ export default function AdminLayout() {
   const mgmt = management.filter((i) => i.show(role, perms));
   const ops = operations.filter((i) => i.show(role, perms));
   const acct = accounting.filter((i) => i.show(role, perms));
+  const shop = store.filter((i) => i.show(role, perms));
   if (mgmt.length) sections.push({ title: 'الإدارة', items: mgmt });
   if (ops.length) sections.push({ title: 'العمليات', items: ops });
+  if (shop.length) sections.push({ title: 'المتجر الإلكتروني', items: shop });
   if (acct.length) sections.push({ title: 'المحاسبة', items: acct });
 
   const unread = notifs.filter((n) => !n.is_read).length;
