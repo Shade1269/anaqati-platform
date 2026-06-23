@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Landing from './pages/Landing';
 
+// Public storefront (no auth)
+import Storefront from './pages/store/Storefront';
+
 // Employee
 import EmployeeLogin from './pages/employee/EmployeeLogin';
 import EmployeeLayout from './pages/employee/EmployeeLayout';
@@ -38,6 +41,9 @@ import AccountingLedger from './pages/admin/accounting/AccountingLedger';
 import AccountingJournal from './pages/admin/accounting/AccountingJournal';
 import AccountingCashFlow from './pages/admin/accounting/AccountingCashFlow';
 import AdminBranding from './pages/admin/AdminBranding';
+import AdminStoreSettings from './pages/admin/store/AdminStoreSettings';
+import AdminStoreProducts from './pages/admin/store/AdminStoreProducts';
+import AdminStoreOrders from './pages/admin/store/AdminStoreOrders';
 
 // Platform owner (white-label SaaS)
 import OwnerLogin from './pages/platform/OwnerLogin';
@@ -49,6 +55,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+
+      {/* Public storefront (no auth) */}
+      <Route path="/store/:slug" element={<Storefront />} />
 
       {/* Employee */}
       <Route path="/employee/login" element={<EmployeeLogin />} />
@@ -79,6 +88,11 @@ export default function App() {
         <Route path="finance" element={<RequireAdmin><AdminFinance /></RequireAdmin>} />
         <Route path="audit" element={<RequireAdmin><AdminAudit /></RequireAdmin>} />
         <Route path="branding" element={<RequireAdmin><AdminBranding /></RequireAdmin>} />
+
+        {/* Online store — admin only */}
+        <Route path="store/settings" element={<RequireAdmin><AdminStoreSettings /></RequireAdmin>} />
+        <Route path="store/products" element={<RequireAdmin><AdminStoreProducts /></RequireAdmin>} />
+        <Route path="store/orders" element={<RequireAdmin><AdminStoreOrders /></RequireAdmin>} />
 
         {/* Operations — accessible to inventory_manager per permissions */}
         <Route path="requests" element={<AdminRequests />} />

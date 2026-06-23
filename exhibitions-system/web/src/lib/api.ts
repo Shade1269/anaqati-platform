@@ -30,6 +30,17 @@ import type {
   ClosePeriodResult,
   PlatformTenant,
   CreateTenantResult,
+  StoreInfo,
+  StoreProduct,
+  StoreCreateOrderPayload,
+  StoreCreateOrderResult,
+  StoreSettings,
+  SellableProduct,
+  ProductPatch,
+  OnlineOrder,
+  OnlineOrderItem,
+  OnlineOrderStatus,
+  FulfillResult,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -409,6 +420,112 @@ export const adminApi = {
       p_logo_url: logoUrl,
       p_primary_color: primaryColor,
     }),
+};
+
+/* --------------------------- Online Store (public) ----------------------------- */
+
+export const storeApi = {
+  info: (slug: string) =>
+    rpc<StoreInfo | null>('store_info', { p_slug: slug }),
+
+  listProducts: (slug: string) =>
+    rpc<StoreProduct[]>('store_list_products', { p_slug: slug }),
+
+  createOrder: (payload: StoreCreateOrderPayload) =>
+    rpc<StoreCreateOrderResult>('store_create_order', {
+      p_slug: payload.slug,
+      p_customer_name: payload.customer_name,
+      p_customer_phone: payload.customer_phone,
+      p_address: payload.address,
+      p_payment_method: payload.payment_method,
+      p_items: payload.items,
+    }),
+};
+
+/* --------------------------- Online Store (admin) ----------------------------- */
+
+export const adminStoreApi = {
+  getSettings: async (tenantId: string): Promise<StoreSettings> => {
+    const { data, error } = await supabase
+      .from('tenants')
+      .select(
+        'id,slug,store_enabled,store_description,store_whatsapp,delivery_fee,cod_enabled'
+      )
+      .eq('id', tenantId)
+      .single();
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+    return data as StoreSettings;
+  },
+
+  updateSettings: async (
+    tenantId: string,
+    patch: Partial<Omit<StoreSettings, 'id' | 'slug'>>
+  ): Promise<void> => {
+    const { error } = await supabase
+      .from('tenants')
+      .update(patch)
+      .eq('id', tenantId);
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+  },
+
+  listSellableProducts: async (): Promise<SellableProduct[]> => {
+    const { data, error } = await supabase
+      .from('products')
+      .select(
+        'id,product_code,name,sale_price_ref,online_enabled,online_price,image_url,description,is_active'
+      )
+      .eq('is_active', true)
+      .order('name');
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+    return (data as SellableProduct[]) || [];
+  },
+
+  updateProduct: async (id: string, patch: ProductPatch): Promise<void> => {
+    const { error } = await supabase
+      .from('products')
+      .update(patch)
+      .eq('id', id);
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+  },
+
+  listOrders: async (): Promise<OnlineOrder[]> => {
+    const { data, error } = await supabase
+      .from('online_orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+    return (data as OnlineOrder[]) || [];
+  },
+
+  getOrderItems: async (orderId: string): Promise<OnlineOrderItem[]> => {
+    const { data, error } = await supabase
+      .from('online_order_items')
+      .select('*, products(name,product_code)')
+      .eq('order_id', orderId);
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+    return (data as OnlineOrderItem[]) || [];
+  },
+
+  setOrderStatus: (id: string, status: Extract<OnlineOrderStatus, 'confirmed' | 'cancelled'>) =>
+    rpc<null>('set_online_order_status', {
+      p_order_id: id,
+      p_status: status,
+    }),
+
+  fulfillOrder: (id: string, warehouseId: string) =>
+    rpc<FulfillResult>('fulfill_online_order', {
+      p_order_id: id,
+      p_warehouse_id: warehouseId,
+    }),
+
+  listWarehouses: async (): Promise<{ id: string; name: string }[]> => {
+    const { data, error } = await supabase
+      .from('warehouses')
+      .select('id,name')
+      .order('name');
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+    return (data as { id: string; name: string }[]) || [];
+  },
 };
 
 /* --------------------------- Platform owner RPCs ----------------------------- */

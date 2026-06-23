@@ -31,6 +31,114 @@ export interface MyProfile {
   tenant: TenantBranding | null;
 }
 
+/* ----------------------------- Online Store ----------------------------- */
+
+export interface StoreInfo {
+  tenant_id: string;
+  name: string;
+  brand_name: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  description: string | null;
+  whatsapp: string | null;
+  delivery_fee: number | null;
+  cod_enabled: boolean | null;
+  slug: string;
+}
+
+export interface StoreProduct {
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  image_url: string | null;
+  price: number;
+  in_stock: number;
+}
+
+export interface StoreOrderItemInput {
+  product_id: string;
+  qty: number;
+}
+
+export interface StoreCreateOrderPayload {
+  slug: string;
+  customer_name: string;
+  customer_phone: string;
+  address: string;
+  payment_method: 'cash' | 'card';
+  items: StoreOrderItemInput[];
+}
+
+export interface StoreCreateOrderResult {
+  order_id: string;
+  order_no: string;
+  total: number;
+}
+
+export interface StoreSettings {
+  id: string;
+  slug: string | null;
+  store_enabled: boolean | null;
+  store_description: string | null;
+  store_whatsapp: string | null;
+  delivery_fee: number | null;
+  cod_enabled: boolean | null;
+}
+
+export interface SellableProduct {
+  id: string;
+  product_code: string;
+  name: string;
+  sale_price_ref: number | null;
+  online_enabled: boolean | null;
+  online_price: number | null;
+  image_url: string | null;
+  description: string | null;
+  is_active: boolean;
+}
+
+export interface ProductPatch {
+  online_enabled?: boolean;
+  online_price?: number | null;
+  image_url?: string | null;
+  description?: string | null;
+}
+
+export type OnlineOrderStatus =
+  | 'new'
+  | 'confirmed'
+  | 'fulfilled'
+  | 'cancelled';
+
+export interface OnlineOrder {
+  id: string;
+  order_no: string;
+  customer_name: string | null;
+  customer_phone: string | null;
+  address: string | null;
+  payment_method: string | null;
+  total_sar: number | null;
+  delivery_fee: number | null;
+  status: OnlineOrderStatus;
+  created_at: string;
+}
+
+export interface OnlineOrderItem {
+  id: string;
+  order_id: string;
+  product_id: string | null;
+  qty: number;
+  unit_price: number | null;
+  products?: { name: string | null; product_code: string | null } | null;
+}
+
+export interface FulfillResult {
+  order_id: string;
+  revenue: number;
+  cogs: number;
+}
+
 /* ----------------------------- Platform (white-label SaaS) ----------------------------- */
 
 export interface PlatformTenant {
