@@ -20,6 +20,14 @@ import type {
   JournalEntry,
   ManualJournalLine,
   EmployeeRecentSale,
+  EmployeeListRow,
+  EmployeeFile,
+  EmployeeConsignmentReport,
+  SupplierBalance,
+  BranchClosePreviewRow,
+  ReconcileCloseResult,
+  CashFlow,
+  ClosePeriodResult,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -192,6 +200,20 @@ export const accountingApi = {
       p_memo: memo,
       p_lines: lines,
     }),
+
+  cashFlow: (from?: string, to?: string) => {
+    const r = thisMonthRange();
+    return rpc<CashFlow>('cash_flow', {
+      p_from: from || r.from,
+      p_to: to || r.to,
+    });
+  },
+
+  closePeriod: (date: string, memo: string) =>
+    rpc<ClosePeriodResult>('close_period', {
+      p_date: date,
+      p_memo: memo,
+    }),
 };
 
 /* --------------------------- Admin / IM RPCs ----------------------------- */
@@ -319,4 +341,55 @@ export const adminApi = {
 
   markNotificationRead: (id: string) =>
     rpc<null>('mark_notification_read', { p_id: id }),
+
+  /* --------------------------- Monitoring --------------------------- */
+
+  listEmployees: async (): Promise<EmployeeListRow[]> => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id,full_name,phone,status')
+      .eq('role', 'employee')
+      .order('full_name');
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+    return (data as EmployeeListRow[]) || [];
+  },
+
+  employeeFile: (id: string) =>
+    rpc<EmployeeFile>('employee_file', { p_employee_id: id }),
+
+  employeeConsignmentReport: (id: string) =>
+    rpc<EmployeeConsignmentReport>('employee_consignment_report', {
+      p_employee_id: id,
+    }),
+
+  /* --------------------------- Suppliers --------------------------- */
+
+  supplierBalances: () => rpc<SupplierBalance[]>('supplier_balances', {}),
+
+  paySupplier: (
+    id: string,
+    amount: number,
+    method: 'cash' | 'card',
+    notes: string
+  ) =>
+    rpc<string>('pay_supplier', {
+      p_supplier_id: id,
+      p_amount: amount,
+      p_method: method,
+      p_notes: notes,
+    }),
+
+  /* --------------------------- Branch close --------------------------- */
+
+  branchClosePreview: (id: string) =>
+    rpc<BranchClosePreviewRow[]>('branch_close_preview', { p_branch_id: id }),
+
+  reconcileAndCloseBranch: (
+    id: string,
+    counts: { product_id: string; received: number }[]
+  ) =>
+    rpc<ReconcileCloseResult>('reconcile_and_close_branch', {
+      p_branch_id: id,
+      p_counts: counts,
+    }),
 };

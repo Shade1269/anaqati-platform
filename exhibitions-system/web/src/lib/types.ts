@@ -250,3 +250,105 @@ export interface EmployeeRecentSale {
   status: string;
   items: EmployeeSaleItem[];
 }
+
+/* ----------------------------- Monitoring ----------------------------- */
+
+export interface EmployeeListRow {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  status: string | null;
+}
+
+export interface EmployeeFileProfile {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  status: string | null;
+  monthly_salary_sar: number | null;
+  access_code: string | null;
+  is_active: boolean | null;
+  hire_date: string | null;
+}
+
+export interface EmployeeFile {
+  profile: EmployeeFileProfile;
+  sales_total: number;
+  sales_count: number;
+  returns_total: number;
+  cash_due: number;
+  cash_settled: number;
+  shortages_total: number;
+  consignment_qty: number;
+  consignment_retail: number;
+  advances_total: number;
+  commissions_total: number;
+  present_days_month: number;
+}
+
+export interface ConsignmentGoodsRow {
+  product_id: string;
+  name: string;
+  code: string;
+  withdrawn: number;
+  sold: number;
+  returned: number;
+  on_hand: number;
+  variance: number;
+}
+
+export interface EmployeeConsignmentReport {
+  goods: ConsignmentGoodsRow[];
+  cash: {
+    sales: number;
+    returns: number;
+    settled: number;
+    shortage: number;
+  };
+}
+
+/* ----------------------------- Suppliers ----------------------------- */
+
+export interface SupplierBalance {
+  id: string;
+  name: string;
+  phone: string | null;
+  purchased: number;
+  paid: number;
+  balance: number;
+}
+
+/* ----------------------------- Branch close ----------------------------- */
+
+export interface BranchClosePreviewRow {
+  product_id: string;
+  name: string;
+  code: string;
+  expected: number;
+}
+
+export interface ReconcileCloseResult {
+  transfer_id: string;
+  loss_value: number;
+}
+
+/* ----------------------------- Period close / cash flow ----------------------------- */
+
+export interface ClosePeriodResult {
+  closed: boolean;
+  net_income?: number;
+  entry_id?: string;
+}
+
+export interface CashFlowLine {
+  category: string;
+  amount: number;
+}
+
+export interface CashFlow {
+  inflows: CashFlowLine[];
+  outflows: CashFlowLine[];
+  net_change: number;
+  total_in: number;
+  total_out: number;
+}

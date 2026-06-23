@@ -26,6 +26,9 @@ import AdminWholesale from './pages/admin/AdminWholesale';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminReceiveStock from './pages/admin/AdminReceiveStock';
 import AdminAudit from './pages/admin/AdminAudit';
+import AdminMonitoring from './pages/admin/AdminMonitoring';
+import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
+import AdminSuppliers from './pages/admin/AdminSuppliers';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import AccountingOverview from './pages/admin/accounting/AccountingOverview';
 import AccountingIncome from './pages/admin/accounting/AccountingIncome';
@@ -33,6 +36,7 @@ import AccountingBalance from './pages/admin/accounting/AccountingBalance';
 import AccountingTrialBalance from './pages/admin/accounting/AccountingTrialBalance';
 import AccountingLedger from './pages/admin/accounting/AccountingLedger';
 import AccountingJournal from './pages/admin/accounting/AccountingJournal';
+import AccountingCashFlow from './pages/admin/accounting/AccountingCashFlow';
 
 export default function App() {
   return (
@@ -62,6 +66,9 @@ export default function App() {
         <Route path="catalog" element={<RequireAdmin><AdminCatalog /></RequireAdmin>} />
         <Route path="branches" element={<RequireAdmin><AdminBranches /></RequireAdmin>} />
         <Route path="employees" element={<RequireAdmin><AdminEmployees /></RequireAdmin>} />
+        <Route path="monitoring" element={<RequireAdmin><AdminMonitoring /></RequireAdmin>} />
+        <Route path="monitoring/:employeeId" element={<RequireAdmin><AdminEmployeeFile /></RequireAdmin>} />
+        <Route path="suppliers" element={<RequireAdmin><AdminSuppliers /></RequireAdmin>} />
         <Route path="finance" element={<RequireAdmin><AdminFinance /></RequireAdmin>} />
         <Route path="audit" element={<RequireAdmin><AdminAudit /></RequireAdmin>} />
 
@@ -78,6 +85,7 @@ export default function App() {
         <Route path="accounting/trial-balance" element={<RequireAdmin><AccountingTrialBalance /></RequireAdmin>} />
         <Route path="accounting/ledger" element={<RequireAdmin><AccountingLedger /></RequireAdmin>} />
         <Route path="accounting/journal" element={<RequireAdmin><AccountingJournal /></RequireAdmin>} />
+        <Route path="accounting/cashflow" element={<RequireAdmin><AccountingCashFlow /></RequireAdmin>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

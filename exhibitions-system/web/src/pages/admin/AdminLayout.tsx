@@ -19,6 +19,9 @@ import {
   ListChecks,
   BookOpen,
   NotebookPen,
+  UserCheck,
+  Truck,
+  Waves,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
@@ -77,6 +80,8 @@ const management: Item[] = [
   { to: '/admin/catalog', label: 'الكتالوج', icon: <Tags size={sz} />, show: adminOnly },
   { to: '/admin/branches', label: 'المعارض', icon: <Store size={sz} />, show: adminOnly },
   { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} />, show: adminOnly },
+  { to: '/admin/monitoring', label: 'مراقبة الموظفين', icon: <UserCheck size={sz} />, show: adminOnly },
+  { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} />, show: adminOnly },
   { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} />, show: adminOnly },
   { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} />, show: adminOnly },
 ];
@@ -88,6 +93,7 @@ const accounting: Item[] = [
   { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} />, show: adminOnly },
   { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} />, show: adminOnly },
   { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} />, show: adminOnly },
 ];
 
 export default function AdminLayout() {
