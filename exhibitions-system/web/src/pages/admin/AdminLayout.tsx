@@ -13,6 +13,12 @@ import {
   Wallet,
   ScrollText,
   ShieldAlert,
+  Calculator,
+  TrendingUp,
+  Scale,
+  ListChecks,
+  BookOpen,
+  NotebookPen,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
@@ -29,6 +35,7 @@ interface Item {
   to: string;
   label: string;
   icon: React.ReactNode;
+  end?: boolean;
   show: (role: string, p: Permissions | null) => boolean;
 }
 
@@ -72,6 +79,15 @@ const management: Item[] = [
   { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} />, show: adminOnly },
   { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} />, show: adminOnly },
   { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} />, show: adminOnly },
+];
+
+const accounting: Item[] = [
+  { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true, show: adminOnly },
+  { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} />, show: adminOnly },
+  { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} />, show: adminOnly },
 ];
 
 export default function AdminLayout() {
@@ -141,8 +157,10 @@ export default function AdminLayout() {
   const sections: NavSection[] = [];
   const mgmt = management.filter((i) => i.show(role, perms));
   const ops = operations.filter((i) => i.show(role, perms));
+  const acct = accounting.filter((i) => i.show(role, perms));
   if (mgmt.length) sections.push({ title: 'الإدارة', items: mgmt });
   if (ops.length) sections.push({ title: 'العمليات', items: ops });
+  if (acct.length) sections.push({ title: 'المحاسبة', items: acct });
 
   const unread = notifs.filter((n) => !n.is_read).length;
 

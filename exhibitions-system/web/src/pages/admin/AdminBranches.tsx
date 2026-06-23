@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Store, Plus } from 'lucide-react';
+import { Store, Plus, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminApi } from '../../lib/api';
-import type { Branch, Warehouse } from '../../lib/types';
+import type { Branch, ProductPublic, Warehouse } from '../../lib/types';
 import {
   Button,
   Card,
   CardHeader,
+  Dialog,
   EmptyState,
   Field,
   Input,
@@ -22,6 +23,11 @@ import { fmtDate, sar } from '../../lib/format';
 interface ProfileRow {
   id: string;
   full_name: string;
+}
+
+interface BranchInvRow {
+  product_id: string;
+  quantity: number;
 }
 
 const emptyForm = {
@@ -50,6 +56,7 @@ export default function AdminBranches() {
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
   const [closingId, setClosingId] = useState('');
+  const [confirmBranch, setConfirmBranch] = useState<Branch | null>(null);
   const toast = useToast();
 
   async function load() {
@@ -110,6 +117,7 @@ export default function AdminBranches() {
     try {
       await adminApi.closeBranch(id);
       toast.success('تم إغلاق المعرض');
+      setConfirmBranch(null);
       load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -273,7 +281,7 @@ export default function AdminBranches() {
                     variant="danger"
                     size="sm"
                     loading={closingId === b.id}
-                    onClick={() => closeBranch(b.id)}
+                    onClick={() => setConfirmBranch(b)}
                   >
                     إغلاق
                   </Button>
@@ -283,6 +291,113 @@ export default function AdminBranches() {
           ))}
         </Table>
       )}
+
+      {confirmBranch && (
+        <CloseBranchDialog
+          branch={confirmBranch}
+          busy={closingId === confirmBranch.id}
+          onCancel={() => setConfirmBranch(null)}
+          onConfirm={() => closeBranch(confirmBranch.id)}
+        />
+      )}
     </div>
+  );
+}
+
+function CloseBranchDialog({
+  branch,
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  branch: Branch;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const [rows, setRows] = useState<BranchInvRow[]>([]);
+  const [products, setProducts] = useState<Record<string, ProductPublic>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      supabase
+        .from('inventory')
+        .select('product_id,quantity')
+        .eq('location_type', 'branch')
+        .eq('location_id', branch.id)
+        .gt('quantity', 0),
+      supabase
+        .from('products_public')
+        .select('id,product_code,name,category_id,sale_price_ref,is_active'),
+    ]).then(([inv, p]) => {
+      setRows((inv.data as BranchInvRow[]) || []);
+      const map: Record<string, ProductPublic> = {};
+      ((p.data as ProductPublic[]) || []).forEach((x) => (map[x.id] = x));
+      setProducts(map);
+      setLoading(false);
+    });
+  }, [branch.id]);
+
+  return (
+    <Dialog
+      open
+      onClose={onCancel}
+      title={`إغلاق المعرض — ${branch.name}`}
+      size="md"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onCancel}>
+            إلغاء
+          </Button>
+          <Button variant="danger" loading={busy} onClick={onConfirm}>
+            تأكيد الإغلاق
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/8 px-4 py-3 text-sm text-warning">
+          <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+          <span>
+            سيتم إرجاع البضاعة المتبقية في هذا المعرض إلى المستودع ثم إغلاق
+            المعرض نهائيًا.
+          </span>
+        </div>
+
+        {loading ? (
+          <Spinner />
+        ) : rows.length === 0 ? (
+          <EmptyState message="لا توجد بضاعة متبقية في المعرض" />
+        ) : (
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">
+              البضاعة التي ستُرجع للمستودع
+            </p>
+            <Table
+              head={
+                <>
+                  <th>المنتج</th>
+                  <th>الرمز</th>
+                  <th>الكمية</th>
+                </>
+              }
+            >
+              {rows.map((r) => (
+                <tr key={r.product_id}>
+                  <td className="font-semibold">
+                    {products[r.product_id]?.name || r.product_id}
+                  </td>
+                  <td className="text-muted">
+                    {products[r.product_id]?.product_code || '—'}
+                  </td>
+                  <td className="text-gold">{r.quantity}</td>
+                </tr>
+              ))}
+            </Table>
+          </div>
+        )}
+      </div>
+    </Dialog>
   );
 }

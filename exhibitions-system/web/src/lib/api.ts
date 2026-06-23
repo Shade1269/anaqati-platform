@@ -11,6 +11,15 @@ import type {
   SaleItemInput,
   StockItemInput,
   NotificationRow,
+  FinancialSummary,
+  IncomeStatement,
+  BalanceSheet,
+  TrialBalanceRow,
+  LedgerRow,
+  AccountRow,
+  JournalEntry,
+  ManualJournalLine,
+  EmployeeRecentSale,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -101,6 +110,88 @@ export const employeeApi = {
 
   markRead: (token: string, id: string) =>
     rpc<null>('employee_mark_read', { p_token: token, p_id: id }),
+
+  recentSales: (token: string) =>
+    rpc<EmployeeRecentSale[]>('employee_recent_sales', { p_token: token }),
+};
+
+/* ----------------------------- Accounting RPCs ----------------------------- */
+
+function thisMonthRange(): { from: string; to: string } {
+  const now = new Date();
+  const from = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .slice(0, 10);
+  const to = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    .toISOString()
+    .slice(0, 10);
+  return { from, to };
+}
+
+export const accountingApi = {
+  financialSummary: () => rpc<FinancialSummary>('financial_summary', {}),
+
+  incomeStatement: (from?: string, to?: string) => {
+    const r = thisMonthRange();
+    return rpc<IncomeStatement>('income_statement', {
+      p_from: from || r.from,
+      p_to: to || r.to,
+    });
+  },
+
+  balanceSheet: (asOf?: string) =>
+    rpc<BalanceSheet>('balance_sheet', {
+      p_as_of: asOf || new Date().toISOString().slice(0, 10),
+    }),
+
+  trialBalance: (from?: string, to?: string) => {
+    const r = thisMonthRange();
+    return rpc<TrialBalanceRow[]>('trial_balance', {
+      p_from: from || r.from,
+      p_to: to || r.to,
+    });
+  },
+
+  accountLedger: (code: string, from?: string, to?: string) => {
+    const r = thisMonthRange();
+    return rpc<LedgerRow[]>('account_ledger', {
+      p_code: code,
+      p_from: from || r.from,
+      p_to: to || r.to,
+    });
+  },
+
+  listAccounts: async (): Promise<AccountRow[]> => {
+    const { data, error } = await supabase
+      .from('accounts')
+      .select('code,name,type')
+      .order('sort');
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+    return (data as AccountRow[]) || [];
+  },
+
+  listJournal: async (): Promise<JournalEntry[]> => {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select(
+        'id,entry_date,memo,source_table, journal_lines(account_code,debit,credit)'
+      )
+      .order('entry_date', { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
+    return (data as JournalEntry[]) || [];
+  },
+
+  postManualJournal: (
+    date: string,
+    memo: string,
+    lines: ManualJournalLine[]
+  ) =>
+    rpc<string>('post_manual_journal', {
+      p_date: date,
+      p_memo: memo,
+      p_lines: lines,
+    }),
 };
 
 /* --------------------------- Admin / IM RPCs ----------------------------- */

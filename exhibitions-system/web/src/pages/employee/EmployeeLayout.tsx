@@ -7,6 +7,7 @@ import {
   PackageMinus,
   Wallet,
   Bell,
+  Undo2,
 } from 'lucide-react';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
 import { employeeApi } from '../../lib/api';
@@ -25,6 +26,7 @@ const sections: NavSection[] = [
     items: [
       { to: '/employee/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
       { to: '/employee/pos', label: 'نقطة البيع', icon: <ShoppingBag size={sz} /> },
+      { to: '/employee/returns', label: 'إرجاع المبيعات', icon: <Undo2 size={sz} /> },
       { to: '/employee/request-stock', label: 'طلب بضاعة', icon: <PackagePlus size={sz} /> },
       { to: '/employee/withdraw', label: 'سحب عُهدة', icon: <PackageMinus size={sz} /> },
       { to: '/employee/settlement', label: 'تسليم العُهدة', icon: <Wallet size={sz} /> },

@@ -7,6 +7,7 @@ export interface NavLinkItem {
   to: string;
   label: string;
   icon: ReactNode;
+  end?: boolean;
 }
 
 export interface NavSection {
@@ -72,6 +73,7 @@ export function DashboardShell({
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  end={item.end}
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     `group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${

@@ -5,9 +5,11 @@ import {
   CheckCircle2,
   Wallet,
   BarChart3,
+  Banknote,
+  TrendingUp,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { adminApi } from '../../lib/api';
+import { adminApi, accountingApi } from '../../lib/api';
 import type { Branch, BranchPnl, CommissionResult } from '../../lib/types';
 import {
   Button,
@@ -29,6 +31,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [active, setActive] = useState<Branch | null>(null);
+  const [cash, setCash] = useState<number | null>(null);
+  const [netProfit, setNetProfit] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -56,6 +60,15 @@ export default function AdminDashboard() {
       setLoading(false);
     }
     load();
+    // Accounting quick figures (admin-only RPCs); fail silently.
+    accountingApi
+      .financialSummary()
+      .then((f) => setCash(f.cash))
+      .catch(() => setCash(null));
+    accountingApi
+      .incomeStatement()
+      .then((s) => setNetProfit(s.net_profit))
+      .catch(() => setNetProfit(null));
   }, []);
 
   const activeCount = useMemo(
@@ -102,6 +115,23 @@ export default function AdminDashboard() {
           tone="warning"
         />
       </div>
+
+      {(cash !== null || netProfit !== null) && (
+        <div className="mb-6 grid gap-4 sm:grid-cols-2">
+          <StatCard
+            label="الخزينة (نقدًا)"
+            value={sar(cash ?? 0)}
+            icon={<Banknote size={20} />}
+            tone="gold"
+          />
+          <StatCard
+            label="صافي ربح هذا الشهر"
+            value={sar(netProfit ?? 0)}
+            icon={<TrendingUp size={20} />}
+            tone={(netProfit ?? 0) >= 0 ? 'success' : 'danger'}
+          />
+        </div>
+      )}
 
       {branches.length === 0 ? (
         <EmptyState message="لا توجد معارض بعد" icon={<Store size={26} />} />
