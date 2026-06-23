@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Store, Plus, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminApi } from '../../lib/api';
-import type { Branch, ProductPublic, Warehouse } from '../../lib/types';
+import type { Branch, BranchClosePreviewRow, Warehouse } from '../../lib/types';
 import {
   Button,
   Card,
@@ -23,11 +23,6 @@ import { fmtDate, sar } from '../../lib/format';
 interface ProfileRow {
   id: string;
   full_name: string;
-}
-
-interface BranchInvRow {
-  product_id: string;
-  quantity: number;
 }
 
 const emptyForm = {
@@ -55,7 +50,6 @@ export default function AdminBranches() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
-  const [closingId, setClosingId] = useState('');
   const [confirmBranch, setConfirmBranch] = useState<Branch | null>(null);
   const toast = useToast();
 
@@ -109,20 +103,6 @@ export default function AdminBranches() {
       toast.error((err as Error).message);
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function closeBranch(id: string) {
-    setClosingId(id);
-    try {
-      await adminApi.closeBranch(id);
-      toast.success('تم إغلاق المعرض');
-      setConfirmBranch(null);
-      load();
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setClosingId('');
     }
   }
 
@@ -280,7 +260,6 @@ export default function AdminBranches() {
                   <Button
                     variant="danger"
                     size="sm"
-                    loading={closingId === b.id}
                     onClick={() => setConfirmBranch(b)}
                   >
                     إغلاق
@@ -295,9 +274,11 @@ export default function AdminBranches() {
       {confirmBranch && (
         <CloseBranchDialog
           branch={confirmBranch}
-          busy={closingId === confirmBranch.id}
           onCancel={() => setConfirmBranch(null)}
-          onConfirm={() => closeBranch(confirmBranch.id)}
+          onClosed={() => {
+            setConfirmBranch(null);
+            load();
+          }}
         />
       )}
     </div>
@@ -306,51 +287,84 @@ export default function AdminBranches() {
 
 function CloseBranchDialog({
   branch,
-  busy,
   onCancel,
-  onConfirm,
+  onClosed,
 }: {
   branch: Branch;
-  busy: boolean;
   onCancel: () => void;
-  onConfirm: () => void;
+  onClosed: () => void;
 }) {
-  const [rows, setRows] = useState<BranchInvRow[]>([]);
-  const [products, setProducts] = useState<Record<string, ProductPublic>>({});
+  const [rows, setRows] = useState<BranchClosePreviewRow[]>([]);
+  const [received, setReceived] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
-    Promise.all([
-      supabase
-        .from('inventory')
-        .select('product_id,quantity')
-        .eq('location_type', 'branch')
-        .eq('location_id', branch.id)
-        .gt('quantity', 0),
-      supabase
-        .from('products_public')
-        .select('id,product_code,name,category_id,sale_price_ref,is_active'),
-    ]).then(([inv, p]) => {
-      setRows((inv.data as BranchInvRow[]) || []);
-      const map: Record<string, ProductPublic> = {};
-      ((p.data as ProductPublic[]) || []).forEach((x) => (map[x.id] = x));
-      setProducts(map);
-      setLoading(false);
-    });
+    setLoading(true);
+    setError('');
+    adminApi
+      .branchClosePreview(branch.id)
+      .then((data) => {
+        const list = data || [];
+        setRows(list);
+        const init: Record<string, string> = {};
+        list.forEach((r) => (init[r.product_id] = String(r.expected)));
+        setReceived(init);
+      })
+      .catch((e) => setError((e as Error).message))
+      .finally(() => setLoading(false));
   }, [branch.id]);
+
+  const recvNum = (id: string, expected: number) => {
+    const v = received[id];
+    if (v === undefined || v === '') return 0;
+    const n = Number(v);
+    return Number.isNaN(n) ? expected : n;
+  };
+
+  const totalLoss = rows.reduce(
+    (sum, r) => sum + (r.expected - recvNum(r.product_id, r.expected)),
+    0
+  );
+
+  async function confirm() {
+    setBusy(true);
+    try {
+      if (rows.length === 0) {
+        // No inventory — fall back to the simple close.
+        await adminApi.closeBranch(branch.id);
+        toast.success('تم إغلاق المعرض');
+        onClosed();
+        return;
+      }
+      const counts = rows.map((r) => ({
+        product_id: r.product_id,
+        received: recvNum(r.product_id, r.expected),
+      }));
+      const res = await adminApi.reconcileAndCloseBranch(branch.id, counts);
+      toast.success(`تم إغلاق المعرض — قيمة الفاقد: ${sar(res.loss_value)}`);
+      onClosed();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Dialog
       open
       onClose={onCancel}
-      title={`إغلاق المعرض — ${branch.name}`}
-      size="md"
+      title={`إغلاق وجرد المعرض — ${branch.name}`}
+      size="lg"
       footer={
         <>
           <Button variant="ghost" onClick={onCancel}>
             إلغاء
           </Button>
-          <Button variant="danger" loading={busy} onClick={onConfirm}>
+          <Button variant="danger" loading={busy} onClick={confirm}>
             تأكيد الإغلاق
           </Button>
         </>
@@ -360,42 +374,77 @@ function CloseBranchDialog({
         <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/8 px-4 py-3 text-sm text-warning">
           <AlertTriangle size={18} className="mt-0.5 shrink-0" />
           <span>
-            سيتم إرجاع البضاعة المتبقية في هذا المعرض إلى المستودع ثم إغلاق
-            المعرض نهائيًا.
+            أدخل العدد الواصل فعليًا لكل منتج. الفرق بين المتوقع والواصل يُسجَّل
+            كفاقد، ثم تُرجَع البضاعة الواصلة للمستودع ويُغلق المعرض نهائيًا.
           </span>
         </div>
+
+        {error && (
+          <div className="rounded-lg border border-danger/30 bg-danger/8 px-4 py-3 text-sm text-danger">
+            {error}
+          </div>
+        )}
 
         {loading ? (
           <Spinner />
         ) : rows.length === 0 ? (
-          <EmptyState message="لا توجد بضاعة متبقية في المعرض" />
+          <EmptyState message="لا توجد بضاعة في المعرض — سيتم الإغلاق مباشرة" />
         ) : (
-          <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">
-              البضاعة التي ستُرجع للمستودع
-            </p>
+          <>
             <Table
               head={
                 <>
                   <th>المنتج</th>
                   <th>الرمز</th>
-                  <th>الكمية</th>
+                  <th>المتوقع</th>
+                  <th>الواصل فعلًا</th>
+                  <th>الفاقد</th>
                 </>
               }
             >
-              {rows.map((r) => (
-                <tr key={r.product_id}>
-                  <td className="font-semibold">
-                    {products[r.product_id]?.name || r.product_id}
-                  </td>
-                  <td className="text-muted">
-                    {products[r.product_id]?.product_code || '—'}
-                  </td>
-                  <td className="text-gold">{r.quantity}</td>
-                </tr>
-              ))}
+              {rows.map((r) => {
+                const loss = r.expected - recvNum(r.product_id, r.expected);
+                return (
+                  <tr key={r.product_id}>
+                    <td className="font-semibold">{r.name}</td>
+                    <td className="text-muted">{r.code || '—'}</td>
+                    <td className="text-gold">{r.expected}</td>
+                    <td>
+                      <Input
+                        type="number"
+                        min="0"
+                        className="w-24"
+                        value={received[r.product_id] ?? ''}
+                        onChange={(e) =>
+                          setReceived((s) => ({
+                            ...s,
+                            [r.product_id]: e.target.value,
+                          }))
+                        }
+                      />
+                    </td>
+                    <td
+                      className={`font-bold ${
+                        loss !== 0 ? 'text-danger' : 'text-success'
+                      }`}
+                    >
+                      {loss}
+                    </td>
+                  </tr>
+                );
+              })}
             </Table>
-          </div>
+            <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm">
+              <span className="font-semibold text-muted">إجمالي الفاقد</span>
+              <span
+                className={`text-lg font-extrabold ${
+                  totalLoss !== 0 ? 'text-danger' : 'text-success'
+                }`}
+              >
+                {totalLoss} قطعة
+              </span>
+            </div>
+          </>
         )}
       </div>
     </Dialog>
