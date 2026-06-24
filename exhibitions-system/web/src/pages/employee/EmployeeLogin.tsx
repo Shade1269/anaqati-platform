@@ -62,10 +62,10 @@ export default function EmployeeLogin() {
         </Button>
 
         <Link
-          to="/"
+          to="/admin/login"
           className="flex items-center justify-center gap-1 text-sm text-muted hover:text-text"
         >
-          <ArrowRight size={14} /> العودة للرئيسية
+          <ArrowRight size={14} /> دخول المشترك (بريد + كلمة مرور)
         </Link>
       </form>
     </div>
