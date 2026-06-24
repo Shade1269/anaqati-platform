@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { Button, Field, Input, ErrorBanner } from '../../components/ui';
@@ -101,13 +101,6 @@ export default function AdminLogin() {
         <p className="text-center text-xs text-muted">
           ليس لديك حساب؟ تواصل مع إدارة النظام لتفعيل اشتراكك.
         </p>
-
-        <Link
-          to="/employee/login"
-          className="flex items-center justify-center gap-1 text-sm text-muted hover:text-text"
-        >
-          <ArrowRight size={14} /> دخول الموظفين (جوال + كود)
-        </Link>
       </form>
     </div>
   );
