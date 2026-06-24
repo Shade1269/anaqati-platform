@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import Landing from './pages/Landing';
 
 // Public storefront (no auth)
 import Storefront from './pages/store/Storefront';
@@ -56,7 +55,8 @@ import RequirePlatform from './pages/platform/RequirePlatform';
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      {/* الجذر = بوابة دخول المشترك مباشرة (إيميل + كلمة مرور) */}
+      <Route path="/" element={<Navigate to="/admin/login" replace />} />
 
       {/* Public storefront (no auth) */}
       <Route path="/store/:slug" element={<Storefront />} />

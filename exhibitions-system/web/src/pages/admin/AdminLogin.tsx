@@ -103,10 +103,10 @@ export default function AdminLogin() {
         </p>
 
         <Link
-          to="/"
+          to="/employee/login"
           className="flex items-center justify-center gap-1 text-sm text-muted hover:text-text"
         >
-          <ArrowRight size={14} /> العودة للرئيسية
+          <ArrowRight size={14} /> دخول الموظفين (جوال + كود)
         </Link>
       </form>
     </div>
