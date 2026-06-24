@@ -8,6 +8,8 @@ import {
   Wallet,
   Bell,
   Undo2,
+  LayoutGrid,
+  ChefHat,
 } from 'lucide-react';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
 import { employeeApi } from '../../lib/api';
@@ -21,7 +23,7 @@ import {
 import { NotificationsPanel } from '../../components/shell/NotificationsPanel';
 
 const sz = 18;
-const sections: NavSection[] = [
+const retailSections: NavSection[] = [
   {
     items: [
       { to: '/employee/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
@@ -30,6 +32,15 @@ const sections: NavSection[] = [
       { to: '/employee/request-stock', label: 'طلب بضاعة', icon: <PackagePlus size={sz} /> },
       { to: '/employee/withdraw', label: 'سحب عُهدة', icon: <PackageMinus size={sz} /> },
       { to: '/employee/settlement', label: 'تسليم العُهدة', icon: <Wallet size={sz} /> },
+      { to: '/employee/notifications', label: 'الإشعارات', icon: <Bell size={sz} /> },
+    ],
+  },
+];
+const restaurantSections: NavSection[] = [
+  {
+    items: [
+      { to: '/employee/restaurant', label: 'الطاولات', icon: <LayoutGrid size={sz} /> },
+      { to: '/employee/kitchen', label: 'المطبخ', icon: <ChefHat size={sz} /> },
       { to: '/employee/notifications', label: 'الإشعارات', icon: <Bell size={sz} /> },
     ],
   },
@@ -91,6 +102,8 @@ export default function EmployeeLayout() {
 
   if (!session) return null;
 
+  const isRestaurant = session.business_type === 'restaurant';
+  const sections = isRestaurant ? restaurantSections : retailSections;
   const unread = notifs.filter((n) => !n.is_read).length;
 
   return (
@@ -114,23 +127,25 @@ export default function EmployeeLayout() {
           },
         }}
         topExtra={
-          <Select
-            className="w-44"
-            value={branchId ?? ''}
-            onChange={(e) => chooseBranch(e.target.value)}
-          >
-            <option value="" disabled>
-              اختر المعرض
-            </option>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
+          isRestaurant ? undefined : (
+            <Select
+              className="w-44"
+              value={branchId ?? ''}
+              onChange={(e) => chooseBranch(e.target.value)}
+            >
+              <option value="" disabled>
+                اختر المعرض
               </option>
-            ))}
-          </Select>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </Select>
+          )
         }
         banner={
-          !branchId ? (
+          !isRestaurant && !branchId ? (
             <div className="mb-5 rounded-lg border border-warning/30 bg-warning/8 px-4 py-2.5 text-sm font-medium text-warning">
               اختر المعرض من الأعلى للبدء.
             </div>

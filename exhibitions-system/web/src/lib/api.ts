@@ -42,6 +42,11 @@ import type {
   OnlineOrderStatus,
   FulfillResult,
   ManagerEmployeeRow,
+  MenuCategory,
+  DiningTable,
+  SessionDetail,
+  KdsOrder,
+  NewOrderItem,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -261,7 +266,8 @@ export const adminApi = {
     wholesale: boolean,
     returns: boolean,
     manageEmployees: boolean,
-    manageStore: boolean
+    manageStore: boolean,
+    manageRestaurant: boolean = false
   ) =>
     rpc<null>('set_im_permissions', {
       p_profile_id: profileId,
@@ -272,6 +278,7 @@ export const adminApi = {
       p_returns: returns,
       p_manage_employees: manageEmployees,
       p_manage_store: manageStore,
+      p_manage_restaurant: manageRestaurant,
     }),
 
   /* --------------------------- Manager (delegated) --------------------------- */
@@ -545,6 +552,7 @@ export const platformApi = {
     brandName: string;
     primaryColor: string;
     subscriptionExpires: string | null;
+    businessType?: 'retail' | 'restaurant';
   }) =>
     rpc<CreateTenantResult>('create_tenant', {
       p_name: payload.name,
@@ -553,6 +561,7 @@ export const platformApi = {
       p_brand_name: payload.brandName,
       p_primary_color: payload.primaryColor,
       p_subscription_expires: payload.subscriptionExpires,
+      p_business_type: payload.businessType ?? 'retail',
     }),
 
   setTenantStatus: (
@@ -579,5 +588,136 @@ export const platformApi = {
       p_brand_name: brandName,
       p_logo_url: logoUrl,
       p_primary_color: primaryColor,
+    }),
+};
+
+/* --------------------------- Restaurant / Café -----------------------------
+ * كل الدوال تقبل token اختياري: null = أدمن/مدير (جلسة Supabase)، أو توكن النادل.
+ * نفس RPC يخدم الطرفين (الباك-إند يحلّ السياق عبر _rest_ctx).
+ * -------------------------------------------------------------------------- */
+
+export const restaurantApi = {
+  menu: (token: string | null = null) =>
+    rpc<MenuCategory[]>('restaurant_menu', { p_token: token }),
+
+  tables: (token: string | null = null) =>
+    rpc<DiningTable[]>('restaurant_tables', { p_token: token }),
+
+  sessionDetail: (sessionId: string, token: string | null = null) =>
+    rpc<SessionDetail>('session_detail', { p_session_id: sessionId, p_token: token }),
+
+  openTable: (tableId: string, guests: number, token: string | null = null) =>
+    rpc<{ session_id: string; session_no: string; reused: boolean }>('open_table', {
+      p_table_id: tableId,
+      p_guests: guests,
+      p_token: token,
+    }),
+
+  addOrder: (
+    sessionId: string,
+    items: NewOrderItem[],
+    note: string | null,
+    token: string | null = null
+  ) =>
+    rpc<{ order_id: string; order_no: string; added: number }>('add_order', {
+      p_session_id: sessionId,
+      p_items: items,
+      p_note: note,
+      p_token: token,
+    }),
+
+  kdsList: (token: string | null = null) =>
+    rpc<KdsOrder[]>('kds_list', { p_token: token }),
+
+  kdsSetStatus: (
+    orderId: string,
+    status: 'new' | 'preparing' | 'ready' | 'served' | 'cancelled',
+    token: string | null = null
+  ) =>
+    rpc<null>('kds_set_order_status', { p_order_id: orderId, p_status: status, p_token: token }),
+
+  closeBill: (sessionId: string, paymentMethod: 'cash' | 'card', token: string | null = null) =>
+    rpc<{ session_id: string; total: number; payment_method: string }>('close_table_bill', {
+      p_session_id: sessionId,
+      p_payment_method: paymentMethod,
+      p_token: token,
+    }),
+
+  transferTable: (sessionId: string, toTableId: string, token: string | null = null) =>
+    rpc<null>('transfer_table', { p_session_id: sessionId, p_to_table_id: toTableId, p_token: token }),
+
+  mergeTables: (fromSessionId: string, intoSessionId: string, token: string | null = null) =>
+    rpc<null>('merge_tables', {
+      p_from_session_id: fromSessionId,
+      p_into_session_id: intoSessionId,
+      p_token: token,
+    }),
+
+  splitSession: (sessionId: string, itemIds: string[], token: string | null = null) =>
+    rpc<{ new_session_id: string; new_session_no: string }>('split_session', {
+      p_session_id: sessionId,
+      p_item_ids: itemIds,
+      p_token: token,
+    }),
+
+  /* ---- Management (admin / manager with can_manage_restaurant) ---- */
+  setCategory: (id: string | null, name: string, sort: number, active: boolean) =>
+    rpc<string>('menu_set_category', { p_id: id, p_name: name, p_sort: sort, p_active: active }),
+
+  setItem: (
+    id: string | null,
+    categoryId: string | null,
+    name: string,
+    price: number,
+    description: string | null,
+    imageUrl: string | null,
+    available: boolean,
+    sort: number
+  ) =>
+    rpc<string>('menu_set_item', {
+      p_id: id,
+      p_category_id: categoryId,
+      p_name: name,
+      p_price: price,
+      p_description: description,
+      p_image_url: imageUrl,
+      p_available: available,
+      p_sort: sort,
+    }),
+
+  deleteItem: (id: string) => rpc<null>('menu_delete_item', { p_id: id }),
+
+  setOption: (
+    id: string | null,
+    itemId: string,
+    group: string,
+    name: string,
+    delta: number,
+    sort: number
+  ) =>
+    rpc<string>('menu_set_option', {
+      p_id: id,
+      p_item_id: itemId,
+      p_group: group,
+      p_name: name,
+      p_delta: delta,
+      p_sort: sort,
+    }),
+
+  deleteOption: (id: string) => rpc<null>('menu_delete_option', { p_id: id }),
+
+  setTable: (
+    id: string | null,
+    label: string,
+    section: string | null,
+    seats: number,
+    active: boolean
+  ) =>
+    rpc<string>('table_set', {
+      p_id: id,
+      p_label: label,
+      p_section: section,
+      p_seats: seats,
+      p_active: active,
     }),
 };

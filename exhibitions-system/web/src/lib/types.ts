@@ -10,6 +10,7 @@ export interface Permissions {
   can_returns?: boolean;
   can_manage_employees?: boolean;
   can_manage_store?: boolean;
+  can_manage_restaurant?: boolean;
   [key: string]: boolean | undefined;
 }
 
@@ -32,6 +33,7 @@ export interface TenantBranding {
   status: string | null;
   subscription_status: string | null;
   subscription_expires_at: string | null;
+  business_type?: 'retail' | 'restaurant';
 }
 
 export interface MyProfile {
@@ -164,6 +166,7 @@ export interface PlatformTenant {
   subscription_status: string | null;
   subscription_expires_at: string | null;
   created_at: string | null;
+  business_type?: 'retail' | 'restaurant';
   employees: number;
   branches: number;
   sales_total: number;
@@ -180,6 +183,103 @@ export interface EmployeeSession {
   token: string;
   profile_id: string;
   full_name: string;
+  business_type?: 'retail' | 'restaurant';
+}
+
+/* ----------------------------- Restaurant / Café ----------------------------- */
+
+export interface MenuOption {
+  id: string;
+  group: string;
+  name: string;
+  price_delta: number;
+}
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  description: string | null;
+  image_url: string | null;
+  is_available: boolean;
+  sort: number;
+  options: MenuOption[];
+}
+
+export interface MenuCategory {
+  id: string;
+  name: string;
+  sort: number;
+  is_active: boolean;
+  items: MenuItem[];
+}
+
+export interface TableSessionBrief {
+  id: string;
+  session_no: string;
+  total: number;
+  guest_count: number;
+  opened_at: string;
+}
+
+export interface DiningTable {
+  id: string;
+  label: string;
+  section: string | null;
+  seats: number;
+  status: 'free' | 'open' | 'billing';
+  is_active: boolean;
+  sessions: TableSessionBrief[];
+}
+
+export interface OrderItemRow {
+  id: string;
+  name: string;
+  qty: number;
+  unit_price: number;
+  options: { name: string; price_delta: number }[];
+  line_total: number;
+  note: string | null;
+}
+
+export interface OrderRow {
+  id: string;
+  order_no: string;
+  status: 'new' | 'preparing' | 'ready' | 'served' | 'cancelled';
+  note: string | null;
+  created_at: string;
+  items: OrderItemRow[];
+}
+
+export interface SessionDetail {
+  session: {
+    id: string;
+    session_no: string;
+    status: string;
+    guest_count: number;
+    total_sar: number;
+    opened_at: string;
+    table_label: string;
+    section: string | null;
+  } | null;
+  orders: OrderRow[];
+}
+
+export interface KdsOrder {
+  id: string;
+  order_no: string;
+  status: 'new' | 'preparing' | 'ready';
+  created_at: string;
+  note: string | null;
+  table_label: string;
+  items: { name: string; qty: number; options: { name: string }[]; note: string | null }[];
+}
+
+export interface NewOrderItem {
+  menu_item_id: string;
+  qty: number;
+  options: { name: string; price_delta: number }[];
+  note?: string | null;
 }
 
 export interface Branch {
