@@ -26,6 +26,10 @@ import {
   Settings,
   ShoppingBag,
   ClipboardList as ClipboardListIcon,
+  Armchair,
+  ChefHat,
+  UtensilsCrossed,
+  LayoutGrid,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
@@ -71,6 +75,45 @@ const navStoreProducts: Item = { to: '/admin/store/products', label: 'منتجا
 const navStoreOrders: Item = { to: '/admin/store/orders', label: 'طلبات المتجر', icon: <ClipboardListIcon size={sz} /> };
 
 const navTeam: Item = { to: '/admin/team', label: 'الموظفون', icon: <Users size={sz} /> };
+
+/* ---- Restaurant nav items ---- */
+const navRestPos: Item = { to: '/admin/restaurant/pos', label: 'الطاولات (نقطة البيع)', icon: <LayoutGrid size={sz} /> };
+const navRestKds: Item = { to: '/admin/restaurant/kds', label: 'شاشة المطبخ', icon: <ChefHat size={sz} /> };
+const navRestMenu: Item = { to: '/admin/restaurant/menu', label: 'المنيو', icon: <UtensilsCrossed size={sz} /> };
+const navRestTables: Item = { to: '/admin/restaurant/tables', label: 'إدارة الطاولات', icon: <Armchair size={sz} /> };
+const restaurantItems: Item[] = [navRestPos, navRestKds, navRestMenu, navRestTables];
+
+/* ---- OWNER nav (restaurant): POS + kitchen + menu, no retail/store ops ---- */
+function ownerRestaurantSections(): NavSection[] {
+  return [
+    {
+      title: 'نظرة عامة',
+      items: [{ to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> }],
+    },
+    { title: 'المطعم', items: restaurantItems },
+    {
+      title: 'المالية والمحاسبة',
+      items: [
+        { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} /> },
+        { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true },
+        { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} /> },
+        { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} /> },
+        { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} /> },
+        { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
+        { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
+        { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+      ],
+    },
+    {
+      title: 'النظام',
+      items: [
+        { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} /> },
+        { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} /> },
+        { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} /> },
+      ],
+    },
+  ];
+}
 
 /* ---- OWNER nav: grouped & tidy ---- */
 function ownerSections(): NavSection[] {
@@ -139,6 +182,10 @@ function managerSections(p: Permissions | null): NavSection[] {
       title: 'المتجر الإلكتروني',
       items: [navStoreSettings, navStoreProducts, navStoreOrders],
     });
+  }
+
+  if (p?.can_manage_restaurant) {
+    sections.push({ title: 'المطعم', items: restaurantItems });
   }
 
   if (p?.can_manage_employees) {
@@ -218,8 +265,11 @@ export default function AdminLayout() {
 
   const perms = profile.permissions;
   const isOwner = role === 'admin';
+  const isRestaurant = profile.tenant?.business_type === 'restaurant';
   const sections: NavSection[] = isOwner
-    ? ownerSections()
+    ? isRestaurant
+      ? ownerRestaurantSections()
+      : ownerSections()
     : managerSections(perms);
 
   const managerLabel = managerHasBroadCaps(perms) ? 'مدير' : 'مدير مخزون';

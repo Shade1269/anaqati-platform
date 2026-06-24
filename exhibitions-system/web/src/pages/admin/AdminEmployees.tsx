@@ -308,6 +308,7 @@ function ImRow({
     returns: !!(p.can_receive_returns || p.can_returns),
     manageEmployees: !!p.can_manage_employees,
     manageStore: !!p.can_manage_store,
+    manageRestaurant: !!p.can_manage_restaurant,
   });
   const [status, setStatus] = useState(profile.status);
   const [busy, setBusy] = useState(false);
@@ -324,7 +325,8 @@ function ImRow({
         perms.wholesale,
         perms.returns,
         perms.manageEmployees,
-        perms.manageStore
+        perms.manageStore,
+        perms.manageRestaurant
       );
       toast.success('تم حفظ الصلاحيات');
       onChanged();
@@ -397,6 +399,11 @@ function ImRow({
               label="إدارة المتجر والمخزون"
               checked={perms.manageStore}
               onChange={toggle('manageStore')}
+            />
+            <Check2
+              label="إدارة المطعم (طاولات/منيو/مطبخ)"
+              checked={perms.manageRestaurant}
+              onChange={toggle('manageRestaurant')}
             />
           </div>
         </div>

@@ -13,6 +13,14 @@ import EmployeeWithdraw from './pages/employee/EmployeeWithdraw';
 import EmployeeSettlement from './pages/employee/EmployeeSettlement';
 import EmployeeNotifications from './pages/employee/EmployeeNotifications';
 import EmployeeReturns from './pages/employee/EmployeeReturns';
+import EmployeeRestaurant from './pages/employee/EmployeeRestaurant';
+import EmployeeKitchen from './pages/employee/EmployeeKitchen';
+
+// Restaurant / Café module (shared components)
+import RestaurantPos from './pages/restaurant/RestaurantPos';
+import RestaurantKds from './pages/restaurant/RestaurantKds';
+import RestaurantMenu from './pages/restaurant/RestaurantMenu';
+import RestaurantTables from './pages/restaurant/RestaurantTables';
 
 // Admin / IM
 import AdminLogin from './pages/admin/AdminLogin';
@@ -71,6 +79,8 @@ export default function App() {
         <Route path="withdraw" element={<EmployeeWithdraw />} />
         <Route path="settlement" element={<EmployeeSettlement />} />
         <Route path="returns" element={<EmployeeReturns />} />
+        <Route path="restaurant" element={<EmployeeRestaurant />} />
+        <Route path="kitchen" element={<EmployeeKitchen />} />
         <Route path="notifications" element={<EmployeeNotifications />} />
       </Route>
 
@@ -98,6 +108,12 @@ export default function App() {
 
         {/* Team — owner or delegated employee manager (manager-only page) */}
         <Route path="team" element={<RequireCapability caps={['can_manage_employees']}><ManagerEmployees /></RequireCapability>} />
+
+        {/* Restaurant / Café — owner or delegated restaurant manager */}
+        <Route path="restaurant/pos" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantPos token={null} /></RequireCapability>} />
+        <Route path="restaurant/kds" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantKds token={null} /></RequireCapability>} />
+        <Route path="restaurant/menu" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantMenu /></RequireCapability>} />
+        <Route path="restaurant/tables" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantTables /></RequireCapability>} />
 
         {/* Operations — owner or inventory_manager per permissions */}
         <Route path="requests" element={<RequireCapability caps={['can_approve_requests']}><AdminRequests /></RequireCapability>} />

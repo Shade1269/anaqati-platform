@@ -155,7 +155,12 @@ export default function PlatformTenants() {
                     style={{ background: t.primary_color || '#C9A24B' }}
                   />
                   <div>
-                    <p className="text-text">{t.brand_name || t.name}</p>
+                    <p className="flex items-center gap-2 text-text">
+                      {t.brand_name || t.name}
+                      <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-muted">
+                        {t.business_type === 'restaurant' ? 'مطعم' : 'تجزئة'}
+                      </span>
+                    </p>
                     {t.brand_name && t.brand_name !== t.name && (
                       <p className="text-xs text-muted">{t.name}</p>
                     )}
@@ -277,6 +282,7 @@ function CreateTenantDialog({
   const [adminPassword, setAdminPassword] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#C9A24B');
   const [expires, setExpires] = useState('');
+  const [businessType, setBusinessType] = useState<'retail' | 'restaurant'>('retail');
   const [busy, setBusy] = useState(false);
   const toast = useToast();
 
@@ -295,6 +301,7 @@ function CreateTenantDialog({
         brandName: brandName.trim() || name.trim(),
         primaryColor,
         subscriptionExpires: expires || null,
+        businessType,
       });
       toast.success(
         `تم إنشاء العميل. بريد الأدمن: ${res.admin_email} — شارك بيانات الدخول مع العميل`
@@ -342,6 +349,15 @@ function CreateTenantDialog({
             />
           </Field>
         </div>
+        <Field label="نوع النشاط">
+          <Select
+            value={businessType}
+            onChange={(e) => setBusinessType(e.target.value as 'retail' | 'restaurant')}
+          >
+            <option value="retail">تجزئة / متجر ومعارض</option>
+            <option value="restaurant">مطعم / كافيه (طاولات ومطبخ)</option>
+          </Select>
+        </Field>
         <Field label="بريد الأدمن">
           <Input
             type="email"

@@ -20,7 +20,7 @@ export default function EmployeeLogin() {
     try {
       const s = await employeeApi.login(phone.trim(), code.trim());
       setSession(s);
-      navigate('/employee/dashboard');
+      navigate(s.business_type === 'restaurant' ? '/employee/restaurant' : '/employee/dashboard');
     } catch (err) {
       setError((err as Error).message);
     } finally {
