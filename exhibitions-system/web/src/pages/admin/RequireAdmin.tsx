@@ -15,6 +15,9 @@ export default function RequireAdmin({ children }: { children: ReactNode }) {
 
   if (!profile) return <Navigate to="/admin/login" replace />;
 
+  // مالك المنصة لا يدخل أنظمة العملاء — يُحوّل للوحة المنصة.
+  if (profile.is_platform_admin) return <Navigate to="/platform" replace />;
+
   if (profile.role !== 'admin') {
     if (profile.role === 'inventory_manager') {
       return <Navigate to="/admin/inventory" replace />;
