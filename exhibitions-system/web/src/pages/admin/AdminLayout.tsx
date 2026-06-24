@@ -43,69 +43,115 @@ interface Item {
   label: string;
   icon: React.ReactNode;
   end?: boolean;
-  show: (role: string, p: Permissions | null) => boolean;
 }
 
-const adminOnly = (role: string) => role === 'admin';
 const sz = 18;
 
-const operations: Item[] = [
-  {
-    to: '/admin/inventory',
-    label: 'المخزون',
-    icon: <Boxes size={sz} />,
-    show: (r) => r === 'admin' || r === 'inventory_manager',
-  },
-  {
-    to: '/admin/receive-stock',
-    label: 'استلام بضاعة',
-    icon: <PackagePlus size={sz} />,
-    show: (r, p) => r === 'admin' || (r === 'inventory_manager' && !!p?.can_add_stock),
-  },
-  {
-    to: '/admin/requests',
-    label: 'طلبات البضاعة',
-    icon: <ClipboardList size={sz} />,
-    show: (r, p) =>
-      r === 'admin' || (r === 'inventory_manager' && !!p?.can_approve_requests),
-  },
-  {
-    to: '/admin/wholesale',
-    label: 'الجملة',
-    icon: <ShoppingCart size={sz} />,
-    show: (r, p) =>
-      r === 'admin' || (r === 'inventory_manager' && !!p?.can_issue_wholesale),
-  },
-];
+/* ---- Inventory flag helper (manager can read inventory if any op flag set) ---- */
+function hasAnyInventoryFlag(p: Permissions | null): boolean {
+  return !!(
+    p?.can_add_stock ||
+    p?.can_approve_requests ||
+    p?.can_issue_transfers ||
+    p?.can_transfers ||
+    p?.can_issue_wholesale ||
+    p?.can_receive_returns ||
+    p?.can_returns
+  );
+}
 
-const management: Item[] = [
-  { to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} />, show: adminOnly },
-  { to: '/admin/products', label: 'المنتجات', icon: <Package size={sz} />, show: adminOnly },
-  { to: '/admin/catalog', label: 'الكتالوج', icon: <Tags size={sz} />, show: adminOnly },
-  { to: '/admin/branches', label: 'المعارض', icon: <Store size={sz} />, show: adminOnly },
-  { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} />, show: adminOnly },
-  { to: '/admin/monitoring', label: 'مراقبة الموظفين', icon: <UserCheck size={sz} />, show: adminOnly },
-  { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} />, show: adminOnly },
-  { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} />, show: adminOnly },
-  { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} />, show: adminOnly },
-  { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} />, show: adminOnly },
-];
+/* ---- Reusable nav items ---- */
+const navInventory: Item = { to: '/admin/inventory', label: 'المخزون', icon: <Boxes size={sz} /> };
+const navReceive: Item = { to: '/admin/receive-stock', label: 'استلام بضاعة', icon: <PackagePlus size={sz} /> };
+const navRequests: Item = { to: '/admin/requests', label: 'طلبات البضاعة', icon: <ClipboardList size={sz} /> };
+const navWholesale: Item = { to: '/admin/wholesale', label: 'الجملة', icon: <ShoppingCart size={sz} /> };
 
-const store: Item[] = [
-  { to: '/admin/store/settings', label: 'إعدادات المتجر', icon: <Settings size={sz} />, show: adminOnly },
-  { to: '/admin/store/products', label: 'منتجات المتجر', icon: <ShoppingBag size={sz} />, show: adminOnly },
-  { to: '/admin/store/orders', label: 'طلبات المتجر', icon: <ClipboardListIcon size={sz} />, show: adminOnly },
-];
+const navStoreSettings: Item = { to: '/admin/store/settings', label: 'إعدادات المتجر', icon: <Settings size={sz} /> };
+const navStoreProducts: Item = { to: '/admin/store/products', label: 'منتجات المتجر', icon: <ShoppingBag size={sz} /> };
+const navStoreOrders: Item = { to: '/admin/store/orders', label: 'طلبات المتجر', icon: <ClipboardListIcon size={sz} /> };
 
-const accounting: Item[] = [
-  { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true, show: adminOnly },
-  { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} />, show: adminOnly },
-  { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} />, show: adminOnly },
-  { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} />, show: adminOnly },
-  { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} />, show: adminOnly },
-  { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} />, show: adminOnly },
-  { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} />, show: adminOnly },
-];
+const navTeam: Item = { to: '/admin/team', label: 'الموظفون', icon: <Users size={sz} /> };
+
+/* ---- OWNER nav: grouped & tidy ---- */
+function ownerSections(): NavSection[] {
+  return [
+    {
+      title: 'نظرة عامة',
+      items: [
+        { to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
+        { to: '/admin/monitoring', label: 'مراقبة الموظفين', icon: <UserCheck size={sz} /> },
+      ],
+    },
+    {
+      title: 'التشغيل',
+      items: [
+        { to: '/admin/products', label: 'المنتجات', icon: <Package size={sz} /> },
+        { to: '/admin/catalog', label: 'الكتالوج', icon: <Tags size={sz} /> },
+        { to: '/admin/branches', label: 'المعارض', icon: <Store size={sz} /> },
+        navRequests,
+        navReceive,
+        navInventory,
+        navWholesale,
+      ],
+    },
+    {
+      title: 'المتجر الإلكتروني',
+      items: [navStoreSettings, navStoreProducts, navStoreOrders],
+    },
+    {
+      title: 'المالية والمحاسبة',
+      items: [
+        { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} /> },
+        { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true },
+        { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} /> },
+        { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} /> },
+        { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} /> },
+        { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
+        { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
+        { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+        { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} /> },
+      ],
+    },
+    {
+      title: 'النظام',
+      items: [
+        { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} /> },
+        { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} /> },
+        { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} /> },
+      ],
+    },
+  ];
+}
+
+/* ---- MANAGER nav: only what permission flags allow ---- */
+function managerSections(p: Permissions | null): NavSection[] {
+  const sections: NavSection[] = [];
+
+  const ops: Item[] = [];
+  if (hasAnyInventoryFlag(p)) ops.push(navInventory);
+  if (p?.can_add_stock) ops.push(navReceive);
+  if (p?.can_approve_requests) ops.push(navRequests);
+  if (p?.can_issue_wholesale) ops.push(navWholesale);
+  if (ops.length) sections.push({ title: 'العمليات', items: ops });
+
+  if (p?.can_manage_store) {
+    sections.push({
+      title: 'المتجر الإلكتروني',
+      items: [navStoreSettings, navStoreProducts, navStoreOrders],
+    });
+  }
+
+  if (p?.can_manage_employees) {
+    sections.push({ title: 'الفريق', items: [navTeam] });
+  }
+
+  return sections;
+}
+
+/* ---- A manager with broad caps is labelled "مدير", else "مدير مخزون" ---- */
+function managerHasBroadCaps(p: Permissions | null): boolean {
+  return !!(p?.can_manage_employees || p?.can_manage_store);
+}
 
 export default function AdminLayout() {
   const { loading, authed, profile, signOut } = useAdminAuth();
@@ -171,15 +217,12 @@ export default function AdminLayout() {
   }
 
   const perms = profile.permissions;
-  const sections: NavSection[] = [];
-  const mgmt = management.filter((i) => i.show(role, perms));
-  const ops = operations.filter((i) => i.show(role, perms));
-  const acct = accounting.filter((i) => i.show(role, perms));
-  const shop = store.filter((i) => i.show(role, perms));
-  if (mgmt.length) sections.push({ title: 'الإدارة', items: mgmt });
-  if (ops.length) sections.push({ title: 'العمليات', items: ops });
-  if (shop.length) sections.push({ title: 'المتجر الإلكتروني', items: shop });
-  if (acct.length) sections.push({ title: 'المحاسبة', items: acct });
+  const isOwner = role === 'admin';
+  const sections: NavSection[] = isOwner
+    ? ownerSections()
+    : managerSections(perms);
+
+  const managerLabel = managerHasBroadCaps(perms) ? 'مدير' : 'مدير مخزون';
 
   const unread = notifs.filter((n) => !n.is_read).length;
   const brand = profile.tenant?.brand_name || profile.tenant?.name || 'Black Axis';
@@ -189,12 +232,12 @@ export default function AdminLayout() {
     <>
       <DashboardShell
         brand={brand}
-        brandSub={role === 'admin' ? 'لوحة الأدمن' : 'إدارة المخزون'}
+        brandSub={isOwner ? 'لوحة المالك' : 'لوحة المدير'}
         logoUrl={logoUrl}
         sections={sections}
         userName={profile.full_name}
-        roleLabel={role === 'admin' ? 'أدمن' : 'مدير مخزون'}
-        roleTone={role === 'admin' ? 'gold' : 'info'}
+        roleLabel={isOwner ? 'مالك' : managerLabel}
+        roleTone={isOwner ? 'gold' : 'info'}
         onLogout={async () => {
           await signOut();
           navigate('/');
@@ -207,9 +250,9 @@ export default function AdminLayout() {
           },
         }}
         banner={
-          role === 'inventory_manager' ? (
+          !isOwner ? (
             <div className="mb-5 rounded-lg border border-info/30 bg-info/8 px-4 py-2.5 text-xs font-medium text-info">
-              وضع مدير المخزون: التكلفة والأرباح مخفية تمامًا.
+              وضع المدير: لا تظهر التكلفة ولا الأرباح.
             </div>
           ) : undefined
         }

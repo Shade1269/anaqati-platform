@@ -41,6 +41,7 @@ import type {
   OnlineOrderItem,
   OnlineOrderStatus,
   FulfillResult,
+  ManagerEmployeeRow,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -258,7 +259,9 @@ export const adminApi = {
     approve: boolean,
     transfers: boolean,
     wholesale: boolean,
-    returns: boolean
+    returns: boolean,
+    manageEmployees: boolean,
+    manageStore: boolean
   ) =>
     rpc<null>('set_im_permissions', {
       p_profile_id: profileId,
@@ -267,7 +270,14 @@ export const adminApi = {
       p_transfers: transfers,
       p_wholesale: wholesale,
       p_returns: returns,
+      p_manage_employees: manageEmployees,
+      p_manage_store: manageStore,
     }),
+
+  /* --------------------------- Manager (delegated) --------------------------- */
+
+  managerListEmployees: () =>
+    rpc<ManagerEmployeeRow[]>('mgr_list_employees', {}),
 
   setUserRole: (profileId: string, role: string, status: string) =>
     rpc<null>('set_user_role', {
@@ -457,36 +467,31 @@ export const adminStoreApi = {
     return data as StoreSettings;
   },
 
-  updateSettings: async (
-    tenantId: string,
+  // SAVE store settings via RPC so both owner and store-manager work (RLS-safe).
+  updateSettings: (
     patch: Partial<Omit<StoreSettings, 'id' | 'slug'>>
-  ): Promise<void> => {
-    const { error } = await supabase
-      .from('tenants')
-      .update(patch)
-      .eq('id', tenantId);
-    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
-  },
+  ): Promise<null> =>
+    rpc<null>('update_store_settings', {
+      p_enabled: !!patch.store_enabled,
+      p_description: patch.store_description ?? null,
+      p_whatsapp: patch.store_whatsapp ?? null,
+      p_delivery_fee: patch.delivery_fee ?? 0,
+      p_cod: !!patch.cod_enabled,
+    }),
 
-  listSellableProducts: async (): Promise<SellableProduct[]> => {
-    const { data, error } = await supabase
-      .from('products')
-      .select(
-        'id,product_code,name,sale_price_ref,online_enabled,online_price,image_url,description,is_active'
-      )
-      .eq('is_active', true)
-      .order('name');
-    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
-    return (data as SellableProduct[]) || [];
-  },
+  // List products via RPC (no cost exposed) so managers can read them.
+  listSellableProducts: () =>
+    rpc<SellableProduct[]>('store_admin_products', {}),
 
-  updateProduct: async (id: string, patch: ProductPatch): Promise<void> => {
-    const { error } = await supabase
-      .from('products')
-      .update(patch)
-      .eq('id', id);
-    if (error) throw new Error(error.message || 'حدث خطأ غير متوقع');
-  },
+  // Save a product's store fields via RPC (RLS-safe for managers).
+  updateProduct: (id: string, patch: ProductPatch): Promise<null> =>
+    rpc<null>('store_set_product', {
+      p_id: id,
+      p_online_enabled: !!patch.online_enabled,
+      p_online_price: patch.online_price ?? null,
+      p_image_url: patch.image_url ?? null,
+      p_description: patch.description ?? null,
+    }),
 
   listOrders: async (): Promise<OnlineOrder[]> => {
     const { data, error } = await supabase

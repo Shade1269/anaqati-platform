@@ -269,9 +269,11 @@ function ImRow({
   const [perms, setPerms] = useState({
     addStock: !!p.can_add_stock,
     approve: !!p.can_approve_requests,
-    transfers: !!p.can_transfers,
+    transfers: !!(p.can_issue_transfers || p.can_transfers),
     wholesale: !!p.can_issue_wholesale,
-    returns: !!p.can_returns,
+    returns: !!(p.can_receive_returns || p.can_returns),
+    manageEmployees: !!p.can_manage_employees,
+    manageStore: !!p.can_manage_store,
   });
   const [status, setStatus] = useState(profile.status);
   const [busy, setBusy] = useState(false);
@@ -286,7 +288,9 @@ function ImRow({
         perms.approve,
         perms.transfers,
         perms.wholesale,
-        perms.returns
+        perms.returns,
+        perms.manageEmployees,
+        perms.manageStore
       );
       toast.success('تم حفظ الصلاحيات');
       onChanged();
@@ -332,12 +336,36 @@ function ImRow({
           </Button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-4 text-sm">
-        <Check2 label="استلام بضاعة" checked={perms.addStock} onChange={toggle('addStock')} />
-        <Check2 label="مراجعة الطلبات" checked={perms.approve} onChange={toggle('approve')} />
-        <Check2 label="التحويلات" checked={perms.transfers} onChange={toggle('transfers')} />
-        <Check2 label="الجملة" checked={perms.wholesale} onChange={toggle('wholesale')} />
-        <Check2 label="المرتجعات" checked={perms.returns} onChange={toggle('returns')} />
+      <div className="space-y-3">
+        <div>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted/70">
+            عمليات المخزون
+          </p>
+          <div className="flex flex-wrap gap-4 text-sm">
+            <Check2 label="استلام بضاعة" checked={perms.addStock} onChange={toggle('addStock')} />
+            <Check2 label="مراجعة الطلبات" checked={perms.approve} onChange={toggle('approve')} />
+            <Check2 label="التحويلات" checked={perms.transfers} onChange={toggle('transfers')} />
+            <Check2 label="الجملة" checked={perms.wholesale} onChange={toggle('wholesale')} />
+            <Check2 label="المرتجعات" checked={perms.returns} onChange={toggle('returns')} />
+          </div>
+        </div>
+        <div>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted/70">
+            الإدارة
+          </p>
+          <div className="flex flex-wrap gap-4 text-sm">
+            <Check2
+              label="إدارة الموظفين"
+              checked={perms.manageEmployees}
+              onChange={toggle('manageEmployees')}
+            />
+            <Check2
+              label="إدارة المتجر والمخزون"
+              checked={perms.manageStore}
+              onChange={toggle('manageStore')}
+            />
+          </div>
+        </div>
       </div>
       <Button className="mt-3" size="sm" onClick={savePerms} loading={busy}>
         حفظ الصلاحيات

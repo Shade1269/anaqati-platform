@@ -33,6 +33,8 @@ import AdminMonitoring from './pages/admin/AdminMonitoring';
 import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
 import RequireAdmin from './pages/admin/RequireAdmin';
+import RequireCapability from './pages/admin/RequireCapability';
+import ManagerEmployees from './pages/admin/team/ManagerEmployees';
 import AccountingOverview from './pages/admin/accounting/AccountingOverview';
 import AccountingIncome from './pages/admin/accounting/AccountingIncome';
 import AccountingBalance from './pages/admin/accounting/AccountingBalance';
@@ -89,16 +91,19 @@ export default function App() {
         <Route path="audit" element={<RequireAdmin><AdminAudit /></RequireAdmin>} />
         <Route path="branding" element={<RequireAdmin><AdminBranding /></RequireAdmin>} />
 
-        {/* Online store — admin only */}
-        <Route path="store/settings" element={<RequireAdmin><AdminStoreSettings /></RequireAdmin>} />
-        <Route path="store/products" element={<RequireAdmin><AdminStoreProducts /></RequireAdmin>} />
-        <Route path="store/orders" element={<RequireAdmin><AdminStoreOrders /></RequireAdmin>} />
+        {/* Online store — owner or delegated store manager */}
+        <Route path="store/settings" element={<RequireCapability caps={['can_manage_store']}><AdminStoreSettings /></RequireCapability>} />
+        <Route path="store/products" element={<RequireCapability caps={['can_manage_store']}><AdminStoreProducts /></RequireCapability>} />
+        <Route path="store/orders" element={<RequireCapability caps={['can_manage_store']}><AdminStoreOrders /></RequireCapability>} />
 
-        {/* Operations — accessible to inventory_manager per permissions */}
-        <Route path="requests" element={<AdminRequests />} />
-        <Route path="wholesale" element={<AdminWholesale />} />
+        {/* Team — owner or delegated employee manager (manager-only page) */}
+        <Route path="team" element={<RequireCapability caps={['can_manage_employees']}><ManagerEmployees /></RequireCapability>} />
+
+        {/* Operations — owner or inventory_manager per permissions */}
+        <Route path="requests" element={<RequireCapability caps={['can_approve_requests']}><AdminRequests /></RequireCapability>} />
+        <Route path="wholesale" element={<RequireCapability caps={['can_issue_wholesale']}><AdminWholesale /></RequireCapability>} />
         <Route path="inventory" element={<AdminInventory />} />
-        <Route path="receive-stock" element={<AdminReceiveStock />} />
+        <Route path="receive-stock" element={<RequireCapability caps={['can_add_stock']}><AdminReceiveStock /></RequireCapability>} />
 
         {/* Accounting — admin only */}
         <Route path="accounting" element={<RequireAdmin><AccountingOverview /></RequireAdmin>} />
