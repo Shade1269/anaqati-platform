@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, UserRound } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { UserRound } from 'lucide-react';
 import { employeeApi } from '../../lib/api';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
 import { Button, Field, Input, ErrorBanner } from '../../components/ui';
@@ -61,12 +61,9 @@ export default function EmployeeLogin() {
           دخول
         </Button>
 
-        <Link
-          to="/admin/login"
-          className="flex items-center justify-center gap-1 text-sm text-muted hover:text-text"
-        >
-          <ArrowRight size={14} /> دخول المشترك (بريد + كلمة مرور)
-        </Link>
+        <p className="text-center text-xs text-muted">
+          ادخل برقم جوالك وكود الوصول الذي زوّدك به مكان عملك.
+        </p>
       </form>
     </div>
   );

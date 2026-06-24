@@ -104,6 +104,8 @@ export default function AdminEmployees() {
         icon={<Users size={22} />}
       />
 
+      <EmployeeLoginLink />
+
       {generatedCode && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-primary/8 px-4 py-3 text-sm">
           <span className="flex items-center gap-2 text-text">
@@ -205,6 +207,38 @@ export default function AdminEmployees() {
           ))}
         </Table>
       )}
+    </div>
+  );
+}
+
+// رابط دخول الموظفين — غير ظاهر للعامة؛ المالك ينسخه ويعطيه لموظفيه.
+function EmployeeLoginLink() {
+  const [copied, setCopied] = useState(false);
+  const url = `${window.location.origin}/employee/login`;
+
+  function copy() {
+    navigator.clipboard?.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
+
+  return (
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-info/30 bg-info/8 px-4 py-3 text-sm">
+      <span className="flex items-center gap-2 text-text">
+        <KeyRound size={16} className="text-info" />
+        رابط دخول الموظفين (شاركه مع موظفيك فقط):
+        <code className="rounded bg-surface-2 px-2 py-0.5 font-mono text-xs text-muted" dir="ltr">
+          {url}
+        </code>
+      </span>
+      <Button
+        size="sm"
+        variant="outline"
+        icon={copied ? <Check size={14} /> : <Copy size={14} />}
+        onClick={copy}
+      >
+        {copied ? 'تم النسخ' : 'نسخ الرابط'}
+      </Button>
     </div>
   );
 }
