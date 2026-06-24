@@ -3,10 +3,24 @@ export type Role = 'admin' | 'inventory_manager';
 export interface Permissions {
   can_add_stock?: boolean;
   can_approve_requests?: boolean;
+  can_issue_transfers?: boolean;
   can_transfers?: boolean;
   can_issue_wholesale?: boolean;
+  can_receive_returns?: boolean;
   can_returns?: boolean;
+  can_manage_employees?: boolean;
+  can_manage_store?: boolean;
   [key: string]: boolean | undefined;
+}
+
+export interface ManagerEmployeeRow {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  status: string | null;
+  access_code: string | null;
+  hire_date: string | null;
+  is_active: boolean | null;
 }
 
 export interface TenantBranding {

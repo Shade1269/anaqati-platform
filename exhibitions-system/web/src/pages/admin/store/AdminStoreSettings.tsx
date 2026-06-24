@@ -63,7 +63,7 @@ export default function AdminStoreSettings() {
     if (!tenantId) return;
     setBusy(true);
     try {
-      await adminStoreApi.updateSettings(tenantId, {
+      await adminStoreApi.updateSettings({
         store_enabled: enabled,
         store_description: description.trim() || null,
         store_whatsapp: whatsapp.trim() || null,
