@@ -61,6 +61,9 @@ export default function RequireCapability({
 
   if (!profile) return <Navigate to="/admin/login" replace />;
 
+  // مالك المنصة لا يدخل أنظمة العملاء — يُحوّل للوحة المنصة.
+  if (profile.is_platform_admin) return <Navigate to="/platform" replace />;
+
   // Owner sees everything.
   if (profile.role === 'admin') return <>{children}</>;
 

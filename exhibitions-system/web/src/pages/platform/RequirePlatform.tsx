@@ -10,7 +10,7 @@ export default function RequirePlatform({ children }: { children: ReactNode }) {
 
   if (loading) return <Spinner label="جارٍ التحقق..." />;
 
-  if (!authed || !profile) return <Navigate to="/admin/login" replace />;
+  if (!authed || !profile) return <Navigate to="/owner" replace />;
 
   if (!profile.is_platform_admin) {
     return (
