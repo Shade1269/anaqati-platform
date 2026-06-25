@@ -282,6 +282,25 @@ export interface NewOrderItem {
   note?: string | null;
 }
 
+export interface Ingredient {
+  id: string;
+  name: string;
+  unit: string;
+  current_qty: number;
+  reorder_level: number;
+  cost_per_unit: number;
+  is_active: boolean;
+  is_low: boolean;
+}
+
+export interface RecipeLine {
+  id: string;
+  ingredient_id: string;
+  name: string;
+  unit: string;
+  qty: number;
+}
+
 export interface Branch {
   id: string;
   name: string;

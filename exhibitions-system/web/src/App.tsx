@@ -21,6 +21,7 @@ import RestaurantPos from './pages/restaurant/RestaurantPos';
 import RestaurantKds from './pages/restaurant/RestaurantKds';
 import RestaurantMenu from './pages/restaurant/RestaurantMenu';
 import RestaurantTables from './pages/restaurant/RestaurantTables';
+import RestaurantInventory from './pages/restaurant/RestaurantInventory';
 
 // Admin / IM
 import AdminLogin from './pages/admin/AdminLogin';
@@ -114,6 +115,7 @@ export default function App() {
         <Route path="restaurant/kds" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantKds token={null} /></RequireCapability>} />
         <Route path="restaurant/menu" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantMenu /></RequireCapability>} />
         <Route path="restaurant/tables" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantTables /></RequireCapability>} />
+        <Route path="restaurant/inventory" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantInventory /></RequireCapability>} />
 
         {/* Operations — owner or inventory_manager per permissions */}
         <Route path="requests" element={<RequireCapability caps={['can_approve_requests']}><AdminRequests /></RequireCapability>} />

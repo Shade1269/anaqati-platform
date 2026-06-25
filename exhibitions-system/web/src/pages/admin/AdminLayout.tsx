@@ -81,7 +81,8 @@ const navRestPos: Item = { to: '/admin/restaurant/pos', label: 'الطاولات
 const navRestKds: Item = { to: '/admin/restaurant/kds', label: 'شاشة المطبخ', icon: <ChefHat size={sz} /> };
 const navRestMenu: Item = { to: '/admin/restaurant/menu', label: 'المنيو', icon: <UtensilsCrossed size={sz} /> };
 const navRestTables: Item = { to: '/admin/restaurant/tables', label: 'إدارة الطاولات', icon: <Armchair size={sz} /> };
-const restaurantItems: Item[] = [navRestPos, navRestKds, navRestMenu, navRestTables];
+const navRestInventory: Item = { to: '/admin/restaurant/inventory', label: 'مخزون المواد', icon: <Boxes size={sz} /> };
+const restaurantItems: Item[] = [navRestPos, navRestKds, navRestMenu, navRestTables, navRestInventory];
 
 /* ---- OWNER nav (restaurant): POS + kitchen + menu, no retail/store ops ---- */
 function ownerRestaurantSections(): NavSection[] {
