@@ -35,6 +35,7 @@ export interface TenantBranding {
   subscription_status: string | null;
   subscription_expires_at: string | null;
   business_type?: 'retail' | 'restaurant' | 'manufacturing';
+  business_subtype?: 'general' | 'plastics' | 'wood' | 'metal';
 }
 
 export interface MyProfile {
@@ -168,6 +169,7 @@ export interface PlatformTenant {
   subscription_expires_at: string | null;
   created_at: string | null;
   business_type?: 'retail' | 'restaurant' | 'manufacturing';
+  business_subtype?: 'general' | 'plastics' | 'wood' | 'metal';
   employees: number;
   branches: number;
   sales_total: number;
@@ -372,6 +374,17 @@ export interface MfgMaterial {
   cost_per_unit: number;
   is_active: boolean;
   is_low: boolean;
+  density?: number | null;
+}
+
+export interface MfgMold {
+  id: string;
+  name: string;
+  cavities: number;
+  product_id: string | null;
+  product: string | null;
+  note: string | null;
+  is_active: boolean;
 }
 
 export interface MfgProduct {
@@ -432,6 +445,8 @@ export interface MfgWorkOrderDetail {
   status: MfgWorkOrderRow['status'];
   markup_pct: number;
   note: string | null;
+  produced_qty: number;
+  scrap_qty: number;
   est: { material: number; labor: number; overhead: number; total: number; price: number };
   actual: { material: number; labor: number; overhead: number; total: number };
   materials: { name: string; qty: number; cost: number }[];

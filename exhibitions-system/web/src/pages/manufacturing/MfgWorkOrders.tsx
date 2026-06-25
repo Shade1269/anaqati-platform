@@ -120,6 +120,7 @@ function DetailDialog({ id, onClose, onChanged }: { id: string; onClose: () => v
   const [imMat, setImMat] = useState(''); const [imQty, setImQty] = useState('');
   // log labor
   const [lbWc, setLbWc] = useState(''); const [lbOp, setLbOp] = useState(''); const [lbMin, setLbMin] = useState(''); const [lbRate, setLbRate] = useState('');
+  const [prod, setProd] = useState(''); const [scrap, setScrap] = useState('');
   const toast = useToast();
 
   const reload = useCallback(async () => {
@@ -144,6 +145,9 @@ function DetailDialog({ id, onClose, onChanged }: { id: string; onClose: () => v
   }
   async function invoice(pm: 'cash' | 'card' | 'credit') {
     try { await mfgApi.woInvoice(id, pm); toast.success('تمت الفوترة'); reload(); onChanged(); } catch (e) { toast.error((e as Error).message); }
+  }
+  async function recordOutput() {
+    try { await mfgApi.woRecordOutput(id, Number(prod) || 0, Number(scrap) || 0); toast.success('تم تسجيل الإنتاج'); reload(); } catch (e) { toast.error((e as Error).message); }
   }
 
   if (loading || !d) return <Dialog open onClose={onClose} title="..."><Spinner /></Dialog>;
@@ -204,6 +208,15 @@ function DetailDialog({ id, onClose, onChanged }: { id: string; onClose: () => v
                 <Input className="col-span-2" type="number" placeholder="دقائق" value={lbMin} onChange={(e) => setLbMin(e.target.value)} />
                 <Input className="col-span-2" type="number" placeholder="أجر/س" value={lbRate} onChange={(e) => setLbRate(e.target.value)} />
                 <Button size="sm" className="col-span-2" onClick={logLabor}>تسجيل</Button>
+              </div>
+            </Card>
+            <Card>
+              <h4 className="mb-2 text-sm font-bold text-text">تسجيل الإنتاج / الهدر</h4>
+              <div className="flex flex-wrap items-end gap-2">
+                <Field label="المنتَج"><Input type="number" step="0.001" className="w-28" value={prod} onChange={(e) => setProd(e.target.value)} placeholder={String(d.produced_qty)} /></Field>
+                <Field label="الهدر/التالف"><Input type="number" step="0.001" className="w-28" value={scrap} onChange={(e) => setScrap(e.target.value)} placeholder={String(d.scrap_qty)} /></Field>
+                <Button size="sm" onClick={recordOutput}>حفظ</Button>
+                <span className="text-xs text-muted">المسجّل: {d.produced_qty} منتَج / {d.scrap_qty} هدر</span>
               </div>
             </Card>
             <Button onClick={() => status('done')}>إنجاز الأمر</Button>

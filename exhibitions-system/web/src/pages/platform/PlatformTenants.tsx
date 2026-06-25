@@ -283,6 +283,7 @@ function CreateTenantDialog({
   const [primaryColor, setPrimaryColor] = useState('#C9A24B');
   const [expires, setExpires] = useState('');
   const [businessType, setBusinessType] = useState<'retail' | 'restaurant' | 'manufacturing'>('retail');
+  const [businessSubtype, setBusinessSubtype] = useState<'general' | 'plastics' | 'wood' | 'metal'>('general');
   const [busy, setBusy] = useState(false);
   const toast = useToast();
 
@@ -302,6 +303,7 @@ function CreateTenantDialog({
         primaryColor,
         subscriptionExpires: expires || null,
         businessType,
+        businessSubtype: businessType === 'manufacturing' ? businessSubtype : 'general',
       });
       toast.success(
         `تم إنشاء العميل. بريد الأدمن: ${res.admin_email} — شارك بيانات الدخول مع العميل`
@@ -359,6 +361,16 @@ function CreateTenantDialog({
             <option value="manufacturing">تصنيع / ورشة (أوامر شغل وتكلفة)</option>
           </Select>
         </Field>
+        {businessType === 'manufacturing' && (
+          <Field label="القطاع الصناعي">
+            <Select value={businessSubtype} onChange={(e) => setBusinessSubtype(e.target.value as typeof businessSubtype)}>
+              <option value="general">عام</option>
+              <option value="plastics">بلاستيك (قوالب)</option>
+              <option value="wood">خشب/أثاث (حاسبة قص)</option>
+              <option value="metal">معادن (حاسبة وزن)</option>
+            </Select>
+          </Field>
+        )}
         <Field label="بريد الأدمن">
           <Input
             type="email"
