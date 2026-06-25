@@ -36,6 +36,7 @@ export interface TenantBranding {
   subscription_expires_at: string | null;
   business_type?: 'retail' | 'restaurant' | 'manufacturing';
   business_subtype?: 'general' | 'plastics' | 'wood' | 'metal';
+  currency?: string;
 }
 
 export interface MyProfile {
@@ -62,6 +63,7 @@ export interface StoreInfo {
   delivery_fee: number | null;
   cod_enabled: boolean | null;
   slug: string;
+  currency?: string;
 }
 
 export interface StoreProduct {
@@ -187,6 +189,7 @@ export interface EmployeeSession {
   profile_id: string;
   full_name: string;
   business_type?: 'retail' | 'restaurant' | 'manufacturing';
+  currency?: string;
 }
 
 /* ----------------------------- Restaurant / Café ----------------------------- */

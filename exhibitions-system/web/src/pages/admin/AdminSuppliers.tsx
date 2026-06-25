@@ -15,7 +15,7 @@ import {
   Table,
   useToast,
 } from '../../components/ui';
-import { sar } from '../../lib/format';
+import { sar, currencyLabel } from '../../lib/format';
 
 export default function AdminSuppliers() {
   const [rows, setRows] = useState<SupplierBalance[]>([]);
@@ -170,7 +170,7 @@ function PayDialog({
             {sar(supplier.balance)}
           </span>
         </div>
-        <Field label="المبلغ (ر.س)">
+        <Field label={`المبلغ (${currencyLabel()})`}>
           <Input
             type="number"
             step="0.01"

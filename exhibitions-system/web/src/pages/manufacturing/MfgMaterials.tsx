@@ -7,7 +7,7 @@ import {
 } from '../../components/ui';
 
 const num = (n: number) => (Math.round((n || 0) * 1000) / 1000).toString();
-const money = (n: number) => `${(n || 0).toFixed(2)} ر.س`;
+import { money } from '../../lib/format';
 const emptyForm = { id: null as string | null, name: '', unit: 'قطعة', reorder: '0', cost: '0', active: true };
 
 export default function MfgMaterials() {

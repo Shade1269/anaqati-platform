@@ -15,8 +15,7 @@ import {
   useToast,
 } from '../../components/ui';
 
-const money = (n: number) => `${(n || 0).toFixed(2)} ر.س`;
-
+import { money } from '../../lib/format';
 export default function RestaurantMenu() {
   const [menu, setMenu] = useState<MenuCategory[]>([]);
   const [loading, setLoading] = useState(true);

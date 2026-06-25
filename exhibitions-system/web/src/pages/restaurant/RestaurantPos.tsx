@@ -31,8 +31,7 @@ import {
   useToast,
 } from '../../components/ui';
 
-const money = (n: number) => `${(n || 0).toFixed(2)} ر.س`;
-
+import { money } from '../../lib/format';
 /** Restaurant POS — floor map + open table + running tab + add order + close/split/merge/transfer.
  *  token=null → owner/manager (Supabase session). token set → waiter (employee). */
 export default function RestaurantPos({ token = null }: { token?: string | null }) {

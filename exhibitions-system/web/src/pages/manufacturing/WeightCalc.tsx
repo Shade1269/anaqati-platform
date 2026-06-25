@@ -5,8 +5,7 @@ import { Button, Card, CardHeader, Field, Input, PageHeader } from '../../compon
 const DENSITIES: Record<string, number> = {
   'حديد/صلب': 7.85, 'ألمنيوم': 2.70, 'نحاس': 8.96, 'ستانلس': 8.00, 'نحاس أصفر': 8.50,
 };
-const money = (n: number) => `${(n || 0).toFixed(2)} ر.س`;
-
+import { money } from '../../lib/format';
 /** حاسبة الوزن (معادن): الأبعاد + الكثافة → الوزن → التكلفة. */
 export default function WeightCalc() {
   const [shape, setShape] = useState<'sheet' | 'bar'>('sheet');

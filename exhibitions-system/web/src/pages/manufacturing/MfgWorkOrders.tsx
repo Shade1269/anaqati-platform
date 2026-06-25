@@ -4,7 +4,7 @@ import { mfgApi } from '../../lib/api';
 import type { MfgProduct, MfgWorkOrderRow, MfgWorkOrderDetail, MfgEstimate, MfgMaterial, WorkCenter } from '../../lib/types';
 import { Button, Card, Dialog, EmptyState, Field, Input, PageHeader, Spinner, Table, useToast } from '../../components/ui';
 
-const money = (n: number) => `${(n || 0).toFixed(2)} ر.س`;
+import { money } from '../../lib/format';
 const statusLabel: Record<string, string> = {
   quote: 'عرض سعر', released: 'صادر', in_progress: 'قيد التنفيذ', done: 'منجز', invoiced: 'مفوتر', cancelled: 'ملغى',
 };
