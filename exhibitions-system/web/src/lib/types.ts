@@ -11,6 +11,7 @@ export interface Permissions {
   can_manage_employees?: boolean;
   can_manage_store?: boolean;
   can_manage_restaurant?: boolean;
+  can_manage_market?: boolean;
   [key: string]: boolean | undefined;
 }
 
@@ -299,6 +300,58 @@ export interface RecipeLine {
   name: string;
   unit: string;
   qty: number;
+}
+
+/* ----------------------------- Internal Market (B2B) ----------------------------- */
+
+export interface MarketListing {
+  id: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  unit: string;
+  price: number;
+  min_order_qty: number;
+  image_url: string | null;
+  is_active: boolean;
+}
+
+export interface MarketBrowseItem {
+  id: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  unit: string;
+  price: number;
+  min_order_qty: number;
+  image_url: string | null;
+  seller_tenant_id: string;
+  seller_name: string;
+}
+
+export type MarketOrderStatus = 'new' | 'confirmed' | 'fulfilled' | 'cancelled';
+
+export interface MarketOrderRow {
+  id: string;
+  order_no: string;
+  status: MarketOrderStatus;
+  payment_method: 'cash' | 'credit';
+  total: number;
+  note: string | null;
+  created_at: string;
+  counterparty: string;
+}
+
+export interface MarketOrderDetail {
+  id: string;
+  order_no: string;
+  status: MarketOrderStatus;
+  payment_method: 'cash' | 'credit';
+  total: number;
+  note: string | null;
+  created_at: string;
+  is_seller: boolean;
+  items: { name: string; unit: string | null; qty: number; unit_price: number; line_total: number }[];
 }
 
 export interface Branch {
