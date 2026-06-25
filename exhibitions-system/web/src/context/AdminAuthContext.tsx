@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { supabase } from '../lib/supabase';
 import { adminApi } from '../lib/api';
+import { setCurrency } from '../lib/format';
 import type { MyProfile } from '../lib/types';
 
 interface AdminAuthState {
@@ -28,6 +29,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     try {
       const p = await adminApi.myProfile();
       setProfile(p);
+      setCurrency(p?.tenant?.currency);
       return p;
     } catch {
       setProfile(null);

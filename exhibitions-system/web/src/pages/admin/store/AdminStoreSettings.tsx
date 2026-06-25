@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { currencyLabel } from '../../../lib/format';
 import { Store, Copy, ExternalLink } from 'lucide-react';
 import { adminStoreApi } from '../../../lib/api';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
@@ -147,7 +148,7 @@ export default function AdminStoreSettings() {
               />
             </Field>
 
-            <Field label="رسوم التوصيل (ر.س)">
+            <Field label={`رسوم التوصيل (${currencyLabel()})`}>
               <Input
                 type="number"
                 step="0.01"

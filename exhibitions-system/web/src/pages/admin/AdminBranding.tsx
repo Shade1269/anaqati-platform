@@ -8,9 +8,11 @@ import {
   ErrorBanner,
   Field,
   Input,
+  Select,
   PageHeader,
   useToast,
 } from '../../components/ui';
+import { setCurrency } from '../../lib/format';
 
 export default function AdminBranding() {
   const { profile, refreshProfile } = useAdminAuth();
@@ -22,6 +24,7 @@ export default function AdminBranding() {
   const [primaryColor, setPrimaryColor] = useState(
     tenant?.primary_color || '#C9A24B'
   );
+  const [currency, setCurrencyCode] = useState(tenant?.currency || 'SAR');
   const [busy, setBusy] = useState(false);
 
   if (!profile?.tenant_id) {
@@ -46,9 +49,11 @@ export default function AdminBranding() {
         profile.tenant_id,
         brandName.trim(),
         logoUrl.trim() || null,
-        primaryColor
+        primaryColor,
+        currency
       );
       applyPrimaryColor(primaryColor);
+      setCurrency(currency);
       await refreshProfile();
       toast.success('تم حفظ العلامة التجارية');
     } catch (err) {
@@ -87,6 +92,17 @@ export default function AdminBranding() {
               onChange={(e) => setLogoUrl(e.target.value)}
               placeholder="https://...  (اختياري)"
             />
+          </Field>
+
+          <Field label="العملة">
+            <Select value={currency} onChange={(e) => setCurrencyCode(e.target.value)}>
+              <option value="SYP">ليرة سورية (ل.س)</option>
+              <option value="USD">دولار ($)</option>
+              <option value="TRY">ليرة تركية (₺)</option>
+              <option value="SAR">ريال سعودي (ر.س)</option>
+              <option value="AED">درهم (د.إ)</option>
+              <option value="EUR">يورو (€)</option>
+            </Select>
           </Field>
 
           <Field label="اللون الأساسي">

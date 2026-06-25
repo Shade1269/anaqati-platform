@@ -18,7 +18,7 @@ import {
   Table,
   useToast,
 } from '../../components/ui';
-import { fmtDate, sar } from '../../lib/format';
+import { fmtDate, sar, currencyLabel } from '../../lib/format';
 
 interface ProfileRow {
   id: string;
@@ -160,7 +160,7 @@ export default function AdminBranches() {
                 onChange={(e) => setForm({ ...form, end_date: e.target.value })}
               />
             </Field>
-            <Field label="الهدف (ر.س)">
+            <Field label={`الهدف (${currencyLabel()})`}>
               <Input
                 type="number"
                 step="0.01"

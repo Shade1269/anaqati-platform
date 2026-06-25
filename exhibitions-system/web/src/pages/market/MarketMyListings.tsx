@@ -15,7 +15,7 @@ import {
   useToast,
 } from '../../components/ui';
 
-const money = (n: number) => `${(n || 0).toFixed(2)} ر.س`;
+import { money } from '../../lib/format';
 const empty = {
   id: null as string | null,
   name: '',

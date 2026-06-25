@@ -14,8 +14,7 @@ import {
   useToast,
 } from '../../components/ui';
 
-const money = (n: number) => `${(n || 0).toFixed(2)} ر.س`;
-
+import { money } from '../../lib/format';
 interface CartLine {
   listing: MarketBrowseItem;
   qty: number;

@@ -12,7 +12,7 @@ import {
   useToast,
 } from '../../components/ui';
 
-const money = (n: number) => `${(n || 0).toFixed(2)} ر.س`;
+import { money } from '../../lib/format';
 const statusLabel: Record<string, string> = {
   new: 'جديد',
   confirmed: 'مؤكّد',

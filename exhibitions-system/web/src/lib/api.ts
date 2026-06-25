@@ -448,13 +448,15 @@ export const adminApi = {
     tenantId: string,
     brandName: string,
     logoUrl: string | null,
-    primaryColor: string
+    primaryColor: string,
+    currency?: string
   ) =>
     rpc<null>('update_tenant_branding', {
       p_tenant_id: tenantId,
       p_brand_name: brandName,
       p_logo_url: logoUrl,
       p_primary_color: primaryColor,
+      p_currency: currency ?? null,
     }),
 };
 
@@ -602,13 +604,15 @@ export const platformApi = {
     tenantId: string,
     brandName: string,
     logoUrl: string | null,
-    primaryColor: string
+    primaryColor: string,
+    currency?: string
   ) =>
     rpc<null>('update_tenant_branding', {
       p_tenant_id: tenantId,
       p_brand_name: brandName,
       p_logo_url: logoUrl,
       p_primary_color: primaryColor,
+      p_currency: currency ?? null,
     }),
 };
 
