@@ -158,7 +158,7 @@ export default function PlatformTenants() {
                     <p className="flex items-center gap-2 text-text">
                       {t.brand_name || t.name}
                       <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-muted">
-                        {t.business_type === 'restaurant' ? 'مطعم' : 'تجزئة'}
+                        {t.business_type === 'restaurant' ? 'مطعم' : t.business_type === 'manufacturing' ? 'تصنيع' : 'تجزئة'}
                       </span>
                     </p>
                     {t.brand_name && t.brand_name !== t.name && (
@@ -282,7 +282,7 @@ function CreateTenantDialog({
   const [adminPassword, setAdminPassword] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#C9A24B');
   const [expires, setExpires] = useState('');
-  const [businessType, setBusinessType] = useState<'retail' | 'restaurant'>('retail');
+  const [businessType, setBusinessType] = useState<'retail' | 'restaurant' | 'manufacturing'>('retail');
   const [busy, setBusy] = useState(false);
   const toast = useToast();
 
@@ -356,6 +356,7 @@ function CreateTenantDialog({
           >
             <option value="retail">تجزئة / متجر ومعارض</option>
             <option value="restaurant">مطعم / كافيه (طاولات ومطبخ)</option>
+            <option value="manufacturing">تصنيع / ورشة (أوامر شغل وتكلفة)</option>
           </Select>
         </Field>
         <Field label="بريد الأدمن">

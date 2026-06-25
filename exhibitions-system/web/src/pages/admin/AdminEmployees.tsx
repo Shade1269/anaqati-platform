@@ -324,6 +324,7 @@ function ImRow({
     manageStore: !!p.can_manage_store,
     manageRestaurant: !!p.can_manage_restaurant,
     manageMarket: !!p.can_manage_market,
+    manageManufacturing: !!p.can_manage_manufacturing,
   });
   const [status, setStatus] = useState(profile.status);
   const [busy, setBusy] = useState(false);
@@ -342,7 +343,8 @@ function ImRow({
         perms.manageEmployees,
         perms.manageStore,
         perms.manageRestaurant,
-        perms.manageMarket
+        perms.manageMarket,
+        perms.manageManufacturing
       );
       toast.success('تم حفظ الصلاحيات');
       onChanged();
@@ -425,6 +427,11 @@ function ImRow({
               label="إدارة السوق الداخلي"
               checked={perms.manageMarket}
               onChange={toggle('manageMarket')}
+            />
+            <Check2
+              label="إدارة التصنيع"
+              checked={perms.manageManufacturing}
+              onChange={toggle('manageManufacturing')}
             />
           </div>
         </div>
