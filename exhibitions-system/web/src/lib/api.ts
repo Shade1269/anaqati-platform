@@ -53,6 +53,14 @@ import type {
   MarketBrowseItem,
   MarketOrderRow,
   MarketOrderDetail,
+  WorkCenter,
+  MfgMaterial,
+  MfgProduct,
+  MfgBomLine,
+  MfgRoutingOp,
+  MfgEstimate,
+  MfgWorkOrderRow,
+  MfgWorkOrderDetail,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -274,7 +282,8 @@ export const adminApi = {
     manageEmployees: boolean,
     manageStore: boolean,
     manageRestaurant: boolean = false,
-    manageMarket: boolean = false
+    manageMarket: boolean = false,
+    manageManufacturing: boolean = false
   ) =>
     rpc<null>('set_im_permissions', {
       p_profile_id: profileId,
@@ -287,6 +296,7 @@ export const adminApi = {
       p_manage_store: manageStore,
       p_manage_restaurant: manageRestaurant,
       p_manage_market: manageMarket,
+      p_manage_manufacturing: manageManufacturing,
     }),
 
   /* --------------------------- Manager (delegated) --------------------------- */
@@ -560,7 +570,7 @@ export const platformApi = {
     brandName: string;
     primaryColor: string;
     subscriptionExpires: string | null;
-    businessType?: 'retail' | 'restaurant';
+    businessType?: 'retail' | 'restaurant' | 'manufacturing';
   }) =>
     rpc<CreateTenantResult>('create_tenant', {
       p_name: payload.name,
@@ -837,4 +847,50 @@ export const marketApi = {
   orderDetail: (id: string) => rpc<MarketOrderDetail>('market_order_detail', { p_order_id: id }),
   setOrderStatus: (id: string, status: 'confirmed' | 'fulfilled' | 'cancelled') =>
     rpc<null>('market_set_order_status', { p_order_id: id, p_status: status }),
+};
+
+/* --------------------------- Manufacturing (job-shop) ----------------------------- */
+
+export const mfgApi = {
+  /* materials */
+  materialsList: (lowOnly = false) => rpc<MfgMaterial[]>('mfg_materials_list', { p_low_only: lowOnly }),
+  setMaterial: (id: string | null, name: string, unit: string, reorder: number, cost: number, active: boolean) =>
+    rpc<string>('mfg_material_set', { p_id: id, p_name: name, p_unit: unit, p_reorder: reorder, p_cost: cost, p_active: active }),
+  receiveMaterial: (id: string, qty: number, unitCost: number, pm: 'cash' | 'card', note: string | null) =>
+    rpc<{ new_qty: number }>('mfg_material_receive', { p_material_id: id, p_qty: qty, p_unit_cost: unitCost, p_payment_method: pm, p_note: note }),
+  adjustMaterial: (id: string, newQty: number, reason: 'adjustment' | 'waste', note: string | null) =>
+    rpc<null>('mfg_material_adjust', { p_material_id: id, p_new_qty: newQty, p_reason: reason, p_note: note }),
+
+  /* work centers */
+  workCentersList: () => rpc<WorkCenter[]>('mfg_workcenters_list', {}),
+  setWorkCenter: (id: string | null, name: string, rate: number, active: boolean) =>
+    rpc<string>('mfg_workcenter_set', { p_id: id, p_name: name, p_rate: rate, p_active: active }),
+
+  /* products + BOM + routing */
+  productsList: () => rpc<MfgProduct[]>('mfg_products_list', {}),
+  setProduct: (id: string | null, name: string, unit: string, active: boolean) =>
+    rpc<string>('mfg_product_set', { p_id: id, p_name: name, p_unit: unit, p_active: active }),
+  deleteProduct: (id: string) => rpc<null>('mfg_product_delete', { p_id: id }),
+  bomGet: (productId: string) => rpc<MfgBomLine[]>('mfg_bom_get', { p_product_id: productId }),
+  bomSet: (productId: string, items: { material_id: string; qty: number }[]) =>
+    rpc<null>('mfg_bom_set', { p_product_id: productId, p_items: items }),
+  routingGet: (productId: string) => rpc<MfgRoutingOp[]>('mfg_routing_get', { p_product_id: productId }),
+  routingSet: (productId: string, ops: { operation: string; work_center_id: string | null; run_minutes: number; labor_rate: number }[]) =>
+    rpc<null>('mfg_routing_set', { p_product_id: productId, p_ops: ops }),
+
+  /* estimate + work orders */
+  estimate: (productId: string, qty: number, markup: number) =>
+    rpc<MfgEstimate>('mfg_estimate', { p_product_id: productId, p_qty: qty, p_markup: markup }),
+  woCreate: (productId: string, qty: number, customer: string | null, markup: number, note: string | null) =>
+    rpc<{ id: string; wo_no: string }>('mfg_wo_create', { p_product_id: productId, p_qty: qty, p_customer: customer, p_markup: markup, p_note: note }),
+  woList: (status: string | null = null) => rpc<MfgWorkOrderRow[]>('mfg_wo_list', { p_status: status }),
+  woDetail: (id: string) => rpc<MfgWorkOrderDetail>('mfg_wo_detail', { p_id: id }),
+  woSetStatus: (id: string, status: 'released' | 'in_progress' | 'done' | 'cancelled') =>
+    rpc<null>('mfg_wo_set_status', { p_id: id, p_status: status }),
+  woIssueMaterial: (id: string, materialId: string, qty: number) =>
+    rpc<null>('mfg_wo_issue_material', { p_id: id, p_material_id: materialId, p_qty: qty }),
+  woLogLabor: (id: string, workCenterId: string | null, operation: string, minutes: number, laborRate: number) =>
+    rpc<null>('mfg_wo_log_labor', { p_id: id, p_work_center_id: workCenterId, p_operation: operation, p_minutes: minutes, p_labor_rate: laborRate, p_employee_id: null }),
+  woInvoice: (id: string, pm: 'cash' | 'card' | 'credit') =>
+    rpc<{ price: number; actual_total: number }>('mfg_wo_invoice', { p_id: id, p_payment_method: pm }),
 };

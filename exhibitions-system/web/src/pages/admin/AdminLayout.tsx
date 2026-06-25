@@ -90,6 +90,43 @@ const navMarketListings: Item = { to: '/admin/market/listings', label: 'منتج
 const navMarketOrders: Item = { to: '/admin/market/orders', label: 'طلبات السوق', icon: <ClipboardListIcon size={sz} /> };
 const marketSection = { title: 'السوق الداخلي', items: [navMarketBrowse, navMarketListings, navMarketOrders] };
 
+/* ---- Manufacturing (job-shop) ---- */
+const navMfgWO: Item = { to: '/admin/mfg/work-orders', label: 'أوامر الشغل', icon: <ClipboardList size={sz} /> };
+const navMfgProducts: Item = { to: '/admin/mfg/products', label: 'المنتجات والوصفات', icon: <Package size={sz} /> };
+const navMfgMaterials: Item = { to: '/admin/mfg/materials', label: 'مواد التصنيع', icon: <Boxes size={sz} /> };
+const navMfgWC: Item = { to: '/admin/mfg/work-centers', label: 'محطات العمل', icon: <Settings size={sz} /> };
+const manufacturingItems: Item[] = [navMfgWO, navMfgProducts, navMfgMaterials, navMfgWC];
+
+/* ---- OWNER nav (manufacturing): work orders + products + materials, no retail ops ---- */
+function ownerManufacturingSections(): NavSection[] {
+  return [
+    { title: 'نظرة عامة', items: [{ to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> }] },
+    { title: 'التصنيع', items: manufacturingItems },
+    marketSection,
+    {
+      title: 'المالية والمحاسبة',
+      items: [
+        { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} /> },
+        { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true },
+        { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} /> },
+        { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} /> },
+        { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} /> },
+        { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
+        { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
+        { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+      ],
+    },
+    {
+      title: 'النظام',
+      items: [
+        { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} /> },
+        { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} /> },
+        { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} /> },
+      ],
+    },
+  ];
+}
+
 /* ---- OWNER nav (restaurant): POS + kitchen + menu, no retail/store ops ---- */
 function ownerRestaurantSections(): NavSection[] {
   return [
@@ -197,6 +234,10 @@ function managerSections(p: Permissions | null): NavSection[] {
     sections.push({ title: 'المطعم', items: restaurantItems });
   }
 
+  if (p?.can_manage_manufacturing) {
+    sections.push({ title: 'التصنيع', items: manufacturingItems });
+  }
+
   if (p?.can_manage_market) {
     sections.push(marketSection);
   }
@@ -278,11 +319,13 @@ export default function AdminLayout() {
 
   const perms = profile.permissions;
   const isOwner = role === 'admin';
-  const isRestaurant = profile.tenant?.business_type === 'restaurant';
+  const bizType = profile.tenant?.business_type;
   const sections: NavSection[] = isOwner
-    ? isRestaurant
+    ? bizType === 'restaurant'
       ? ownerRestaurantSections()
-      : ownerSections()
+      : bizType === 'manufacturing'
+        ? ownerManufacturingSections()
+        : ownerSections()
     : managerSections(perms);
 
   const managerLabel = managerHasBroadCaps(perms) ? 'مدير' : 'مدير مخزون';

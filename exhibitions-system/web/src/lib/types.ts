@@ -34,7 +34,7 @@ export interface TenantBranding {
   status: string | null;
   subscription_status: string | null;
   subscription_expires_at: string | null;
-  business_type?: 'retail' | 'restaurant';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing';
 }
 
 export interface MyProfile {
@@ -167,7 +167,7 @@ export interface PlatformTenant {
   subscription_status: string | null;
   subscription_expires_at: string | null;
   created_at: string | null;
-  business_type?: 'retail' | 'restaurant';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing';
   employees: number;
   branches: number;
   sales_total: number;
@@ -184,7 +184,7 @@ export interface EmployeeSession {
   token: string;
   profile_id: string;
   full_name: string;
-  business_type?: 'retail' | 'restaurant';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing';
 }
 
 /* ----------------------------- Restaurant / Café ----------------------------- */
@@ -352,6 +352,90 @@ export interface MarketOrderDetail {
   created_at: string;
   is_seller: boolean;
   items: { name: string; unit: string | null; qty: number; unit_price: number; line_total: number }[];
+}
+
+/* ----------------------------- Manufacturing (job-shop) ----------------------------- */
+
+export interface WorkCenter {
+  id: string;
+  name: string;
+  hourly_rate: number;
+  is_active: boolean;
+}
+
+export interface MfgMaterial {
+  id: string;
+  name: string;
+  unit: string;
+  current_qty: number;
+  reorder_level: number;
+  cost_per_unit: number;
+  is_active: boolean;
+  is_low: boolean;
+}
+
+export interface MfgProduct {
+  id: string;
+  name: string;
+  unit: string;
+  is_active: boolean;
+}
+
+export interface MfgBomLine {
+  id: string;
+  material_id: string;
+  name: string;
+  unit: string;
+  qty: number;
+  cost: number;
+}
+
+export interface MfgRoutingOp {
+  id: string;
+  seq: number;
+  operation: string;
+  work_center_id: string | null;
+  work_center: string | null;
+  run_minutes: number;
+  labor_rate: number;
+  wc_rate: number | null;
+}
+
+export interface MfgEstimate {
+  material: number;
+  labor: number;
+  overhead: number;
+  cost: number;
+  price: number;
+}
+
+export interface MfgWorkOrderRow {
+  id: string;
+  wo_no: string;
+  product: string;
+  qty: number;
+  customer: string | null;
+  status: 'quote' | 'released' | 'in_progress' | 'done' | 'invoiced' | 'cancelled';
+  est_total: number;
+  price: number;
+  actual_total: number;
+  created_at: string;
+}
+
+export interface MfgWorkOrderDetail {
+  id: string;
+  wo_no: string;
+  product: string;
+  product_id: string | null;
+  qty: number;
+  customer: string | null;
+  status: MfgWorkOrderRow['status'];
+  markup_pct: number;
+  note: string | null;
+  est: { material: number; labor: number; overhead: number; total: number; price: number };
+  actual: { material: number; labor: number; overhead: number; total: number };
+  materials: { name: string; qty: number; cost: number }[];
+  labor: { operation: string | null; minutes: number; labor: number; overhead: number }[];
 }
 
 export interface Branch {
