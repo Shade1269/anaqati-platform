@@ -30,6 +30,8 @@ import {
   ChefHat,
   UtensilsCrossed,
   LayoutGrid,
+  Component,
+  Scissors,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
@@ -95,13 +97,24 @@ const navMfgWO: Item = { to: '/admin/mfg/work-orders', label: 'أوامر الش
 const navMfgProducts: Item = { to: '/admin/mfg/products', label: 'المنتجات والوصفات', icon: <Package size={sz} /> };
 const navMfgMaterials: Item = { to: '/admin/mfg/materials', label: 'مواد التصنيع', icon: <Boxes size={sz} /> };
 const navMfgWC: Item = { to: '/admin/mfg/work-centers', label: 'محطات العمل', icon: <Settings size={sz} /> };
-const manufacturingItems: Item[] = [navMfgWO, navMfgProducts, navMfgMaterials, navMfgWC];
+const navMfgMolds: Item = { to: '/admin/mfg/molds', label: 'القوالب', icon: <Component size={sz} /> };
+const navMfgCutlist: Item = { to: '/admin/mfg/cutlist', label: 'حاسبة القص', icon: <Scissors size={sz} /> };
+const navMfgWeight: Item = { to: '/admin/mfg/weight', label: 'حاسبة الوزن', icon: <Scale size={sz} /> };
+const baseMfgItems: Item[] = [navMfgWO, navMfgProducts, navMfgMaterials, navMfgWC];
+
+/** أدوات القطاع الفرعي تُضاف لقائمة التصنيع */
+function mfgItemsFor(subtype?: string): Item[] {
+  if (subtype === 'plastics') return [...baseMfgItems, navMfgMolds];
+  if (subtype === 'wood') return [...baseMfgItems, navMfgCutlist];
+  if (subtype === 'metal') return [...baseMfgItems, navMfgWeight];
+  return baseMfgItems;
+}
 
 /* ---- OWNER nav (manufacturing): work orders + products + materials, no retail ops ---- */
-function ownerManufacturingSections(): NavSection[] {
+function ownerManufacturingSections(subtype?: string): NavSection[] {
   return [
     { title: 'نظرة عامة', items: [{ to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> }] },
-    { title: 'التصنيع', items: manufacturingItems },
+    { title: 'التصنيع', items: mfgItemsFor(subtype) },
     marketSection,
     {
       title: 'المالية والمحاسبة',
@@ -213,7 +226,7 @@ function ownerSections(): NavSection[] {
 }
 
 /* ---- MANAGER nav: only what permission flags allow ---- */
-function managerSections(p: Permissions | null): NavSection[] {
+function managerSections(p: Permissions | null, subtype?: string): NavSection[] {
   const sections: NavSection[] = [];
 
   const ops: Item[] = [];
@@ -235,7 +248,7 @@ function managerSections(p: Permissions | null): NavSection[] {
   }
 
   if (p?.can_manage_manufacturing) {
-    sections.push({ title: 'التصنيع', items: manufacturingItems });
+    sections.push({ title: 'التصنيع', items: mfgItemsFor(subtype) });
   }
 
   if (p?.can_manage_market) {
@@ -320,13 +333,14 @@ export default function AdminLayout() {
   const perms = profile.permissions;
   const isOwner = role === 'admin';
   const bizType = profile.tenant?.business_type;
+  const bizSubtype = profile.tenant?.business_subtype;
   const sections: NavSection[] = isOwner
     ? bizType === 'restaurant'
       ? ownerRestaurantSections()
       : bizType === 'manufacturing'
-        ? ownerManufacturingSections()
+        ? ownerManufacturingSections(bizSubtype)
         : ownerSections()
-    : managerSections(perms);
+    : managerSections(perms, bizSubtype);
 
   const managerLabel = managerHasBroadCaps(perms) ? 'مدير' : 'مدير مخزون';
 

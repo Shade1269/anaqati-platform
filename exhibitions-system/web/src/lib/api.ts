@@ -61,6 +61,7 @@ import type {
   MfgEstimate,
   MfgWorkOrderRow,
   MfgWorkOrderDetail,
+  MfgMold,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -571,6 +572,7 @@ export const platformApi = {
     primaryColor: string;
     subscriptionExpires: string | null;
     businessType?: 'retail' | 'restaurant' | 'manufacturing';
+    businessSubtype?: 'general' | 'plastics' | 'wood' | 'metal';
   }) =>
     rpc<CreateTenantResult>('create_tenant', {
       p_name: payload.name,
@@ -580,6 +582,7 @@ export const platformApi = {
       p_primary_color: payload.primaryColor,
       p_subscription_expires: payload.subscriptionExpires,
       p_business_type: payload.businessType ?? 'retail',
+      p_business_subtype: payload.businessSubtype ?? 'general',
     }),
 
   setTenantStatus: (
@@ -854,8 +857,8 @@ export const marketApi = {
 export const mfgApi = {
   /* materials */
   materialsList: (lowOnly = false) => rpc<MfgMaterial[]>('mfg_materials_list', { p_low_only: lowOnly }),
-  setMaterial: (id: string | null, name: string, unit: string, reorder: number, cost: number, active: boolean) =>
-    rpc<string>('mfg_material_set', { p_id: id, p_name: name, p_unit: unit, p_reorder: reorder, p_cost: cost, p_active: active }),
+  setMaterial: (id: string | null, name: string, unit: string, reorder: number, cost: number, active: boolean, density: number | null = null) =>
+    rpc<string>('mfg_material_set', { p_id: id, p_name: name, p_unit: unit, p_reorder: reorder, p_cost: cost, p_active: active, p_density: density }),
   receiveMaterial: (id: string, qty: number, unitCost: number, pm: 'cash' | 'card', note: string | null) =>
     rpc<{ new_qty: number }>('mfg_material_receive', { p_material_id: id, p_qty: qty, p_unit_cost: unitCost, p_payment_method: pm, p_note: note }),
   adjustMaterial: (id: string, newQty: number, reason: 'adjustment' | 'waste', note: string | null) =>
@@ -893,4 +896,12 @@ export const mfgApi = {
     rpc<null>('mfg_wo_log_labor', { p_id: id, p_work_center_id: workCenterId, p_operation: operation, p_minutes: minutes, p_labor_rate: laborRate, p_employee_id: null }),
   woInvoice: (id: string, pm: 'cash' | 'card' | 'credit') =>
     rpc<{ price: number; actual_total: number }>('mfg_wo_invoice', { p_id: id, p_payment_method: pm }),
+  woRecordOutput: (id: string, produced: number, scrap: number) =>
+    rpc<null>('mfg_wo_record_output', { p_id: id, p_produced: produced, p_scrap: scrap }),
+
+  /* molds (plastics) */
+  moldsList: () => rpc<MfgMold[]>('mfg_molds_list', {}),
+  setMold: (id: string | null, name: string, cavities: number, productId: string | null, note: string | null, active: boolean) =>
+    rpc<string>('mfg_mold_set', { p_id: id, p_name: name, p_cavities: cavities, p_product_id: productId, p_note: note, p_active: active }),
+  deleteMold: (id: string) => rpc<null>('mfg_mold_delete', { p_id: id }),
 };
