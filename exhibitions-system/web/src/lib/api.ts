@@ -47,6 +47,8 @@ import type {
   SessionDetail,
   KdsOrder,
   NewOrderItem,
+  Ingredient,
+  RecipeLine,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -720,4 +722,60 @@ export const restaurantApi = {
       p_seats: seats,
       p_active: active,
     }),
+
+  /* ---- Ingredients / inventory ---- */
+  ingredientsList: (lowOnly = false) =>
+    rpc<Ingredient[]>('ingredients_list', { p_low_only: lowOnly }),
+
+  setIngredient: (
+    id: string | null,
+    name: string,
+    unit: string,
+    reorder: number,
+    cost: number,
+    active: boolean
+  ) =>
+    rpc<string>('ingredient_set', {
+      p_id: id,
+      p_name: name,
+      p_unit: unit,
+      p_reorder: reorder,
+      p_cost: cost,
+      p_active: active,
+    }),
+
+  receiveIngredient: (
+    ingredientId: string,
+    qty: number,
+    unitCost: number,
+    paymentMethod: 'cash' | 'card',
+    note: string | null
+  ) =>
+    rpc<{ ingredient_id: string; new_qty: number; amount: number }>('ingredient_receive', {
+      p_ingredient_id: ingredientId,
+      p_qty: qty,
+      p_unit_cost: unitCost,
+      p_payment_method: paymentMethod,
+      p_note: note,
+    }),
+
+  adjustIngredient: (
+    ingredientId: string,
+    newQty: number,
+    reason: 'adjustment' | 'waste',
+    note: string | null
+  ) =>
+    rpc<null>('ingredient_adjust', {
+      p_ingredient_id: ingredientId,
+      p_new_qty: newQty,
+      p_reason: reason,
+      p_note: note,
+    }),
+
+  /* ---- Recipes (menu item → ingredients) ---- */
+  recipeGet: (menuItemId: string) =>
+    rpc<RecipeLine[]>('recipe_get', { p_menu_item_id: menuItemId }),
+
+  recipeSet: (menuItemId: string, items: { ingredient_id: string; qty: number }[]) =>
+    rpc<null>('recipe_set', { p_menu_item_id: menuItemId, p_items: items }),
 };

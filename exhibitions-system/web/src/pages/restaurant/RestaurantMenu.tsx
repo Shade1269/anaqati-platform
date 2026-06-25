@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { UtensilsCrossed, Plus, Trash2, Settings2 } from 'lucide-react';
+import { UtensilsCrossed, Plus, Trash2, Settings2, BookText } from 'lucide-react';
 import { restaurantApi } from '../../lib/api';
-import type { MenuCategory, MenuItem } from '../../lib/types';
+import type { MenuCategory, MenuItem, Ingredient } from '../../lib/types';
 import {
   Button,
   Card,
@@ -23,6 +23,7 @@ export default function RestaurantMenu() {
   const [newCat, setNewCat] = useState('');
   const [itemDialog, setItemDialog] = useState<{ catId: string; item: MenuItem | null } | null>(null);
   const [optItem, setOptItem] = useState<MenuItem | null>(null);
+  const [recipeItem, setRecipeItem] = useState<MenuItem | null>(null);
   const toast = useToast();
 
   async function load() {
@@ -110,6 +111,9 @@ export default function RestaurantMenu() {
                         <Button size="sm" variant="ghost" icon={<Settings2 size={14} />} onClick={() => setOptItem(i)}>
                           خيارات
                         </Button>
+                        <Button size="sm" variant="ghost" icon={<BookText size={14} />} onClick={() => setRecipeItem(i)}>
+                          الوصفة
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => setItemDialog({ catId: c.id, item: i })}>
                           تعديل
                         </Button>
@@ -151,7 +155,101 @@ export default function RestaurantMenu() {
           }}
         />
       )}
+      {recipeItem && (
+        <RecipeDialog item={recipeItem} onClose={() => setRecipeItem(null)} />
+      )}
     </div>
+  );
+}
+
+function RecipeDialog({ item, onClose }: { item: MenuItem; onClose: () => void }) {
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [qtys, setQtys] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [ings, recipe] = await Promise.all([
+          restaurantApi.ingredientsList(false),
+          restaurantApi.recipeGet(item.id),
+        ]);
+        setIngredients(ings);
+        const m: Record<string, string> = {};
+        recipe.forEach((r) => {
+          m[r.ingredient_id] = String(r.qty);
+        });
+        setQtys(m);
+      } catch (e) {
+        toast.error((e as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id]);
+
+  async function save() {
+    setBusy(true);
+    try {
+      const items = Object.entries(qtys)
+        .map(([ingredient_id, q]) => ({ ingredient_id, qty: Number(q) || 0 }))
+        .filter((x) => x.qty > 0);
+      await restaurantApi.recipeSet(item.id, items);
+      toast.success('تم حفظ الوصفة');
+      onClose();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={`وصفة: ${item.name}`}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            إلغاء
+          </Button>
+          <Button onClick={save} loading={busy}>
+            حفظ الوصفة
+          </Button>
+        </>
+      }
+    >
+      <p className="mb-3 text-xs text-muted">
+        حدّد كمية كل مادة المستهلكة لكل وحدة من هذا الصنف. تُخصم تلقائيًا عند البيع.
+      </p>
+      {loading ? (
+        <Spinner />
+      ) : ingredients.length === 0 ? (
+        <p className="text-sm text-muted">لا توجد مواد بعد. أضِف مواد من صفحة مخزون المواد أولًا.</p>
+      ) : (
+        <div className="space-y-2">
+          {ingredients.map((ing) => (
+            <div key={ing.id} className="flex items-center justify-between gap-3">
+              <span className="text-sm text-text">
+                {ing.name} <span className="text-[11px] text-muted">({ing.unit})</span>
+              </span>
+              <Input
+                type="number"
+                step="0.001"
+                className="w-28"
+                placeholder="0"
+                value={qtys[ing.id] ?? ''}
+                onChange={(e) => setQtys((m) => ({ ...m, [ing.id]: e.target.value }))}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </Dialog>
   );
 }
 
