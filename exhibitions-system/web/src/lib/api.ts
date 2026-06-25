@@ -49,6 +49,10 @@ import type {
   NewOrderItem,
   Ingredient,
   RecipeLine,
+  MarketListing,
+  MarketBrowseItem,
+  MarketOrderRow,
+  MarketOrderDetail,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -269,7 +273,8 @@ export const adminApi = {
     returns: boolean,
     manageEmployees: boolean,
     manageStore: boolean,
-    manageRestaurant: boolean = false
+    manageRestaurant: boolean = false,
+    manageMarket: boolean = false
   ) =>
     rpc<null>('set_im_permissions', {
       p_profile_id: profileId,
@@ -281,6 +286,7 @@ export const adminApi = {
       p_manage_employees: manageEmployees,
       p_manage_store: manageStore,
       p_manage_restaurant: manageRestaurant,
+      p_manage_market: manageMarket,
     }),
 
   /* --------------------------- Manager (delegated) --------------------------- */
@@ -778,4 +784,57 @@ export const restaurantApi = {
 
   recipeSet: (menuItemId: string, items: { ingredient_id: string; qty: number }[]) =>
     rpc<null>('recipe_set', { p_menu_item_id: menuItemId, p_items: items }),
+};
+
+/* --------------------------- Internal Market (B2B) ----------------------------- */
+
+export const marketApi = {
+  myListings: () => rpc<MarketListing[]>('market_my_listings', {}),
+
+  setListing: (
+    id: string | null,
+    name: string,
+    category: string | null,
+    description: string | null,
+    unit: string,
+    price: number,
+    minQty: number,
+    imageUrl: string | null,
+    active: boolean
+  ) =>
+    rpc<string>('market_set_listing', {
+      p_id: id,
+      p_name: name,
+      p_category: category,
+      p_description: description,
+      p_unit: unit,
+      p_price: price,
+      p_min_qty: minQty,
+      p_image_url: imageUrl,
+      p_active: active,
+    }),
+
+  deleteListing: (id: string) => rpc<null>('market_delete_listing', { p_id: id }),
+
+  browse: (category: string | null = null) =>
+    rpc<MarketBrowseItem[]>('market_browse', { p_category: category }),
+
+  placeOrder: (
+    sellerTenantId: string,
+    items: { listing_id: string; qty: number }[],
+    paymentMethod: 'cash' | 'credit',
+    note: string | null
+  ) =>
+    rpc<{ order_id: string; order_no: string; total: number }>('market_place_order', {
+      p_seller_tenant: sellerTenantId,
+      p_items: items,
+      p_payment_method: paymentMethod,
+      p_note: note,
+    }),
+
+  incoming: () => rpc<MarketOrderRow[]>('market_incoming_orders', {}),
+  outgoing: () => rpc<MarketOrderRow[]>('market_outgoing_orders', {}),
+  orderDetail: (id: string) => rpc<MarketOrderDetail>('market_order_detail', { p_order_id: id }),
+  setOrderStatus: (id: string, status: 'confirmed' | 'fulfilled' | 'cancelled') =>
+    rpc<null>('market_set_order_status', { p_order_id: id, p_status: status }),
 };

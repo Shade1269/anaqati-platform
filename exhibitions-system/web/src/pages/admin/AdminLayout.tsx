@@ -84,6 +84,12 @@ const navRestTables: Item = { to: '/admin/restaurant/tables', label: 'إدارة
 const navRestInventory: Item = { to: '/admin/restaurant/inventory', label: 'مخزون المواد', icon: <Boxes size={sz} /> };
 const restaurantItems: Item[] = [navRestPos, navRestKds, navRestMenu, navRestTables, navRestInventory];
 
+/* ---- Internal market (B2B) — shared by all subscribers ---- */
+const navMarketBrowse: Item = { to: '/admin/market/browse', label: 'تصفّح السوق', icon: <ShoppingBag size={sz} /> };
+const navMarketListings: Item = { to: '/admin/market/listings', label: 'منتجاتي في السوق', icon: <Store size={sz} /> };
+const navMarketOrders: Item = { to: '/admin/market/orders', label: 'طلبات السوق', icon: <ClipboardListIcon size={sz} /> };
+const marketSection = { title: 'السوق الداخلي', items: [navMarketBrowse, navMarketListings, navMarketOrders] };
+
 /* ---- OWNER nav (restaurant): POS + kitchen + menu, no retail/store ops ---- */
 function ownerRestaurantSections(): NavSection[] {
   return [
@@ -92,6 +98,7 @@ function ownerRestaurantSections(): NavSection[] {
       items: [{ to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> }],
     },
     { title: 'المطعم', items: restaurantItems },
+    marketSection,
     {
       title: 'المالية والمحاسبة',
       items: [
@@ -142,6 +149,7 @@ function ownerSections(): NavSection[] {
       title: 'المتجر الإلكتروني',
       items: [navStoreSettings, navStoreProducts, navStoreOrders],
     },
+    marketSection,
     {
       title: 'المالية والمحاسبة',
       items: [
@@ -187,6 +195,10 @@ function managerSections(p: Permissions | null): NavSection[] {
 
   if (p?.can_manage_restaurant) {
     sections.push({ title: 'المطعم', items: restaurantItems });
+  }
+
+  if (p?.can_manage_market) {
+    sections.push(marketSection);
   }
 
   if (p?.can_manage_employees) {

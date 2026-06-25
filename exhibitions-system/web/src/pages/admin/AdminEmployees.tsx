@@ -54,7 +54,7 @@ export default function AdminEmployees() {
     const { data, error } = await supabase
       .from('profiles')
       .select(
-        'id,full_name,role,status,im_permissions(can_add_stock,can_approve_requests,can_issue_transfers,can_issue_wholesale,can_receive_returns,can_manage_employees,can_manage_store,can_manage_restaurant)'
+        'id,full_name,role,status,im_permissions(can_add_stock,can_approve_requests,can_issue_transfers,can_issue_wholesale,can_receive_returns,can_manage_employees,can_manage_store,can_manage_restaurant,can_manage_market)'
       )
       .order('full_name');
     if (error) toast.error(error.message);
@@ -323,6 +323,7 @@ function ImRow({
     manageEmployees: !!p.can_manage_employees,
     manageStore: !!p.can_manage_store,
     manageRestaurant: !!p.can_manage_restaurant,
+    manageMarket: !!p.can_manage_market,
   });
   const [status, setStatus] = useState(profile.status);
   const [busy, setBusy] = useState(false);
@@ -340,7 +341,8 @@ function ImRow({
         perms.returns,
         perms.manageEmployees,
         perms.manageStore,
-        perms.manageRestaurant
+        perms.manageRestaurant,
+        perms.manageMarket
       );
       toast.success('تم حفظ الصلاحيات');
       onChanged();
@@ -418,6 +420,11 @@ function ImRow({
               label="إدارة المطعم (طاولات/منيو/مطبخ)"
               checked={perms.manageRestaurant}
               onChange={toggle('manageRestaurant')}
+            />
+            <Check2
+              label="إدارة السوق الداخلي"
+              checked={perms.manageMarket}
+              onChange={toggle('manageMarket')}
             />
           </div>
         </div>

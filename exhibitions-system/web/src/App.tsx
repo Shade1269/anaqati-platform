@@ -23,6 +23,11 @@ import RestaurantMenu from './pages/restaurant/RestaurantMenu';
 import RestaurantTables from './pages/restaurant/RestaurantTables';
 import RestaurantInventory from './pages/restaurant/RestaurantInventory';
 
+// Internal market (B2B between subscribers)
+import MarketMyListings from './pages/market/MarketMyListings';
+import MarketBrowse from './pages/market/MarketBrowse';
+import MarketOrders from './pages/market/MarketOrders';
+
 // Admin / IM
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -116,6 +121,11 @@ export default function App() {
         <Route path="restaurant/menu" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantMenu /></RequireCapability>} />
         <Route path="restaurant/tables" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantTables /></RequireCapability>} />
         <Route path="restaurant/inventory" element={<RequireCapability caps={['can_manage_restaurant']}><RestaurantInventory /></RequireCapability>} />
+
+        {/* Internal market — owner or delegated market manager */}
+        <Route path="market/listings" element={<RequireCapability caps={['can_manage_market']}><MarketMyListings /></RequireCapability>} />
+        <Route path="market/browse" element={<RequireCapability caps={['can_manage_market']}><MarketBrowse /></RequireCapability>} />
+        <Route path="market/orders" element={<RequireCapability caps={['can_manage_market']}><MarketOrders /></RequireCapability>} />
 
         {/* Operations — owner or inventory_manager per permissions */}
         <Route path="requests" element={<RequireCapability caps={['can_approve_requests']}><AdminRequests /></RequireCapability>} />
