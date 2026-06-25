@@ -53,10 +53,24 @@ export default function AdminEmployees() {
     setLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,full_name,role,status,permissions')
+      .select(
+        'id,full_name,role,status,im_permissions(can_add_stock,can_approve_requests,can_issue_transfers,can_issue_wholesale,can_receive_returns,can_manage_employees,can_manage_store,can_manage_restaurant)'
+      )
       .order('full_name');
     if (error) toast.error(error.message);
-    else setProfiles((data as ProfileRow[]) || []);
+    else
+      setProfiles(
+        ((data as Record<string, unknown>[]) || []).map((r) => {
+          const perm = r.im_permissions;
+          return {
+            id: r.id as string,
+            full_name: r.full_name as string,
+            role: r.role as string,
+            status: r.status as string,
+            permissions: (Array.isArray(perm) ? perm[0] : perm) as Permissions | null,
+          };
+        })
+      );
     setLoading(false);
   }
 
