@@ -32,6 +32,6 @@ test.describe('الصفحات العامة (بلا تسجيل دخول)', () => 
     expect(text.length, 'الصفحة فارغة').toBeGreaterThan(10);
     // لا يجب أن تظهر شاشة خطأ React البيضاء
     expect(text).not.toContain('Application error');
-    expect(errs.filter((e) => !/favicon|manifest/i.test(e))).toEqual([]);
+    expect(errs, errs.join(' | ')).toEqual([]);
   });
 });
