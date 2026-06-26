@@ -917,6 +917,32 @@ export const qrApi = {
     }),
 };
 
+/* --------------------------- Restaurant online ordering (public, menu-based) ----------------------------- */
+
+export const restaurantOnlineApi = {
+  info: (tenantId: string) =>
+    rpc<import('./types').RestaurantPublicInfo>('restaurant_public_info', { p_tenant: tenantId }),
+
+  menu: (tenantId: string) => rpc<MenuCategory[]>('qr_menu', { p_tenant: tenantId }),
+
+  order: (
+    tenantId: string,
+    orderType: 'takeaway' | 'delivery',
+    customer: { name: string; phone: string; address: string },
+    items: NewOrderItem[],
+    note: string | null
+  ) =>
+    rpc<{ order_no: string; session_no: string; items_total: number; delivery_fee: number }>('restaurant_online_order', {
+      p_tenant: tenantId,
+      p_order_type: orderType,
+      p_name: customer.name,
+      p_phone: customer.phone,
+      p_address: customer.address,
+      p_items: items,
+      p_note: note,
+    }),
+};
+
 /* --------------------------- Internal Market (B2B) ----------------------------- */
 
 export const marketApi = {

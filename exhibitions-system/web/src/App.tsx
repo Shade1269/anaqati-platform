@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 // Public storefront (no auth)
 import Storefront from './pages/store/Storefront';
 import QrOrder from './pages/restaurant/QrOrder';
+import RestaurantOnlineMenu from './pages/restaurant/RestaurantOnlineMenu';
 
 // Employee
 import EmployeeLogin from './pages/employee/EmployeeLogin';
@@ -89,6 +90,9 @@ export default function App() {
 
       {/* Public QR self-ordering (no auth) */}
       <Route path="/r/:tenantId/:tableId" element={<QrOrder />} />
+
+      {/* Public restaurant online ordering (takeaway/delivery) */}
+      <Route path="/menu/:tenantId" element={<RestaurantOnlineMenu />} />
 
       {/* Employee */}
       <Route path="/employee/login" element={<EmployeeLogin />} />
