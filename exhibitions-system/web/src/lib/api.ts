@@ -64,6 +64,7 @@ import type {
   MfgMold,
   Customer,
   CustomerStatement,
+  EmployeePermissions,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -442,6 +443,23 @@ export const adminApi = {
     rpc<ReconcileCloseResult>('reconcile_and_close_branch', {
       p_branch_id: id,
       p_counts: counts,
+    }),
+
+  /* --------------------------- Employee fine-grained permissions --------------------------- */
+
+  getEmployeePerms: (profileId: string) =>
+    rpc<EmployeePermissions>('employee_perms_get', { p_profile_id: profileId }),
+
+  setEmployeePerms: (profileId: string, p: EmployeePermissions) =>
+    rpc<null>('employee_perms_set', {
+      p_profile_id: profileId,
+      p_sell: p.can_sell,
+      p_return: p.can_return,
+      p_request_stock: p.can_request_stock,
+      p_withdraw: p.can_withdraw,
+      p_settle: p.can_settle,
+      p_waiter: p.can_waiter,
+      p_kitchen: p.can_kitchen,
     }),
 
   /* --------------------------- Branding (tenant admin) --------------------------- */

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Users, Plus, Copy, Check, KeyRound } from 'lucide-react';
+import { Users, Plus, Copy, Check, KeyRound, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminApi } from '../../lib/api';
-import type { Permissions } from '../../lib/types';
+import type { Permissions, EmployeePermissions } from '../../lib/types';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 import {
   Button,
   Card,
   CardHeader,
+  Dialog,
   EmptyState,
   Field,
   Input,
@@ -41,6 +43,8 @@ const roleLabels: Record<string, string> = {
 };
 
 export default function AdminEmployees() {
+  const { profile } = useAdminAuth();
+  const bizType = profile?.tenant?.business_type || 'retail';
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [emp, setEmp] = useState({ ...emptyEmp });
@@ -217,7 +221,7 @@ export default function AdminEmployees() {
           }
         >
           {profiles.map((p) => (
-            <ProfileActionRow key={p.id} profile={p} onChanged={load} />
+            <ProfileActionRow key={p.id} profile={p} bizType={bizType} onChanged={load} />
           ))}
         </Table>
       )}
@@ -259,13 +263,16 @@ function EmployeeLoginLink() {
 
 function ProfileActionRow({
   profile,
+  bizType,
   onChanged,
 }: {
   profile: ProfileRow;
+  bizType: string;
   onChanged: () => void;
 }) {
   const [role, setRole] = useState(profile.role);
   const [busy, setBusy] = useState(false);
+  const [permsOpen, setPermsOpen] = useState(false);
   const toast = useToast();
 
   async function saveRole(newRole: string) {
@@ -291,18 +298,137 @@ function ProfileActionRow({
         <StatusBadge status={profile.status} />
       </td>
       <td>
-        <Select
-          className="w-40"
-          value={role}
-          disabled={busy}
-          onChange={(e) => saveRole(e.target.value)}
-        >
-          <option value="employee">موظف</option>
-          <option value="inventory_manager">مدير مخزون</option>
-          <option value="admin">أدمن</option>
-        </Select>
+        <div className="flex items-center justify-end gap-2">
+          {role === 'employee' && (
+            <Button
+              size="sm"
+              variant="outline"
+              icon={<ShieldCheck size={15} />}
+              onClick={() => setPermsOpen(true)}
+            >
+              الصلاحيات
+            </Button>
+          )}
+          <Select
+            className="w-40"
+            value={role}
+            disabled={busy}
+            onChange={(e) => saveRole(e.target.value)}
+          >
+            <option value="employee">موظف</option>
+            <option value="inventory_manager">مدير مخزون</option>
+            <option value="admin">أدمن</option>
+          </Select>
+        </div>
+        {permsOpen && (
+          <EmployeePermsDialog
+            profileId={profile.id}
+            name={profile.full_name}
+            bizType={bizType}
+            onClose={() => setPermsOpen(false)}
+          />
+        )}
       </td>
     </tr>
+  );
+}
+
+const RETAIL_PERMS: { key: keyof EmployeePermissions; label: string }[] = [
+  { key: 'can_sell', label: 'نقطة البيع' },
+  { key: 'can_return', label: 'إرجاع المبيعات' },
+  { key: 'can_request_stock', label: 'طلب بضاعة' },
+  { key: 'can_withdraw', label: 'سحب عُهدة' },
+  { key: 'can_settle', label: 'تسليم العُهدة' },
+];
+const RESTAURANT_PERMS: { key: keyof EmployeePermissions; label: string }[] = [
+  { key: 'can_waiter', label: 'الطاولات (نادل)' },
+  { key: 'can_kitchen', label: 'المطبخ (KDS)' },
+];
+
+function EmployeePermsDialog({
+  profileId,
+  name,
+  bizType,
+  onClose,
+}: {
+  profileId: string;
+  name: string;
+  bizType: string;
+  onClose: () => void;
+}) {
+  const [perms, setPerms] = useState<EmployeePermissions | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  const fields = bizType === 'restaurant' ? RESTAURANT_PERMS : RETAIL_PERMS;
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        setPerms(await adminApi.getEmployeePerms(profileId));
+      } catch (e) {
+        toast.error((e as Error).message);
+        onClose();
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileId]);
+
+  async function save() {
+    if (!perms) return;
+    setBusy(true);
+    try {
+      await adminApi.setEmployeePerms(profileId, perms);
+      toast.success('تم حفظ صلاحيات الموظف');
+      onClose();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={`صلاحيات الموظف — ${name}`}
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            إلغاء
+          </Button>
+          <Button onClick={save} loading={busy} disabled={loading || !perms}>
+            حفظ
+          </Button>
+        </>
+      }
+    >
+      {loading || !perms ? (
+        <Spinner />
+      ) : (
+        <div className="space-y-3">
+          <p className="text-xs text-muted">
+            عطّل ما لا تريد أن يصل إليه الموظف. الافتراضي: كل الصلاحيات مفعّلة.
+          </p>
+          <div className="flex flex-col gap-3">
+            {fields.map((f) => (
+              <Check2
+                key={f.key}
+                label={f.label}
+                checked={perms[f.key]}
+                onChange={() => setPerms((s) => (s ? { ...s, [f.key]: !s[f.key] } : s))}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </Dialog>
   );
 }
 

@@ -188,6 +188,16 @@ export interface CreateTenantResult {
   profile_id: string;
 }
 
+export interface EmployeePermissions {
+  can_sell: boolean;
+  can_return: boolean;
+  can_request_stock: boolean;
+  can_withdraw: boolean;
+  can_settle: boolean;
+  can_waiter: boolean;
+  can_kitchen: boolean;
+}
+
 export interface EmployeeSession {
   token: string;
   profile_id: string;
@@ -196,6 +206,7 @@ export interface EmployeeSession {
   currency?: string;
   secondary_currency?: string | null;
   fx_rate?: number | null;
+  permissions?: EmployeePermissions | null;
 }
 
 /* ----------------------------- Restaurant / Café ----------------------------- */
