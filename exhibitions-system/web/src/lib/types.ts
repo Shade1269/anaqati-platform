@@ -276,6 +276,17 @@ export interface OrderRow {
   items: OrderItemRow[];
 }
 
+export interface RestaurantPublicInfo {
+  brand_name: string;
+  logo_url: string | null;
+  primary_color: string | null;
+  currency: string;
+  secondary_currency: string | null;
+  fx_rate: number | null;
+  delivery_fee: number;
+  whatsapp: string | null;
+}
+
 export interface QrInfo {
   brand_name: string;
   logo_url: string | null;
