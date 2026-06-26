@@ -4,7 +4,7 @@ import { mfgApi } from '../../lib/api';
 import type { MfgProduct, MfgWorkOrderRow, MfgWorkOrderDetail, MfgEstimate, MfgMaterial, WorkCenter } from '../../lib/types';
 import { Button, Card, Dialog, EmptyState, Field, Input, PageHeader, Spinner, Table, useToast } from '../../components/ui';
 
-import { money } from '../../lib/format';
+import { money, money2 } from '../../lib/format';
 import { printReceipt } from '../../lib/print';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 const statusLabel: Record<string, string> = {
@@ -196,7 +196,8 @@ function DetailDialog({ id, onClose, onChanged }: { id: string; onClose: () => v
             <Cmp label="الإجمالي" e={d.est.total} a={d.actual.total} bold />
           </div>
           <div className="mt-2 flex justify-between border-t border-white/10 pt-2 font-extrabold">
-            <span className="text-text">السعر</span><span className="text-gold">{money(d.est.price)}</span>
+            <span className="text-text">السعر</span>
+            <span className="text-left text-gold">{money(d.est.price)}{money2(d.est.price) && <span className="block text-[11px] font-normal text-muted">≈ {money2(d.est.price)}</span>}</span>
           </div>
         </Card>
 

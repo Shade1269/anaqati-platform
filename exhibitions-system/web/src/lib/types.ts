@@ -37,6 +37,8 @@ export interface TenantBranding {
   business_type?: 'retail' | 'restaurant' | 'manufacturing';
   business_subtype?: 'general' | 'plastics' | 'wood' | 'metal';
   currency?: string;
+  secondary_currency?: string | null;
+  fx_rate?: number | null;
 }
 
 export interface MyProfile {
@@ -64,6 +66,8 @@ export interface StoreInfo {
   cod_enabled: boolean | null;
   slug: string;
   currency?: string;
+  secondary_currency?: string | null;
+  fx_rate?: number | null;
 }
 
 export interface StoreProduct {
@@ -190,6 +194,8 @@ export interface EmployeeSession {
   full_name: string;
   business_type?: 'retail' | 'restaurant' | 'manufacturing';
   currency?: string;
+  secondary_currency?: string | null;
+  fx_rate?: number | null;
 }
 
 /* ----------------------------- Restaurant / Café ----------------------------- */

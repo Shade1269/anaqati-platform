@@ -1,4 +1,4 @@
-import { currencyLabel } from './format';
+import { currencyLabel, money2 } from './format';
 
 export interface PrintLine {
   name: string;
@@ -71,6 +71,7 @@ export function printReceipt(d: ReceiptData): void {
     <hr>
     ${extra}
     <div class="row total"><span>الإجمالي</span><span>${fmt(d.total)}</span></div>
+    ${money2(d.total) ? `<div class="row"><span>يعادل</span><span>${esc(money2(d.total))}</span></div>` : ''}
     ${d.paid ? `<div class="row"><span>الدفع</span><span>${esc(d.paid)}</span></div>` : ''}
     <div class="foot">${esc(d.footer || 'شكرًا لزيارتكم')}</div>
     <script>window.onload=function(){window.print();setTimeout(function(){window.close()},300)}</script>

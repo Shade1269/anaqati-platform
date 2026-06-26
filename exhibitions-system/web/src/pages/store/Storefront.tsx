@@ -28,7 +28,7 @@ const PLACEHOLDER =
     `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#f1f1f4"/><text x="50%" y="50%" font-family="sans-serif" font-size="22" fill="#bcbcc4" text-anchor="middle" dominant-baseline="middle">لا توجد صورة</text></svg>`
   );
 
-import { sar, setCurrency } from '../../lib/format';
+import { sar, setCurrency, setFx, money2 } from '../../lib/format';
 
 interface CartLine {
   product: StoreProduct;
@@ -69,6 +69,7 @@ export default function Storefront() {
       }
       setInfo(i);
       setCurrency(i.currency);
+      setFx(i.secondary_currency, i.fx_rate);
       if (!i.cod_enabled) setPayment('card');
       const p = await storeApi.listProducts(slug);
       setProducts(p || []);
@@ -456,7 +457,10 @@ export default function Storefront() {
                     </div>
                     <div className="mt-1 flex justify-between border-t border-black/5 pt-2 text-base font-extrabold text-gray-900">
                       <span>الإجمالي</span>
-                      <span style={{ color: accent }}>{sar(total)}</span>
+                      <span className="text-left" style={{ color: accent }}>
+                        {sar(total)}
+                        {money2(total) && <span className="block text-[11px] font-normal text-gray-500">≈ {money2(total)}</span>}
+                      </span>
                     </div>
                   </div>
 
