@@ -295,6 +295,28 @@ export interface SessionDetail {
   orders: OrderRow[];
 }
 
+export interface ShiftZ {
+  id: string;
+  status: 'open' | 'closed';
+  opened_at: string;
+  closed_at: string | null;
+  opening_float: number;
+  opened_by: string | null;
+  closed_by: string | null;
+  bills: number;
+  sales: number;
+  cash_sales: number;
+  card_sales: number;
+  dine_in: number;
+  takeaway: number;
+  delivery: number;
+  delivery_fees: number;
+  expected_cash: number;
+  declared_cash: number | null;
+  variance: number | null;
+  note: string | null;
+}
+
 export interface QuickSession {
   id: string;
   session_no: string;

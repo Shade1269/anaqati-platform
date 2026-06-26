@@ -45,6 +45,7 @@ import type {
   MenuCategory,
   DiningTable,
   QuickSession,
+  ShiftZ,
   SessionDetail,
   KdsOrder,
   NewOrderItem,
@@ -659,6 +660,18 @@ export const restaurantApi = {
 
   quickSessions: (token: string | null = null) =>
     rpc<QuickSession[]>('quick_sessions', { p_token: token }),
+
+  shiftCurrent: (token: string | null = null) =>
+    rpc<ShiftZ | null>('shift_current', { p_token: token }),
+
+  shiftOpen: (openingFloat: number, token: string | null = null) =>
+    rpc<ShiftZ>('shift_open', { p_opening_float: openingFloat, p_token: token }),
+
+  shiftClose: (declaredCash: number, note: string | null, token: string | null = null) =>
+    rpc<ShiftZ>('shift_close', { p_declared_cash: declaredCash, p_note: note, p_token: token }),
+
+  shiftZ: (shiftId: string, token: string | null = null) =>
+    rpc<ShiftZ>('shift_z', { p_shift_id: shiftId, p_token: token }),
 
   openQuick: (
     orderType: 'takeaway' | 'delivery',
