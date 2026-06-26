@@ -276,6 +276,16 @@ export interface OrderRow {
   items: OrderItemRow[];
 }
 
+export interface QrInfo {
+  brand_name: string;
+  logo_url: string | null;
+  primary_color: string | null;
+  currency: string;
+  secondary_currency: string | null;
+  fx_rate: number | null;
+  table_label: string;
+}
+
 export type OrderType = 'dine_in' | 'takeaway' | 'delivery';
 
 export interface SessionDetail {
