@@ -12,6 +12,7 @@ export interface Permissions {
   can_manage_store?: boolean;
   can_manage_restaurant?: boolean;
   can_manage_market?: boolean;
+  can_manage_manufacturing?: boolean;
   [key: string]: boolean | undefined;
 }
 
@@ -143,7 +144,7 @@ export interface OnlineOrder {
   address: string | null;
   payment_method: string | null;
   total_sar: number | null;
-  delivery_fee: number | null;
+  delivery_fee_sar: number | null;
   status: OnlineOrderStatus;
   created_at: string;
 }
@@ -153,7 +154,7 @@ export interface OnlineOrderItem {
   order_id: string;
   product_id: string | null;
   qty: number;
-  unit_price: number | null;
+  unit_price_sar: number | null;
   products?: { name: string | null; product_code: string | null } | null;
 }
 

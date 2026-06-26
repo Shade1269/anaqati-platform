@@ -94,7 +94,7 @@ export default function MarketBrowse() {
       {loading ? (
         <Spinner />
       ) : shown.length === 0 ? (
-        <EmptyState message="لا منتجات معروضة في السوق حاليًا." />
+        <EmptyState message="السوق يعرض منتجات المشتركين الآخرين فقط — منتجاتك أنت تظهر في صفحة «منتجاتي في السوق». لا يوجد مشتركون آخرون لديهم منتجات معروضة حاليًا." />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {shown.map((it) => (

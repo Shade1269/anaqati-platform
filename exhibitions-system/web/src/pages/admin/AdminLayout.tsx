@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -258,10 +258,7 @@ export default function AdminLayout() {
 
   if (loading) return <Spinner label="جارٍ التحقق..." />;
 
-  if (!authed || !profile) {
-    navigate('/admin/login');
-    return null;
-  }
+  if (!authed || !profile) return <Navigate to="/admin/login" replace />;
 
   const role = profile.role;
 

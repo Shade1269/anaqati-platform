@@ -28,7 +28,7 @@ function daysBetween(a: string, b: string): number {
   return Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 86400000) + 1;
 }
 function todayStr(): string {
-  return iso(new Date());
+  return iso(new Date(Date.now() + 10800000)); // توقيت سوريا UTC+3
 }
 function monthStart(): string {
   const d = new Date();

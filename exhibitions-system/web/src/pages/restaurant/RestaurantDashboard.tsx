@@ -20,7 +20,8 @@ import { Button, EmptyState, ErrorBanner, PageHeader, Spinner, StatCard, Table }
 import { money } from '../../lib/format';
 
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  // تاريخ اليوم بتوقيت سوريا (UTC+3) ليطابق تجميع التقارير
+  return new Date(Date.now() + 10800000).toISOString().slice(0, 10);
 }
 
 export default function RestaurantDashboard() {
