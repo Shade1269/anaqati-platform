@@ -113,20 +113,49 @@ function mfgItemsFor(subtype?: string): Item[] {
   return baseMfgItems;
 }
 
-/* ---- OWNER nav: المالك يرى كل شيء (الوحدة الأساسية + كل الأقسام) ---- */
+/* ---- أقسام مشتركة لكل الأنشطة ---- */
+const overviewSection: NavSection = {
+  title: 'نظرة عامة',
+  items: [
+    { to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
+    { to: '/admin/monitoring', label: 'مراقبة الموظفين', icon: <UserCheck size={sz} /> },
+  ],
+};
+const financeSection: NavSection = {
+  title: 'المالية والمحاسبة',
+  items: [
+    { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} /> },
+    { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true },
+    { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} /> },
+    { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} /> },
+    { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} /> },
+    { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
+    { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
+    { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+    navCustomers,
+    { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} /> },
+  ],
+};
+const systemSection: NavSection = {
+  title: 'النظام',
+  items: [
+    { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} /> },
+    { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} /> },
+    { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} /> },
+  ],
+};
+
+/* ---- OWNER nav: كل نشاط يرى وحدته + المشترك فقط (بلا خلط بين الأنشطة) ---- */
 function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
-  const moduleSections: NavSection[] = [];
-  if (bizType === 'restaurant') moduleSections.push({ title: 'المطعم', items: restaurantItems });
-  if (bizType === 'manufacturing') moduleSections.push({ title: 'التصنيع', items: mfgItemsFor(bizSubtype) });
+  if (bizType === 'restaurant') {
+    return [overviewSection, { title: 'المطعم', items: restaurantItems }, marketSection, financeSection, systemSection];
+  }
+  if (bizType === 'manufacturing') {
+    return [overviewSection, { title: 'التصنيع', items: mfgItemsFor(bizSubtype) }, marketSection, financeSection, systemSection];
+  }
+  // التجزئة (الافتراضي)
   return [
-    {
-      title: 'نظرة عامة',
-      items: [
-        { to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
-        { to: '/admin/monitoring', label: 'مراقبة الموظفين', icon: <UserCheck size={sz} /> },
-      ],
-    },
-    ...moduleSections,
+    overviewSection,
     {
       title: 'التشغيل',
       items: [
@@ -139,34 +168,10 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
         navWholesale,
       ],
     },
-    {
-      title: 'المتجر الإلكتروني',
-      items: [navStoreSettings, navStoreProducts, navStoreOrders],
-    },
+    { title: 'المتجر الإلكتروني', items: [navStoreSettings, navStoreProducts, navStoreOrders] },
     marketSection,
-    {
-      title: 'المالية والمحاسبة',
-      items: [
-        { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} /> },
-        { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true },
-        { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} /> },
-        { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} /> },
-        { to: '/admin/accounting/trial-balance', label: 'ميزان المراجعة', icon: <ListChecks size={sz} /> },
-        { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
-        { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
-        { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
-        navCustomers,
-        { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} /> },
-      ],
-    },
-    {
-      title: 'النظام',
-      items: [
-        { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} /> },
-        { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} /> },
-        { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} /> },
-      ],
-    },
+    financeSection,
+    systemSection,
   ];
 }
 
