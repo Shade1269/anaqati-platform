@@ -22,6 +22,12 @@ import {
   PenTool,
   Share2,
   Camera,
+  Bot,
+  BrainCircuit,
+  Workflow,
+  BarChart3,
+  ScanText,
+  Wand2,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -157,6 +163,45 @@ const mediaServices: { icon: React.ReactNode; title: string; desc: string; tone:
     icon: <Camera size={22} />,
     title: 'التصوير الاحترافي',
     desc: 'تصوير المنتجات والفعاليات بزوايا وإضاءة تبرز التفاصيل وترفع قيمة المحتوى.',
+    tone: 'primary',
+  },
+];
+
+const aiServices: { icon: React.ReactNode; title: string; desc: string; tone: string }[] = [
+  {
+    icon: <BrainCircuit size={22} />,
+    title: 'أتمتة المحاسبة والتقارير',
+    desc: 'توليد القيود والقوائم المالية والتقارير تلقائيًا، وكشف الأخطاء والتنبيه عليها بذكاء.',
+    tone: 'primary',
+  },
+  {
+    icon: <Bot size={22} />,
+    title: 'خدمة عملاء ذكية 24/7',
+    desc: 'مساعد آلي يرد على عملائك في واتساب والسوشيال فورًا، ويحوّل الحالات المعقّدة للموظف.',
+    tone: 'info',
+  },
+  {
+    icon: <Wand2 size={22} />,
+    title: 'توليد المحتوى والتصاميم',
+    desc: 'كتابة نصوص إعلانية وإنشاء أفكار تصاميم ومنشورات جاهزة بالذكاء الاصطناعي.',
+    tone: 'success',
+  },
+  {
+    icon: <BarChart3 size={22} />,
+    title: 'التنبؤ والتحليلات الذكية',
+    desc: 'توقّع المبيعات والطلب على المخزون، وتوصيات قرارات مبنية على بياناتك الحقيقية.',
+    tone: 'warning',
+  },
+  {
+    icon: <ScanText size={22} />,
+    title: 'معالجة المستندات تلقائيًا',
+    desc: 'قراءة الفواتير والإيصالات والمستندات واستخراج بياناتها وإدخالها للنظام دون جهد يدوي.',
+    tone: 'info',
+  },
+  {
+    icon: <Workflow size={22} />,
+    title: 'أتمتة سير العمل بالكامل',
+    desc: 'ربط المهام والإشعارات والعمليات عبر كل الأقسام لتسير تلقائيًا من البداية للنهاية.',
     tone: 'primary',
   },
 ];
@@ -348,6 +393,48 @@ export default function AccountingLanding() {
                 </p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ---------- AI automation across all domains ---------- */}
+        <section className="ax-card relative overflow-hidden p-6 sm:p-10">
+          <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-info/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 left-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+          <div className="relative">
+            <div className="text-center">
+              <span className="ax-badge mx-auto bg-primary/15 text-primary-hover">
+                <Sparkles size={14} />
+                مدعوم بالذكاء الاصطناعي
+              </span>
+              <h2 className="mt-4 text-2xl font-extrabold text-text sm:text-3xl">
+                أتمتة كاملة بالذكاء الاصطناعي لكل المجالات
+              </h2>
+              <p className="mx-auto mt-2 max-w-2xl text-muted">
+                نؤتمت عملك من المحاسبة إلى الميديا إلى خدمة العملاء — يعمل الذكاء
+                الاصطناعي على مدار الساعة لتوفير الوقت وتقليل الأخطاء ورفع
+                الإنتاجية في كل قسم.
+              </p>
+            </div>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {aiServices.map((s) => (
+                <div
+                  key={s.title}
+                  className="rounded-xl border border-white/5 bg-white/[0.02] p-5"
+                >
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${tones[s.tone]}`}
+                  >
+                    {s.icon}
+                  </div>
+                  <h3 className="mt-4 text-base font-bold text-text">
+                    {s.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {s.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
