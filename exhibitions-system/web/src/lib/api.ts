@@ -728,7 +728,13 @@ export const restaurantApi = {
   closeBill: (
     sessionId: string,
     paymentMethod: 'cash' | 'card',
-    opts: { discountType?: 'none' | 'percent' | 'amount'; discountValue?: number; tip?: number } = {},
+    opts: {
+      discountType?: 'none' | 'percent' | 'amount';
+      discountValue?: number;
+      tip?: number;
+      customerId?: string | null;
+      redeemPoints?: number;
+    } = {},
     token: string | null = null
   ) =>
     rpc<{
@@ -739,6 +745,9 @@ export const restaurantApi = {
       tax?: number;
       tip?: number;
       delivery_fee?: number;
+      redeem_value?: number;
+      redeem_points?: number;
+      earned_points?: number;
       charged?: number;
       payment_method: string;
     }>('close_table_bill', {
@@ -747,8 +756,16 @@ export const restaurantApi = {
       p_discount_type: opts.discountType ?? 'none',
       p_discount_value: opts.discountValue ?? 0,
       p_tip: opts.tip ?? 0,
+      p_customer_id: opts.customerId ?? null,
+      p_redeem_points: opts.redeemPoints ?? 0,
       p_token: token,
     }),
+
+  loyaltyLookup: (phone: string, name: string | null, token: string | null = null) =>
+    rpc<import('./types').LoyaltyCustomer>('loyalty_customer', { p_phone: phone, p_name: name, p_token: token }),
+
+  setLoyalty: (enabled: boolean, earnRate: number, redeemValue: number) =>
+    rpc<null>('set_loyalty_settings', { p_enabled: enabled, p_earn_rate: earnRate, p_redeem_value: redeemValue }),
 
   settings: (token: string | null = null) =>
     rpc<RestaurantSettings>('restaurant_settings', { p_token: token }),

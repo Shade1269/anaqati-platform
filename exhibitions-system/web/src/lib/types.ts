@@ -321,6 +321,17 @@ export interface SessionDetail {
 export interface RestaurantSettings {
   service_pct: number;
   tax_pct: number;
+  loyalty_enabled?: boolean;
+  loyalty_earn_rate?: number;
+  loyalty_redeem_value?: number;
+}
+
+export interface LoyaltyCustomer {
+  id: string;
+  name: string;
+  points: number;
+  redeem_value: number;
+  enabled: boolean;
 }
 
 export interface RetailReport {
