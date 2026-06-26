@@ -449,7 +449,9 @@ export const adminApi = {
     brandName: string,
     logoUrl: string | null,
     primaryColor: string,
-    currency?: string
+    currency?: string,
+    secondaryCurrency?: string | null,
+    fxRate?: number | null
   ) =>
     rpc<null>('update_tenant_branding', {
       p_tenant_id: tenantId,
@@ -457,6 +459,8 @@ export const adminApi = {
       p_logo_url: logoUrl,
       p_primary_color: primaryColor,
       p_currency: currency ?? null,
+      p_secondary_currency: secondaryCurrency ?? null,
+      p_fx_rate: fxRate ?? null,
     }),
 };
 
@@ -605,7 +609,9 @@ export const platformApi = {
     brandName: string,
     logoUrl: string | null,
     primaryColor: string,
-    currency?: string
+    currency?: string,
+    secondaryCurrency?: string | null,
+    fxRate?: number | null
   ) =>
     rpc<null>('update_tenant_branding', {
       p_tenant_id: tenantId,
@@ -613,6 +619,8 @@ export const platformApi = {
       p_logo_url: logoUrl,
       p_primary_color: primaryColor,
       p_currency: currency ?? null,
+      p_secondary_currency: secondaryCurrency ?? null,
+      p_fx_rate: fxRate ?? null,
     }),
 };
 

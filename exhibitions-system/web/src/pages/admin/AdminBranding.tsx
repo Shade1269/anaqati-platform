@@ -12,7 +12,7 @@ import {
   PageHeader,
   useToast,
 } from '../../components/ui';
-import { setCurrency } from '../../lib/format';
+import { setCurrency, setFx } from '../../lib/format';
 
 export default function AdminBranding() {
   const { profile, refreshProfile } = useAdminAuth();
@@ -25,6 +25,8 @@ export default function AdminBranding() {
     tenant?.primary_color || '#C9A24B'
   );
   const [currency, setCurrencyCode] = useState(tenant?.currency || 'SAR');
+  const [secCurrency, setSecCurrency] = useState(tenant?.secondary_currency || '');
+  const [fxRate, setFxRate] = useState(tenant?.fx_rate ? String(tenant.fx_rate) : '');
   const [busy, setBusy] = useState(false);
 
   if (!profile?.tenant_id) {
@@ -50,10 +52,13 @@ export default function AdminBranding() {
         brandName.trim(),
         logoUrl.trim() || null,
         primaryColor,
-        currency
+        currency,
+        secCurrency.trim() || null,
+        Number(fxRate) || null
       );
       applyPrimaryColor(primaryColor);
       setCurrency(currency);
+      setFx(secCurrency.trim() || null, Number(fxRate) || null);
       await refreshProfile();
       toast.success('تم حفظ العلامة التجارية');
     } catch (err) {
@@ -104,6 +109,24 @@ export default function AdminBranding() {
               <option value="EUR">يورو (€)</option>
             </Select>
           </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="عملة ثانوية (اختياري)">
+              <Select value={secCurrency} onChange={(e) => setSecCurrency(e.target.value)}>
+                <option value="">— بلا —</option>
+                <option value="USD">دولار ($)</option>
+                <option value="SYP">ليرة سورية (ل.س)</option>
+                <option value="TRY">ليرة تركية (₺)</option>
+                <option value="EUR">يورو (€)</option>
+              </Select>
+            </Field>
+            <Field label={`سعر الصرف (1 ${currency} = ؟ ثانوية)`}>
+              <Input type="number" step="0.000001" value={fxRate} onChange={(e) => setFxRate(e.target.value)} placeholder="مثال: 1 دولار = 15000" />
+            </Field>
+          </div>
+          <p className="-mt-1 text-[11px] text-muted">
+            تُعرض القيمة المعادِلة بالعملة الثانوية بجانب الإجماليات والإيصالات. حدّث سعر الصرف يوميًا.
+          </p>
 
           <Field label="اللون الأساسي">
             <div className="flex items-center gap-3">

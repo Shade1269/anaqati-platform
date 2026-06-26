@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { EmployeeSession } from '../lib/types';
-import { setCurrency } from '../lib/format';
+import { setCurrency, setFx } from '../lib/format';
 
 const STORAGE_KEY = 'employee_session';
 
@@ -31,13 +31,14 @@ function load(): EmployeeSession | null {
 export function EmployeeAuthProvider({ children }: { children: ReactNode }) {
   const [session, setSessionState] = useState<EmployeeSession | null>(() => {
     const s = load();
-    if (s) setCurrency(s.currency);
+    if (s) { setCurrency(s.currency); setFx(s.secondary_currency, s.fx_rate); }
     return s;
   });
 
   function setSession(s: EmployeeSession) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
     setCurrency(s.currency);
+    setFx(s.secondary_currency, s.fx_rate);
     setSessionState(s);
   }
 

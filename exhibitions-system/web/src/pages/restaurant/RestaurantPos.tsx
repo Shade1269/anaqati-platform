@@ -31,7 +31,7 @@ import {
   useToast,
 } from '../../components/ui';
 
-import { money } from '../../lib/format';
+import { money, money2 } from '../../lib/format';
 import { printReceipt } from '../../lib/print';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 /** Restaurant POS — floor map + open table + running tab + add order + close/split/merge/transfer.
@@ -598,7 +598,10 @@ function SessionView({
             )}
             <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
               <span className="text-base font-extrabold text-text">الإجمالي</span>
-              <span className="text-lg font-extrabold text-gold">{money(s.total_sar)}</span>
+              <span className="text-left">
+                <span className="text-lg font-extrabold text-gold">{money(s.total_sar)}</span>
+                {money2(s.total_sar) && <span className="block text-[11px] text-muted">≈ {money2(s.total_sar)}</span>}
+              </span>
             </div>
           </Card>
 
