@@ -339,6 +339,7 @@ export interface RestaurantReport {
     tips: number;
   };
   cogs: number;
+  by_day: { d: string; sales: number; bills: number }[];
   top_items: { name: string; qty: number; revenue: number }[];
   by_category: { name: string; qty: number; revenue: number }[];
   by_hour: { hour: number; bills: number; sales: number }[];
