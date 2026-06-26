@@ -10,6 +10,8 @@ import {
   Send,
   Users,
   Trash2,
+  ShoppingBag,
+  Truck,
 } from 'lucide-react';
 import { restaurantApi } from '../../lib/api';
 import type {
@@ -17,6 +19,7 @@ import type {
   MenuCategory,
   MenuItem,
   NewOrderItem,
+  QuickSession,
   SessionDetail,
 } from '../../lib/types';
 import {
@@ -38,6 +41,7 @@ import { useAdminAuth } from '../../context/AdminAuthContext';
  *  token=null → owner/manager (Supabase session). token set → waiter (employee). */
 export default function RestaurantPos({ token = null }: { token?: string | null }) {
   const [tables, setTables] = useState<DiningTable[]>([]);
+  const [quick, setQuick] = useState<QuickSession[]>([]);
   const [menu, setMenu] = useState<MenuCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -45,7 +49,12 @@ export default function RestaurantPos({ token = null }: { token?: string | null 
 
   const loadTables = useCallback(async () => {
     try {
-      setTables(await restaurantApi.tables(token));
+      const [t, q] = await Promise.all([
+        restaurantApi.tables(token),
+        restaurantApi.quickSessions(token),
+      ]);
+      setTables(t);
+      setQuick(q);
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -55,11 +64,13 @@ export default function RestaurantPos({ token = null }: { token?: string | null 
     (async () => {
       setLoading(true);
       try {
-        const [t, m] = await Promise.all([
+        const [t, q, m] = await Promise.all([
           restaurantApi.tables(token),
+          restaurantApi.quickSessions(token),
           restaurantApi.menu(token),
         ]);
         setTables(t);
+        setQuick(q);
         setMenu(m);
       } catch (e) {
         toast.error((e as Error).message);
@@ -89,12 +100,161 @@ export default function RestaurantPos({ token = null }: { token?: string | null 
   }
 
   return (
-    <Floor
-      token={token}
-      tables={tables}
-      reload={loadTables}
-      onOpenSession={(id) => setSessionId(id)}
-    />
+    <div className="space-y-8">
+      <QuickOrders
+        token={token}
+        quick={quick}
+        reload={loadTables}
+        onOpenSession={(id) => setSessionId(id)}
+      />
+      <Floor
+        token={token}
+        tables={tables}
+        reload={loadTables}
+        onOpenSession={(id) => setSessionId(id)}
+      />
+    </div>
+  );
+}
+
+/* ----------------------------- Takeaway / Delivery ----------------------------- */
+
+const ORDER_TYPE_LABEL: Record<string, string> = {
+  dine_in: 'صالة',
+  takeaway: 'سفري',
+  delivery: 'توصيل',
+};
+
+function QuickOrders({
+  token,
+  quick,
+  reload,
+  onOpenSession,
+}: {
+  token: string | null;
+  quick: QuickSession[];
+  reload: () => void;
+  onOpenSession: (sessionId: string) => void;
+}) {
+  const [newType, setNewType] = useState<'takeaway' | 'delivery' | null>(null);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [fee, setFee] = useState('');
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  function reset() {
+    setNewType(null);
+    setName('');
+    setPhone('');
+    setAddress('');
+    setFee('');
+  }
+
+  async function create() {
+    if (!newType) return;
+    setBusy(true);
+    try {
+      const r = await restaurantApi.openQuick(
+        newType,
+        {
+          name: name.trim() || null,
+          phone: phone.trim() || null,
+          address: address.trim() || null,
+          deliveryFee: newType === 'delivery' ? Number(fee) || 0 : 0,
+        },
+        token
+      );
+      reset();
+      onOpenSession(r.session_id);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-bold text-muted">طلبات سفري / توصيل</h2>
+        <div className="flex gap-2">
+          <Button size="sm" icon={<ShoppingBag size={15} />} onClick={() => setNewType('takeaway')}>
+            طلب سفري
+          </Button>
+          <Button size="sm" variant="outline" icon={<Truck size={15} />} onClick={() => setNewType('delivery')}>
+            طلب توصيل
+          </Button>
+        </div>
+      </div>
+
+      {quick.length === 0 ? (
+        <p className="text-sm text-muted">لا طلبات سفري/توصيل مفتوحة.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {quick.map((q) => (
+            <button
+              key={q.id}
+              onClick={() => onOpenSession(q.id)}
+              className="ax-card flex flex-col items-start gap-1 border-info/40 bg-info/5 p-4 text-right transition hover:-translate-y-0.5"
+            >
+              <div className="flex w-full items-center justify-between">
+                <span className="flex items-center gap-1 text-sm font-extrabold text-text">
+                  {q.order_type === 'delivery' ? <Truck size={14} /> : <ShoppingBag size={14} />}
+                  {ORDER_TYPE_LABEL[q.order_type]}
+                </span>
+                <span className="font-mono text-[10px] text-muted">{q.session_no}</span>
+              </div>
+              {q.customer_name && <span className="text-xs text-muted">{q.customer_name}</span>}
+              {q.customer_phone && <span className="text-[11px] text-muted" dir="ltr">{q.customer_phone}</span>}
+              <span className="mt-1 text-sm font-bold text-gold">{money(q.total)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <Dialog
+        open={!!newType}
+        onClose={reset}
+        title={newType === 'delivery' ? 'طلب توصيل جديد' : 'طلب سفري جديد'}
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={reset}>
+              إلغاء
+            </Button>
+            <Button onClick={create} loading={busy}>
+              بدء الطلب
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <Field label="اسم الزبون (اختياري)">
+            <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          </Field>
+          <Field label="الهاتف (اختياري)">
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </Field>
+          {newType === 'delivery' && (
+            <>
+              <Field label="العنوان">
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+              </Field>
+              <Field label="رسوم التوصيل">
+                <Input type="number" step="0.01" min="0" value={fee} onChange={(e) => setFee(e.target.value)} />
+              </Field>
+            </>
+          )}
+        </div>
+        <div className="mt-2">
+          <Button variant="ghost" size="sm" onClick={reload}>
+            تحديث
+          </Button>
+        </div>
+      </Dialog>
+    </div>
   );
 }
 
@@ -363,7 +523,7 @@ function SessionView({
     setClosing(true);
     try {
       const r = await restaurantApi.closeBill(sessionId, pm, token);
-      toast.success(`تم الدفع: ${money(r.total)}`);
+      toast.success(`تم الدفع: ${money(r.charged ?? r.total)}`);
       onBack();
     } catch (e) {
       toast.error((e as Error).message);
@@ -412,6 +572,13 @@ function SessionView({
   const s = detail.session;
   if (!s) return <EmptyState message="الجلسة غير موجودة" />;
 
+  const isQuick = !s.table_label;
+  const deliveryFee = s.delivery_fee || 0;
+  const charged = s.total_sar + deliveryFee;
+  const heading = isQuick
+    ? `${ORDER_TYPE_LABEL[s.order_type]}${s.customer_name ? ` — ${s.customer_name}` : ''}`
+    : `طاولة ${s.table_label}`;
+
   function printBill() {
     if (!s || !detail) return;
     const brand = profile?.tenant?.brand_name || profile?.tenant?.name || 'فاتورة';
@@ -423,13 +590,22 @@ function SessionView({
         note: it.note,
       }))
     );
+    if (deliveryFee > 0) lines.push({ name: 'رسوم التوصيل', qty: 1, amount: deliveryFee, note: null });
+    const meta = isQuick
+      ? [
+          { label: 'النوع', value: ORDER_TYPE_LABEL[s.order_type] },
+          ...(s.customer_name ? [{ label: 'الزبون', value: s.customer_name }] : []),
+          ...(s.customer_phone ? [{ label: 'الهاتف', value: s.customer_phone }] : []),
+          ...(s.address ? [{ label: 'العنوان', value: s.address }] : []),
+        ]
+      : [{ label: 'الضيوف', value: String(s.guest_count) }];
     printReceipt({
       brand,
-      title: 'فاتورة طاولة',
-      ref: `${s.session_no} — طاولة ${s.table_label}`,
-      meta: [{ label: 'الضيوف', value: String(s.guest_count) }],
+      title: isQuick ? `فاتورة ${ORDER_TYPE_LABEL[s.order_type]}` : 'فاتورة طاولة',
+      ref: isQuick ? s.session_no : `${s.session_no} — طاولة ${s.table_label}`,
+      meta,
       lines,
-      total: s.total_sar,
+      total: charged,
     });
   }
 
@@ -443,9 +619,9 @@ function SessionView({
     <div>
       <div className="mb-4 flex items-center gap-2">
         <Button variant="ghost" size="sm" icon={<ArrowRight size={16} />} onClick={onBack}>
-          الطاولات
+          رجوع
         </Button>
-        <h1 className="text-xl font-extrabold text-text">طاولة {s.table_label}</h1>
+        <h1 className="text-xl font-extrabold text-text">{heading}</h1>
         <span className="font-mono text-xs text-muted">{s.session_no}</span>
       </div>
 
@@ -534,20 +710,22 @@ function SessionView({
           {/* الطلبات المرسلة */}
           <Card>
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-text">فاتورة الطاولة</h3>
+              <h3 className="text-sm font-bold text-text">الفاتورة</h3>
               <div className="flex items-center gap-3">
                 <button className="text-xs font-bold text-info" onClick={printBill}>
                   طباعة
                 </button>
-                <button
-                  className={`text-xs font-bold ${splitMode ? 'text-danger' : 'text-info'}`}
-                  onClick={() => {
-                    setSplitMode((v) => !v);
-                    setSplitSel(new Set());
-                  }}
-                >
-                  {splitMode ? 'إلغاء التقسيم' : 'تقسيم'}
-                </button>
+                {!isQuick && (
+                  <button
+                    className={`text-xs font-bold ${splitMode ? 'text-danger' : 'text-info'}`}
+                    onClick={() => {
+                      setSplitMode((v) => !v);
+                      setSplitSel(new Set());
+                    }}
+                  >
+                    {splitMode ? 'إلغاء التقسيم' : 'تقسيم'}
+                  </button>
+                )}
               </div>
             </div>
             {detail.orders.length === 0 ? (
@@ -596,11 +774,23 @@ function SessionView({
                 ))}
               </div>
             )}
+            {deliveryFee > 0 && (
+              <div className="mt-3 flex items-center justify-between text-sm">
+                <span className="text-muted">الأصناف</span>
+                <span className="text-muted">{money(s.total_sar)}</span>
+              </div>
+            )}
+            {deliveryFee > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted">رسوم التوصيل</span>
+                <span className="text-muted">{money(deliveryFee)}</span>
+              </div>
+            )}
             <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
               <span className="text-base font-extrabold text-text">الإجمالي</span>
               <span className="text-left">
-                <span className="text-lg font-extrabold text-gold">{money(s.total_sar)}</span>
-                {money2(s.total_sar) && <span className="block text-[11px] text-muted">≈ {money2(s.total_sar)}</span>}
+                <span className="text-lg font-extrabold text-gold">{money(charged)}</span>
+                {money2(charged) && <span className="block text-[11px] text-muted">≈ {money2(charged)}</span>}
               </span>
             </div>
           </Card>
@@ -612,21 +802,28 @@ function SessionView({
             </Button>
           ) : (
             <div className="grid grid-cols-2 gap-2">
-              <Button icon={<Receipt size={16} />} onClick={() => setPayOpen(true)}>
+              <Button
+                icon={<Receipt size={16} />}
+                onClick={() => setPayOpen(true)}
+                className={isQuick ? 'col-span-2' : ''}
+              >
                 إقفال ودفع
               </Button>
-              <Button variant="outline" icon={<ArrowRight size={16} />} onClick={() => setMoveOpen(true)}>
-                نقل طاولة
-              </Button>
-              <Button
-                variant="outline"
-                icon={<Shuffle size={16} />}
-                onClick={() => setMergeOpen(true)}
-                disabled={!otherOpen.length}
-                className="col-span-2"
-              >
-                دمج مع فاتورة أخرى
-              </Button>
+              {!isQuick && (
+                <>
+                  <Button variant="outline" icon={<ArrowRight size={16} />} onClick={() => setMoveOpen(true)}>
+                    نقل طاولة
+                  </Button>
+                  <Button
+                    variant="outline"
+                    icon={<Shuffle size={16} />}
+                    onClick={() => setMergeOpen(true)}
+                    disabled={!otherOpen.length}
+                  >
+                    دمج مع فاتورة أخرى
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -640,7 +837,7 @@ function SessionView({
       />
 
       {/* الدفع */}
-      <Dialog open={payOpen} onClose={() => setPayOpen(false)} title={`إقفال الفاتورة — ${money(s.total_sar)}`}>
+      <Dialog open={payOpen} onClose={() => setPayOpen(false)} title={`إقفال الفاتورة — ${money(charged)}`}>
         <p className="mb-4 text-sm text-muted">اختر طريقة الدفع:</p>
         <div className="grid grid-cols-2 gap-3">
           <Button loading={closing} onClick={() => closeBill('cash')}>
