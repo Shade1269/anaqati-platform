@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useEmployeeAuth } from '../../context/EmployeeAuthContext';
 import { employeeApi } from '../../lib/api';
-import type { Branch, NotificationRow } from '../../lib/types';
+import type { Branch, NotificationRow, EmployeePermissions } from '../../lib/types';
 import { getStoredBranchId } from '../../context/useBranchSelection';
 import { Select, Dialog } from '../../components/ui';
 import {
@@ -23,28 +23,33 @@ import {
 import { NotificationsPanel } from '../../components/shell/NotificationsPanel';
 
 const sz = 18;
-const retailSections: NavSection[] = [
-  {
-    items: [
-      { to: '/employee/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
-      { to: '/employee/pos', label: 'نقطة البيع', icon: <ShoppingBag size={sz} /> },
-      { to: '/employee/returns', label: 'إرجاع المبيعات', icon: <Undo2 size={sz} /> },
-      { to: '/employee/request-stock', label: 'طلب بضاعة', icon: <PackagePlus size={sz} /> },
-      { to: '/employee/withdraw', label: 'سحب عُهدة', icon: <PackageMinus size={sz} /> },
-      { to: '/employee/settlement', label: 'تسليم العُهدة', icon: <Wallet size={sz} /> },
-      { to: '/employee/notifications', label: 'الإشعارات', icon: <Bell size={sz} /> },
-    ],
-  },
-];
-const restaurantSections: NavSection[] = [
-  {
-    items: [
-      { to: '/employee/restaurant', label: 'الطاولات', icon: <LayoutGrid size={sz} /> },
-      { to: '/employee/kitchen', label: 'المطبخ', icon: <ChefHat size={sz} /> },
-      { to: '/employee/notifications', label: 'الإشعارات', icon: <Bell size={sz} /> },
-    ],
-  },
-];
+
+// كل العناصر مسموحة افتراضيًا إن لم تُحدّد صلاحيات (توافق رجعي).
+function allow(perm: boolean | undefined): boolean {
+  return perm !== false;
+}
+
+function retailSectionsFor(p?: EmployeePermissions | null): NavSection[] {
+  const items = [
+    { to: '/employee/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} />, show: true },
+    { to: '/employee/pos', label: 'نقطة البيع', icon: <ShoppingBag size={sz} />, show: allow(p?.can_sell) },
+    { to: '/employee/returns', label: 'إرجاع المبيعات', icon: <Undo2 size={sz} />, show: allow(p?.can_return) },
+    { to: '/employee/request-stock', label: 'طلب بضاعة', icon: <PackagePlus size={sz} />, show: allow(p?.can_request_stock) },
+    { to: '/employee/withdraw', label: 'سحب عُهدة', icon: <PackageMinus size={sz} />, show: allow(p?.can_withdraw) },
+    { to: '/employee/settlement', label: 'تسليم العُهدة', icon: <Wallet size={sz} />, show: allow(p?.can_settle) },
+    { to: '/employee/notifications', label: 'الإشعارات', icon: <Bell size={sz} />, show: true },
+  ];
+  return [{ items: items.filter((i) => i.show).map(({ show, ...rest }) => rest) }];
+}
+
+function restaurantSectionsFor(p?: EmployeePermissions | null): NavSection[] {
+  const items = [
+    { to: '/employee/restaurant', label: 'الطاولات', icon: <LayoutGrid size={sz} />, show: allow(p?.can_waiter) },
+    { to: '/employee/kitchen', label: 'المطبخ', icon: <ChefHat size={sz} />, show: allow(p?.can_kitchen) },
+    { to: '/employee/notifications', label: 'الإشعارات', icon: <Bell size={sz} />, show: true },
+  ];
+  return [{ items: items.filter((i) => i.show).map(({ show, ...rest }) => rest) }];
+}
 
 export default function EmployeeLayout() {
   const { session, signOut } = useEmployeeAuth();
@@ -103,7 +108,9 @@ export default function EmployeeLayout() {
   if (!session) return null;
 
   const isRestaurant = session.business_type === 'restaurant';
-  const sections = isRestaurant ? restaurantSections : retailSections;
+  const sections = isRestaurant
+    ? restaurantSectionsFor(session.permissions)
+    : retailSectionsFor(session.permissions);
   const unread = notifs.filter((n) => !n.is_read).length;
 
   return (
