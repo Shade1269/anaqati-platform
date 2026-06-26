@@ -47,6 +47,7 @@ import type {
   QuickSession,
   ShiftZ,
   RestaurantSettings,
+  RestaurantReport,
   SessionDetail,
   KdsOrder,
   NewOrderItem,
@@ -751,6 +752,9 @@ export const restaurantApi = {
 
   setSettings: (servicePct: number, taxPct: number) =>
     rpc<null>('set_restaurant_settings', { p_service_pct: servicePct, p_tax_pct: taxPct }),
+
+  report: (from: string, to: string) =>
+    rpc<RestaurantReport>('restaurant_report', { p_from: from, p_to: to }),
 
   transferTable: (sessionId: string, toTableId: string, token: string | null = null) =>
     rpc<null>('transfer_table', { p_session_id: sessionId, p_to_table_id: toTableId, p_token: token }),

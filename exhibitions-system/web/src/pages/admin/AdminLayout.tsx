@@ -86,7 +86,8 @@ const navRestKds: Item = { to: '/admin/restaurant/kds', label: 'شاشة الم�
 const navRestMenu: Item = { to: '/admin/restaurant/menu', label: 'المنيو', icon: <UtensilsCrossed size={sz} /> };
 const navRestTables: Item = { to: '/admin/restaurant/tables', label: 'إدارة الطاولات', icon: <Armchair size={sz} /> };
 const navRestInventory: Item = { to: '/admin/restaurant/inventory', label: 'مخزون المواد', icon: <Boxes size={sz} /> };
-const restaurantItems: Item[] = [navRestPos, navRestKds, navRestMenu, navRestTables, navRestInventory];
+const navRestReports: Item = { to: '/admin/restaurant/reports', label: 'تقارير المطعم', icon: <TrendingUp size={sz} /> };
+const restaurantItems: Item[] = [navRestPos, navRestKds, navRestMenu, navRestTables, navRestInventory, navRestReports];
 
 /* ---- Internal market (B2B) — shared by all subscribers ---- */
 const navMarketBrowse: Item = { to: '/admin/market/browse', label: 'تصفّح السوق', icon: <ShoppingBag size={sz} /> };
