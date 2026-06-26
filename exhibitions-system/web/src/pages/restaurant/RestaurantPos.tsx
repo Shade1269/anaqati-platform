@@ -10,6 +10,7 @@ import {
   Send,
   Users,
   Trash2,
+  Ban,
   ShoppingBag,
   Truck,
   Wallet,
@@ -782,6 +783,9 @@ function SessionView({
   const [mergeOpen, setMergeOpen] = useState(false);
   const [splitMode, setSplitMode] = useState(false);
   const [splitSel, setSplitSel] = useState<Set<string>>(new Set());
+  const [voidTarget, setVoidTarget] = useState<{ id: string; name: string } | null>(null);
+  const [voidReason, setVoidReason] = useState('');
+  const [voiding, setVoiding] = useState(false);
   const toast = useToast();
   const { profile } = useAdminAuth();
 
@@ -870,6 +874,22 @@ function SessionView({
     } finally {
       setClosing(false);
       setPayOpen(false);
+    }
+  }
+
+  async function doVoid() {
+    if (!voidTarget || !voidReason.trim()) return;
+    setVoiding(true);
+    try {
+      await restaurantApi.voidItem(voidTarget.id, voidReason.trim(), token);
+      toast.success('أُلغي الصنف');
+      setVoidTarget(null);
+      setVoidReason('');
+      load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setVoiding(false);
     }
   }
 
@@ -1092,38 +1112,62 @@ function SessionView({
                       <span className="font-mono">{o.order_no}</span>
                       <span>{statusLabel(o.status)}</span>
                     </div>
-                    {o.items.map((it) => (
-                      <label
-                        key={it.id}
-                        className={`flex items-center justify-between gap-2 py-0.5 text-sm ${
-                          splitMode ? 'cursor-pointer' : ''
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          {splitMode && (
-                            <input
-                              type="checkbox"
-                              checked={splitSel.has(it.id)}
-                              onChange={(e) => {
-                                setSplitSel((prev) => {
-                                  const n = new Set(prev);
-                                  if (e.target.checked) n.add(it.id);
-                                  else n.delete(it.id);
-                                  return n;
-                                });
-                              }}
-                            />
-                          )}
-                          {it.qty}× {it.name}
-                          {it.options?.length > 0 && (
-                            <span className="text-[10px] text-muted">
-                              ({it.options.map((x) => x.name).join('، ')})
+                    {o.items.map((it) =>
+                      it.voided ? (
+                        <div key={it.id} className="flex items-center justify-between gap-2 py-0.5 text-sm text-muted/60">
+                          <span className="flex items-center gap-2 line-through">
+                            {it.qty}× {it.name}
+                            <span className="rounded bg-danger/15 px-1 text-[9px] text-danger no-underline">
+                              ملغى{it.void_reason ? `: ${it.void_reason}` : ''}
                             </span>
-                          )}
-                        </span>
-                        <span className="text-gold">{money(it.line_total)}</span>
-                      </label>
-                    ))}
+                          </span>
+                          <span className="line-through">{money(it.line_total)}</span>
+                        </div>
+                      ) : (
+                        <label
+                          key={it.id}
+                          className={`flex items-center justify-between gap-2 py-0.5 text-sm ${
+                            splitMode ? 'cursor-pointer' : ''
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            {splitMode && (
+                              <input
+                                type="checkbox"
+                                checked={splitSel.has(it.id)}
+                                onChange={(e) => {
+                                  setSplitSel((prev) => {
+                                    const n = new Set(prev);
+                                    if (e.target.checked) n.add(it.id);
+                                    else n.delete(it.id);
+                                    return n;
+                                  });
+                                }}
+                              />
+                            )}
+                            {!splitMode && !token && (
+                              <button
+                                className="text-danger/70 hover:text-danger"
+                                title="إلغاء الصنف"
+                                onClick={() => {
+                                  setVoidReason('');
+                                  setVoidTarget({ id: it.id, name: it.name });
+                                }}
+                              >
+                                <Ban size={13} />
+                              </button>
+                            )}
+                            {it.qty}× {it.name}
+                            {it.options?.length > 0 && (
+                              <span className="text-[10px] text-muted">
+                                ({it.options.map((x) => x.name).join('، ')})
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-gold">{money(it.line_total)}</span>
+                        </label>
+                      )
+                    )}
                   </div>
                 ))}
               </div>
@@ -1189,6 +1233,26 @@ function SessionView({
         onClose={() => setOptionItem(null)}
         onAdd={addWithOptions}
       />
+
+      {/* إلغاء صنف */}
+      <Dialog
+        open={!!voidTarget}
+        onClose={() => setVoidTarget(null)}
+        title={`إلغاء صنف — ${voidTarget?.name ?? ''}`}
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setVoidTarget(null)}>تراجع</Button>
+            <Button variant="danger" onClick={doVoid} loading={voiding} disabled={!voidReason.trim()}>
+              تأكيد الإلغاء
+            </Button>
+          </>
+        }
+      >
+        <Field label="سبب الإلغاء (إلزامي)">
+          <Input value={voidReason} onChange={(e) => setVoidReason(e.target.value)} placeholder="خطأ في الطلب، طلب الزبون..." autoFocus />
+        </Field>
+      </Dialog>
 
       {/* الدفع */}
       <Dialog open={payOpen} onClose={() => setPayOpen(false)} title="إقفال الفاتورة">

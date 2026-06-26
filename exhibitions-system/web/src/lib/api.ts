@@ -756,6 +756,9 @@ export const restaurantApi = {
   report: (from: string, to: string) =>
     rpc<RestaurantReport>('restaurant_report', { p_from: from, p_to: to }),
 
+  voidItem: (itemId: string, reason: string, token: string | null = null) =>
+    rpc<null>('void_order_item', { p_item_id: itemId, p_reason: reason, p_token: token }),
+
   transferTable: (sessionId: string, toTableId: string, token: string | null = null) =>
     rpc<null>('transfer_table', { p_session_id: sessionId, p_to_table_id: toTableId, p_token: token }),
 

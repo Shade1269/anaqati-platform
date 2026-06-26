@@ -263,6 +263,8 @@ export interface OrderItemRow {
   options: { name: string; price_delta: number }[];
   line_total: number;
   note: string | null;
+  voided?: boolean;
+  void_reason?: string | null;
 }
 
 export interface OrderRow {
