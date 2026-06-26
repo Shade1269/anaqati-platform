@@ -20,6 +20,7 @@ import {
   BookOpen,
   NotebookPen,
   UserCheck,
+  UserPlus,
   Truck,
   Waves,
   Palette,
@@ -134,6 +135,7 @@ const financeSection: NavSection = {
     { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
     navCustomers,
     { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} /> },
+    { to: '/admin/supplier-leads', label: 'طلبات الموردين', icon: <UserPlus size={sz} /> },
   ],
 };
 const systemSection: NavSection = {

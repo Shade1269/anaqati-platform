@@ -5,6 +5,7 @@ import Storefront from './pages/store/Storefront';
 import QrOrder from './pages/restaurant/QrOrder';
 import AccountingLanding from './pages/AccountingLanding';
 import RestaurantOnlineMenu from './pages/restaurant/RestaurantOnlineMenu';
+import SupplierRegister from './pages/SupplierRegister';
 
 // Employee
 import EmployeeLogin from './pages/employee/EmployeeLogin';
@@ -58,6 +59,7 @@ import AdminAudit from './pages/admin/AdminAudit';
 import AdminMonitoring from './pages/admin/AdminMonitoring';
 import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
+import AdminSupplierLeads from './pages/admin/AdminSupplierLeads';
 import AdminCustomers from './pages/admin/AdminCustomers';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RequireAdmin from './pages/admin/RequireAdmin';
@@ -89,6 +91,10 @@ export default function App() {
 
       {/* Public introductory page for the accounting system (no auth) */}
       <Route path="/accounting" element={<AccountingLanding />} />
+
+      {/* Public supplier registration landing (ad campaign, no auth) */}
+      <Route path="/join" element={<SupplierRegister />} />
+      <Route path="/suppliers/join" element={<SupplierRegister />} />
 
       {/* Public storefront (no auth) */}
       <Route path="/store/:slug" element={<Storefront />} />
@@ -127,6 +133,7 @@ export default function App() {
         <Route path="monitoring" element={<RequireAdmin><AdminMonitoring /></RequireAdmin>} />
         <Route path="monitoring/:employeeId" element={<RequireAdmin><AdminEmployeeFile /></RequireAdmin>} />
         <Route path="suppliers" element={<RequireAdmin><AdminSuppliers /></RequireAdmin>} />
+        <Route path="supplier-leads" element={<RequireAdmin><AdminSupplierLeads /></RequireAdmin>} />
         <Route path="finance" element={<RequireAdmin><AdminFinance /></RequireAdmin>} />
         <Route path="audit" element={<RequireAdmin><AdminAudit /></RequireAdmin>} />
         <Route path="branding" element={<RequireAdmin><AdminBranding /></RequireAdmin>} />

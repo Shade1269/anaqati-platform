@@ -24,6 +24,8 @@ import type {
   EmployeeFile,
   EmployeeConsignmentReport,
   SupplierBalance,
+  SupplierRegistration,
+  SupplierRegistrationStatus,
   BranchClosePreviewRow,
   ReconcileCloseResult,
   CashFlow,
@@ -425,6 +427,20 @@ export const adminApi = {
 
   supplierBalances: () => rpc<SupplierBalance[]>('supplier_balances', {}),
 
+  /* ----------------------- Supplier registrations (leads) ----------------------- */
+
+  supplierRegistrations: () =>
+    rpc<SupplierRegistration[]>('list_supplier_registrations', {}),
+
+  setSupplierRegistrationStatus: (
+    id: string,
+    status: SupplierRegistrationStatus
+  ) =>
+    rpc<null>('set_supplier_registration_status', {
+      p_id: id,
+      p_status: status,
+    }),
+
   paySupplier: (
     id: string,
     amount: number,
@@ -508,6 +524,24 @@ export const storeApi = {
       p_address: payload.address,
       p_payment_method: payload.payment_method,
       p_items: payload.items,
+    }),
+};
+
+/* --------------------------- Public lead capture (no auth) ----------------------------- */
+
+export const publicApi = {
+  // Public supplier registration (ad-campaign landing page). Returns the new id.
+  registerSupplier: (payload: {
+    name: string;
+    phone: string;
+    activity: string;
+    city: string;
+  }) =>
+    rpc<string>('register_supplier', {
+      p_name: payload.name || null,
+      p_phone: payload.phone,
+      p_activity: payload.activity,
+      p_city: payload.city || null,
     }),
 };
 

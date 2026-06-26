@@ -910,6 +910,23 @@ export interface SupplierBalance {
   balance: number;
 }
 
+export type SupplierRegistrationStatus =
+  | 'new'
+  | 'contacted'
+  | 'approved'
+  | 'rejected';
+
+export interface SupplierRegistration {
+  id: string;
+  name: string | null;
+  phone: string;
+  activity: string;
+  city: string | null;
+  status: SupplierRegistrationStatus;
+  notes: string | null;
+  created_at: string;
+}
+
 /* ----------------------------- Branch close ----------------------------- */
 
 export interface BranchClosePreviewRow {
