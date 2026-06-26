@@ -300,6 +300,28 @@ export interface RestaurantSettings {
   tax_pct: number;
 }
 
+export interface RestaurantReport {
+  summary: {
+    bills: number;
+    sales: number;
+    avg_ticket: number;
+    dine_in: number;
+    takeaway: number;
+    delivery: number;
+    cash: number;
+    card: number;
+    discounts: number;
+    service: number;
+    tax: number;
+    tips: number;
+  };
+  cogs: number;
+  top_items: { name: string; qty: number; revenue: number }[];
+  by_category: { name: string; qty: number; revenue: number }[];
+  by_hour: { hour: number; bills: number; sales: number }[];
+  staff: { name: string; bills: number; sales: number }[];
+}
+
 export interface ShiftZ {
   id: string;
   status: 'open' | 'closed';
