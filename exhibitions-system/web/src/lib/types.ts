@@ -274,6 +274,8 @@ export interface OrderRow {
   items: OrderItemRow[];
 }
 
+export type OrderType = 'dine_in' | 'takeaway' | 'delivery';
+
 export interface SessionDetail {
   session: {
     id: string;
@@ -282,10 +284,28 @@ export interface SessionDetail {
     guest_count: number;
     total_sar: number;
     opened_at: string;
-    table_label: string;
+    order_type: OrderType;
+    customer_name: string | null;
+    customer_phone: string | null;
+    address: string | null;
+    delivery_fee: number;
+    table_label: string | null;
     section: string | null;
   } | null;
   orders: OrderRow[];
+}
+
+export interface QuickSession {
+  id: string;
+  session_no: string;
+  order_type: OrderType;
+  status: string;
+  customer_name: string | null;
+  customer_phone: string | null;
+  address: string | null;
+  delivery_fee: number;
+  total: number;
+  opened_at: string;
 }
 
 export interface KdsOrder {

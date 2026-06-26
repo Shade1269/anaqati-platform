@@ -44,6 +44,7 @@ import type {
   ManagerEmployeeRow,
   MenuCategory,
   DiningTable,
+  QuickSession,
   SessionDetail,
   KdsOrder,
   NewOrderItem,
@@ -656,6 +657,23 @@ export const restaurantApi = {
   tables: (token: string | null = null) =>
     rpc<DiningTable[]>('restaurant_tables', { p_token: token }),
 
+  quickSessions: (token: string | null = null) =>
+    rpc<QuickSession[]>('quick_sessions', { p_token: token }),
+
+  openQuick: (
+    orderType: 'takeaway' | 'delivery',
+    customer: { name?: string | null; phone?: string | null; address?: string | null; deliveryFee?: number },
+    token: string | null = null
+  ) =>
+    rpc<{ session_id: string; session_no: string }>('open_quick_session', {
+      p_order_type: orderType,
+      p_customer_name: customer.name ?? null,
+      p_customer_phone: customer.phone ?? null,
+      p_address: customer.address ?? null,
+      p_delivery_fee: customer.deliveryFee ?? 0,
+      p_token: token,
+    }),
+
   sessionDetail: (sessionId: string, token: string | null = null) =>
     rpc<SessionDetail>('session_detail', { p_session_id: sessionId, p_token: token }),
 
@@ -690,7 +708,7 @@ export const restaurantApi = {
     rpc<null>('kds_set_order_status', { p_order_id: orderId, p_status: status, p_token: token }),
 
   closeBill: (sessionId: string, paymentMethod: 'cash' | 'card', token: string | null = null) =>
-    rpc<{ session_id: string; total: number; payment_method: string }>('close_table_bill', {
+    rpc<{ session_id: string; total: number; delivery_fee?: number; charged?: number; payment_method: string }>('close_table_bill', {
       p_session_id: sessionId,
       p_payment_method: paymentMethod,
       p_token: token,
