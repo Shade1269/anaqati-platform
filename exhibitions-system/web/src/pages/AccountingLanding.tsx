@@ -16,6 +16,12 @@ import {
   ArrowLeft,
   CheckCircle2,
   Sparkles,
+  Megaphone,
+  Clapperboard,
+  Palette,
+  PenTool,
+  Share2,
+  Camera,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -114,6 +120,45 @@ const cycle: string[] = [
   'إعداد ميزان المراجعة',
   'إصدار القوائم المالية',
   'إقفال الفترة',
+];
+
+const mediaServices: { icon: React.ReactNode; title: string; desc: string; tone: string }[] = [
+  {
+    icon: <Share2 size={22} />,
+    title: 'إدارة وسائل التواصل',
+    desc: 'إدارة حسابات السوشيال ميديا، جدولة المنشورات، والتفاعل مع الجمهور بهوية موحّدة.',
+    tone: 'info',
+  },
+  {
+    icon: <Megaphone size={22} />,
+    title: 'الحملات الإعلانية',
+    desc: 'تخطيط وإطلاق إعلانات ممولة على المنصات المختلفة مع استهداف دقيق وقياس النتائج.',
+    tone: 'primary',
+  },
+  {
+    icon: <Clapperboard size={22} />,
+    title: 'تصميم وإنتاج الفيديوهات',
+    desc: 'مونتاج، موشن جرافيك، وفيديوهات ترويجية احترافية تبرز منتجاتك وخدماتك.',
+    tone: 'success',
+  },
+  {
+    icon: <Palette size={22} />,
+    title: 'التصاميم الجرافيكية',
+    desc: 'تصاميم سوشيال ميديا، بوسترات، ومواد دعائية بجودة عالية تعكس هوية علامتك.',
+    tone: 'warning',
+  },
+  {
+    icon: <PenTool size={22} />,
+    title: 'الهوية البصرية',
+    desc: 'بناء هوية متكاملة من الشعار والألوان والخطوط لتمييز علامتك التجارية.',
+    tone: 'info',
+  },
+  {
+    icon: <Camera size={22} />,
+    title: 'التصوير الاحترافي',
+    desc: 'تصوير المنتجات والفعاليات بزوايا وإضاءة تبرز التفاصيل وترفع قيمة المحتوى.',
+    tone: 'primary',
+  },
 ];
 
 const tones: Record<string, string> = {
@@ -268,6 +313,39 @@ export default function AccountingLanding() {
                   className="mt-0.5 shrink-0 text-success"
                 />
                 <span className="text-sm leading-relaxed text-text">{item}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ---------- Media & advertising department ---------- */}
+        <section>
+          <div className="text-center">
+            <span className="ax-badge mx-auto bg-info/15 text-info">
+              <Megaphone size={14} />
+              قسم متكامل
+            </span>
+            <h2 className="mt-4 text-2xl font-extrabold text-text sm:text-3xl">
+              قسم الميديا والإعلانات
+            </h2>
+            <p className="mx-auto mt-2 max-w-2xl text-muted">
+              إلى جانب المحاسبة، نوفّر قسمًا مختصًّا بالميديا والإعلانات وتصميم
+              الفيديوهات والتصاميم — لإبراز علامتك التجارية والوصول إلى عملائك
+              بأسلوب احترافي.
+            </p>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {mediaServices.map((s) => (
+              <div key={s.title} className="ax-card p-5">
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${tones[s.tone]}`}
+                >
+                  {s.icon}
+                </div>
+                <h3 className="mt-4 text-base font-bold text-text">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">
+                  {s.desc}
+                </p>
               </div>
             ))}
           </div>
