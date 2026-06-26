@@ -27,5 +27,17 @@ export default defineConfig({
     video: 'retain-on-failure',
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // البيئة السحابية فيها Chromium مثبّت مسبقًا بإصدار مختلف؛ استخدمه مباشرة.
+        // محليًا احذف هذا أو شغّل: npx playwright install chromium
+        launchOptions: process.env.PW_CHROME_PATH
+          ? { executablePath: process.env.PW_CHROME_PATH }
+          : {},
+      },
+    },
+  ],
 });
