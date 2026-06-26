@@ -24,7 +24,6 @@ import {
   Waves,
   Palette,
   Settings,
-  Info,
   ShoppingBag,
   ClipboardList as ClipboardListIcon,
   Armchair,
@@ -124,7 +123,6 @@ function ownerManufacturingSections(subtype?: string): NavSection[] {
       title: 'المالية والمحاسبة',
       items: [
         { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} /> },
-        { to: '/admin/accounting/about', label: 'تعريف بالنظام المحاسبي', icon: <Info size={sz} /> },
         { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true },
         { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} /> },
         { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} /> },
@@ -159,7 +157,6 @@ function ownerRestaurantSections(): NavSection[] {
       title: 'المالية والمحاسبة',
       items: [
         { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} /> },
-        { to: '/admin/accounting/about', label: 'تعريف بالنظام المحاسبي', icon: <Info size={sz} /> },
         { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true },
         { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} /> },
         { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} /> },
@@ -212,7 +209,6 @@ function ownerSections(): NavSection[] {
       title: 'المالية والمحاسبة',
       items: [
         { to: '/admin/finance', label: 'المالية', icon: <Wallet size={sz} /> },
-        { to: '/admin/accounting/about', label: 'تعريف بالنظام المحاسبي', icon: <Info size={sz} /> },
         { to: '/admin/accounting', label: 'النظرة المالية', icon: <Calculator size={sz} />, end: true },
         { to: '/admin/accounting/income', label: 'قائمة الدخل', icon: <TrendingUp size={sz} /> },
         { to: '/admin/accounting/balance', label: 'الميزانية العمومية', icon: <Scale size={sz} /> },

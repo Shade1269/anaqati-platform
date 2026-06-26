@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 // Public storefront (no auth)
 import Storefront from './pages/store/Storefront';
 import QrOrder from './pages/restaurant/QrOrder';
+import AccountingLanding from './pages/AccountingLanding';
 
 // Employee
 import EmployeeLogin from './pages/employee/EmployeeLogin';
@@ -60,7 +61,6 @@ import AdminCustomers from './pages/admin/AdminCustomers';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
 import ManagerEmployees from './pages/admin/team/ManagerEmployees';
-import AccountingAbout from './pages/admin/accounting/AccountingAbout';
 import AccountingOverview from './pages/admin/accounting/AccountingOverview';
 import AccountingIncome from './pages/admin/accounting/AccountingIncome';
 import AccountingBalance from './pages/admin/accounting/AccountingBalance';
@@ -84,6 +84,9 @@ export default function App() {
     <Routes>
       {/* الجذر = بوابة دخول المشترك مباشرة (إيميل + كلمة مرور) */}
       <Route path="/" element={<Navigate to="/admin/login" replace />} />
+
+      {/* Public introductory page for the accounting system (no auth) */}
+      <Route path="/accounting" element={<AccountingLanding />} />
 
       {/* Public storefront (no auth) */}
       <Route path="/store/:slug" element={<Storefront />} />
@@ -163,7 +166,6 @@ export default function App() {
         <Route path="receive-stock" element={<RequireCapability caps={['can_add_stock']}><AdminReceiveStock /></RequireCapability>} />
 
         {/* Accounting — admin only */}
-        <Route path="accounting/about" element={<RequireAdmin><AccountingAbout /></RequireAdmin>} />
         <Route path="accounting" element={<RequireAdmin><AccountingOverview /></RequireAdmin>} />
         <Route path="accounting/income" element={<RequireAdmin><AccountingIncome /></RequireAdmin>} />
         <Route path="accounting/balance" element={<RequireAdmin><AccountingBalance /></RequireAdmin>} />
