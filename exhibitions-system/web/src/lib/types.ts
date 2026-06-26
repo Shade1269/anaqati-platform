@@ -323,6 +323,16 @@ export interface RestaurantSettings {
   tax_pct: number;
 }
 
+export interface RetailReport {
+  summary: { bills: number; sales: number; avg_ticket: number; cash: number; card: number };
+  cogs: number;
+  by_day: { d: string; sales: number; bills: number }[];
+  top_items: { name: string; qty: number; revenue: number }[];
+  by_branch: { name: string; bills: number; sales: number }[];
+  by_hour: { hour: number; bills: number; sales: number }[];
+  staff: { name: string; bills: number; sales: number }[];
+}
+
 export interface RestaurantReport {
   summary: {
     bills: number;

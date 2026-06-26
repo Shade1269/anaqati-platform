@@ -155,7 +155,14 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
   }
   // التجزئة (الافتراضي)
   return [
-    overviewSection,
+    {
+      title: 'نظرة عامة',
+      items: [
+        { to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
+        { to: '/admin/analytics', label: 'التحليلات', icon: <TrendingUp size={sz} /> },
+        { to: '/admin/monitoring', label: 'مراقبة الموظفين', icon: <UserCheck size={sz} /> },
+      ],
+    },
     {
       title: 'التشغيل',
       items: [

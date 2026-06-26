@@ -255,6 +255,9 @@ export const accountingApi = {
       p_date: date,
       p_memo: memo,
     }),
+
+  retailReport: (from: string, to: string) =>
+    rpc<import('./types').RetailReport>('retail_report', { p_from: from, p_to: to }),
 };
 
 /* --------------------------- Admin / IM RPCs ----------------------------- */
