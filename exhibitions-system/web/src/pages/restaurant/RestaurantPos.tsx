@@ -26,6 +26,7 @@ import type {
   QuickSession,
   ShiftZ,
   RestaurantSettings,
+  LoyaltyCustomer,
   SessionDetail,
 } from '../../lib/types';
 import {
@@ -289,6 +290,9 @@ function ShiftBar({ token }: { token: string | null }) {
   const [setOpen, setSetOpen] = useState(false);
   const [svcPct, setSvcPct] = useState('');
   const [taxPct, setTaxPct] = useState('');
+  const [loyEnabled, setLoyEnabled] = useState(false);
+  const [loyEarn, setLoyEarn] = useState('');
+  const [loyRedeem, setLoyRedeem] = useState('');
   const toast = useToast();
   const { profile } = useAdminAuth();
   const brand = profile?.tenant?.brand_name || profile?.tenant?.name || 'المطعم';
@@ -354,6 +358,9 @@ function ShiftBar({ token }: { token: string | null }) {
       const st = await restaurantApi.settings(token);
       setSvcPct(String(st.service_pct ?? 0));
       setTaxPct(String(st.tax_pct ?? 0));
+      setLoyEnabled(!!st.loyalty_enabled);
+      setLoyEarn(String(st.loyalty_earn_rate ?? 0));
+      setLoyRedeem(String(st.loyalty_redeem_value ?? 0));
       setSetOpen(true);
     } catch (e) {
       toast.error((e as Error).message);
@@ -364,8 +371,9 @@ function ShiftBar({ token }: { token: string | null }) {
     setBusy(true);
     try {
       await restaurantApi.setSettings(Number(svcPct) || 0, Number(taxPct) || 0);
+      await restaurantApi.setLoyalty(loyEnabled, Number(loyEarn) || 0, Number(loyRedeem) || 0);
       setSetOpen(false);
-      toast.success('حُفظت نِسَب الخدمة والضريبة');
+      toast.success('حُفظت الإعدادات');
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -535,6 +543,23 @@ function ShiftBar({ token }: { token: string | null }) {
           <Field label="الضريبة %">
             <Input type="number" step="0.1" min="0" value={taxPct} onChange={(e) => setTaxPct(e.target.value)} />
           </Field>
+
+          <div className="mt-2 border-t border-white/10 pt-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-bold text-text">
+              <input type="checkbox" checked={loyEnabled} onChange={(e) => setLoyEnabled(e.target.checked)} />
+              تفعيل نظام الولاء (النقاط)
+            </label>
+            {loyEnabled && (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Field label="نقاط لكل وحدة عملة">
+                  <Input type="number" step="0.01" min="0" value={loyEarn} onChange={(e) => setLoyEarn(e.target.value)} placeholder="مثال: 0.1" />
+                </Field>
+                <Field label="قيمة النقطة عند الاستبدال">
+                  <Input type="number" step="0.01" min="0" value={loyRedeem} onChange={(e) => setLoyRedeem(e.target.value)} placeholder="مثال: 1" />
+                </Field>
+              </div>
+            )}
+          </div>
         </div>
       </Dialog>
     </div>
@@ -779,6 +804,10 @@ function SessionView({
   const [discountType, setDiscountType] = useState<'none' | 'percent' | 'amount'>('none');
   const [discountValue, setDiscountValue] = useState('');
   const [tip, setTip] = useState('');
+  const [loyPhone, setLoyPhone] = useState('');
+  const [loyCust, setLoyCust] = useState<LoyaltyCustomer | null>(null);
+  const [redeem, setRedeem] = useState('');
+  const [loyBusy, setLoyBusy] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [splitMode, setSplitMode] = useState(false);
@@ -864,16 +893,35 @@ function SessionView({
       const r = await restaurantApi.closeBill(
         sessionId,
         pm,
-        { discountType, discountValue: Number(discountValue) || 0, tip: Number(tip) || 0 },
+        {
+          discountType,
+          discountValue: Number(discountValue) || 0,
+          tip: Number(tip) || 0,
+          customerId: loyCust?.id ?? null,
+          redeemPoints: Number(redeem) || 0,
+        },
         token
       );
-      toast.success(`تم الدفع: ${money(r.charged ?? 0)}`);
+      const earned = r.earned_points ?? 0;
+      toast.success(`تم الدفع: ${money(r.charged ?? 0)}${earned ? ` — +${earned} نقطة` : ''}`);
       onBack();
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setClosing(false);
       setPayOpen(false);
+    }
+  }
+
+  async function lookupLoyalty() {
+    if (!loyPhone.trim()) return;
+    setLoyBusy(true);
+    try {
+      setLoyCust(await restaurantApi.loyaltyLookup(loyPhone.trim(), null, token));
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setLoyBusy(false);
     }
   }
 
@@ -949,6 +997,12 @@ function SessionView({
   const taxAmt = r2(((netAmt + serviceAmt) * settings.tax_pct) / 100);
   const tipAmt = Number(tip) || 0;
   const grandPay = netAmt + serviceAmt + taxAmt + tipAmt + deliveryFee;
+  const redeemCap = netAmt + serviceAmt + deliveryFee;
+  const redeemVal =
+    loyCust && settings.loyalty_enabled
+      ? Math.min((Number(redeem) || 0) * (settings.loyalty_redeem_value || 0), redeemCap)
+      : 0;
+  const finalPay = grandPay - redeemVal;
   const heading = isQuick
     ? `${ORDER_TYPE_LABEL[s.order_type]}${s.customer_name ? ` — ${s.customer_name}` : ''}`
     : `طاولة ${s.table_label}`;
@@ -1283,6 +1337,33 @@ function SessionView({
             <Input type="number" step="0.01" min="0" value={tip} onChange={(e) => setTip(e.target.value)} />
           </Field>
 
+          {settings.loyalty_enabled && (
+            <div className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-2.5">
+              {!loyCust ? (
+                <div className="flex items-end gap-2">
+                  <Field label="هاتف زبون الولاء (اختياري)">
+                    <Input value={loyPhone} onChange={(e) => setLoyPhone(e.target.value)} placeholder="09xxxxxxxx" />
+                  </Field>
+                  <Button size="sm" variant="outline" loading={loyBusy} onClick={lookupLoyalty}>بحث</Button>
+                </div>
+              ) : (
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-text">{loyCust.name}</span>
+                    <span className="text-muted">الرصيد: <b className="text-gold">{loyCust.points}</b> نقطة</span>
+                  </div>
+                  {loyCust.points > 0 && (
+                    <Field label={`استبدال نقاط (كل نقطة = ${money(loyCust.redeem_value)})`}>
+                      <Input type="number" min="0" max={loyCust.points} value={redeem}
+                        onChange={(e) => setRedeem(e.target.value)} placeholder="0" />
+                    </Field>
+                  )}
+                  <button className="text-xs text-danger" onClick={() => { setLoyCust(null); setRedeem(''); setLoyPhone(''); }}>إزالة</button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm">
             <BillRow label="الأصناف" value={money(s.total_sar)} />
             {discAmt > 0 && <BillRow label="الخصم" value={`- ${money(discAmt)}`} tone="text-danger" />}
@@ -1290,9 +1371,10 @@ function SessionView({
             {taxAmt > 0 && <BillRow label={`ضريبة ${settings.tax_pct}%`} value={money(taxAmt)} />}
             {deliveryFee > 0 && <BillRow label="توصيل" value={money(deliveryFee)} />}
             {tipAmt > 0 && <BillRow label="إكرامية" value={money(tipAmt)} />}
+            {redeemVal > 0 && <BillRow label="استبدال نقاط" value={`- ${money(redeemVal)}`} tone="text-success" />}
             <div className="mt-1.5 flex items-center justify-between border-t border-white/10 pt-1.5">
               <span className="font-extrabold text-text">الإجمالي</span>
-              <span className="text-lg font-extrabold text-gold">{money(grandPay)}</span>
+              <span className="text-lg font-extrabold text-gold">{money(finalPay)}</span>
             </div>
           </div>
 

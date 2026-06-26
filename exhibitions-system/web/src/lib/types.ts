@@ -321,6 +321,27 @@ export interface SessionDetail {
 export interface RestaurantSettings {
   service_pct: number;
   tax_pct: number;
+  loyalty_enabled?: boolean;
+  loyalty_earn_rate?: number;
+  loyalty_redeem_value?: number;
+}
+
+export interface LoyaltyCustomer {
+  id: string;
+  name: string;
+  points: number;
+  redeem_value: number;
+  enabled: boolean;
+}
+
+export interface RetailReport {
+  summary: { bills: number; sales: number; avg_ticket: number; cash: number; card: number };
+  cogs: number;
+  by_day: { d: string; sales: number; bills: number }[];
+  top_items: { name: string; qty: number; revenue: number }[];
+  by_branch: { name: string; bills: number; sales: number }[];
+  by_hour: { hour: number; bills: number; sales: number }[];
+  staff: { name: string; bills: number; sales: number }[];
 }
 
 export interface RestaurantReport {

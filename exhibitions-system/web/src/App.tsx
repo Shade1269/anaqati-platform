@@ -59,6 +59,7 @@ import AdminMonitoring from './pages/admin/AdminMonitoring';
 import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
 import AdminCustomers from './pages/admin/AdminCustomers';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
 import ManagerEmployees from './pages/admin/team/ManagerEmployees';
@@ -129,6 +130,7 @@ export default function App() {
         <Route path="finance" element={<RequireAdmin><AdminFinance /></RequireAdmin>} />
         <Route path="audit" element={<RequireAdmin><AdminAudit /></RequireAdmin>} />
         <Route path="branding" element={<RequireAdmin><AdminBranding /></RequireAdmin>} />
+        <Route path="analytics" element={<RequireAdmin><AdminAnalytics /></RequireAdmin>} />
 
         {/* Online store — owner or delegated store manager */}
         <Route path="store/settings" element={<RequireCapability caps={['can_manage_store']}><AdminStoreSettings /></RequireCapability>} />
