@@ -894,6 +894,29 @@ export const restaurantApi = {
     rpc<null>('recipe_set', { p_menu_item_id: menuItemId, p_items: items }),
 };
 
+/* --------------------------- QR self-ordering (public) ----------------------------- */
+
+export const qrApi = {
+  info: (tenantId: string, tableId: string) =>
+    rpc<import('./types').QrInfo>('qr_info', { p_tenant: tenantId, p_table: tableId }),
+
+  menu: (tenantId: string) =>
+    rpc<MenuCategory[]>('qr_menu', { p_tenant: tenantId }),
+
+  placeOrder: (
+    tenantId: string,
+    tableId: string,
+    items: NewOrderItem[],
+    note: string | null
+  ) =>
+    rpc<{ order_no: string; session_no: string; added: number }>('qr_place_order', {
+      p_tenant: tenantId,
+      p_table: tableId,
+      p_items: items,
+      p_note: note,
+    }),
+};
+
 /* --------------------------- Internal Market (B2B) ----------------------------- */
 
 export const marketApi = {

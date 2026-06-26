@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 // Public storefront (no auth)
 import Storefront from './pages/store/Storefront';
+import QrOrder from './pages/restaurant/QrOrder';
 
 // Employee
 import EmployeeLogin from './pages/employee/EmployeeLogin';
@@ -85,6 +86,9 @@ export default function App() {
 
       {/* Public storefront (no auth) */}
       <Route path="/store/:slug" element={<Storefront />} />
+
+      {/* Public QR self-ordering (no auth) */}
+      <Route path="/r/:tenantId/:tableId" element={<QrOrder />} />
 
       {/* Employee */}
       <Route path="/employee/login" element={<EmployeeLogin />} />
