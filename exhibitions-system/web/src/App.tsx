@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 // Public storefront (no auth)
 import Storefront from './pages/store/Storefront';
 import QrOrder from './pages/restaurant/QrOrder';
+import AccountingLanding from './pages/AccountingLanding';
 import RestaurantOnlineMenu from './pages/restaurant/RestaurantOnlineMenu';
 
 // Employee
@@ -84,6 +85,9 @@ export default function App() {
     <Routes>
       {/* الجذر = بوابة دخول المشترك مباشرة (إيميل + كلمة مرور) */}
       <Route path="/" element={<Navigate to="/admin/login" replace />} />
+
+      {/* Public introductory page for the accounting system (no auth) */}
+      <Route path="/accounting" element={<AccountingLanding />} />
 
       {/* Public storefront (no auth) */}
       <Route path="/store/:slug" element={<Storefront />} />
