@@ -12,8 +12,10 @@ import {
   Banknote,
   CreditCard,
 } from 'lucide-react';
+import { Copy, Check, ExternalLink } from 'lucide-react';
 import { restaurantApi } from '../../lib/api';
 import type { RestaurantReport, DiningTable, ShiftZ } from '../../lib/types';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 import { Button, EmptyState, ErrorBanner, PageHeader, Spinner, StatCard, Table } from '../../components/ui';
 import { money } from '../../lib/format';
 
@@ -22,6 +24,10 @@ function today(): string {
 }
 
 export default function RestaurantDashboard() {
+  const { profile } = useAdminAuth();
+  const tenantId = profile?.tenant_id || profile?.tenant?.id || '';
+  const onlineUrl = `${window.location.origin}/menu/${tenantId}`;
+  const [copied, setCopied] = useState(false);
   const [rep, setRep] = useState<RestaurantReport | null>(null);
   const [tables, setTables] = useState<DiningTable[]>([]);
   const [shift, setShift] = useState<ShiftZ | null>(null);
@@ -70,6 +76,22 @@ export default function RestaurantDashboard() {
         }
       />
       <ErrorBanner message={error} />
+
+      {/* رابط الطلب أونلاين */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/8 px-4 py-3 text-sm">
+        <span className="flex items-center gap-2 text-text">
+          <ExternalLink size={16} className="text-primary-hover" />
+          رابط الطلب أونلاين (سفري/توصيل) — شاركه مع زبائنك:
+          <code className="rounded bg-surface-2 px-2 py-0.5 font-mono text-xs text-muted" dir="ltr">{onlineUrl}</code>
+        </span>
+        <span className="flex gap-2">
+          <Button size="sm" variant="outline" icon={copied ? <Check size={14} /> : <Copy size={14} />}
+            onClick={() => { navigator.clipboard?.writeText(onlineUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); }}>
+            {copied ? 'تم' : 'نسخ'}
+          </Button>
+          <a href={onlineUrl} target="_blank" rel="noreferrer"><Button size="sm" variant="ghost">فتح</Button></a>
+        </span>
+      </div>
 
       {/* حالة الوردية */}
       <div className={`mb-5 rounded-lg border px-4 py-2.5 text-sm ${shift ? 'border-success/30 bg-success/8' : 'border-warning/30 bg-warning/8'}`}>
