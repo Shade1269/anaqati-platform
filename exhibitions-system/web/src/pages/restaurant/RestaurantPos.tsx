@@ -32,6 +32,8 @@ import {
 } from '../../components/ui';
 
 import { money } from '../../lib/format';
+import { printReceipt } from '../../lib/print';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 /** Restaurant POS — floor map + open table + running tab + add order + close/split/merge/transfer.
  *  token=null → owner/manager (Supabase session). token set → waiter (employee). */
 export default function RestaurantPos({ token = null }: { token?: string | null }) {
@@ -290,6 +292,7 @@ function SessionView({
   const [splitMode, setSplitMode] = useState(false);
   const [splitSel, setSplitSel] = useState<Set<string>>(new Set());
   const toast = useToast();
+  const { profile } = useAdminAuth();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -409,6 +412,27 @@ function SessionView({
   const s = detail.session;
   if (!s) return <EmptyState message="الجلسة غير موجودة" />;
 
+  function printBill() {
+    if (!s || !detail) return;
+    const brand = profile?.tenant?.brand_name || profile?.tenant?.name || 'فاتورة';
+    const lines = detail.orders.flatMap((o) =>
+      o.items.map((it) => ({
+        name: it.name + (it.options?.length ? ` (${it.options.map((x) => x.name).join('، ')})` : ''),
+        qty: it.qty,
+        amount: it.line_total,
+        note: it.note,
+      }))
+    );
+    printReceipt({
+      brand,
+      title: 'فاتورة طاولة',
+      ref: `${s.session_no} — طاولة ${s.table_label}`,
+      meta: [{ label: 'الضيوف', value: String(s.guest_count) }],
+      lines,
+      total: s.total_sar,
+    });
+  }
+
   const cat = menu.find((c) => c.id === activeCat);
   const freeTables = tables.filter((t) => t.sessions.length === 0 && t.is_active);
   const otherOpen = tables
@@ -511,15 +535,20 @@ function SessionView({
           <Card>
             <div className="mb-2 flex items-center justify-between">
               <h3 className="text-sm font-bold text-text">فاتورة الطاولة</h3>
-              <button
-                className={`text-xs font-bold ${splitMode ? 'text-danger' : 'text-info'}`}
-                onClick={() => {
-                  setSplitMode((v) => !v);
-                  setSplitSel(new Set());
-                }}
-              >
-                {splitMode ? 'إلغاء التقسيم' : 'تقسيم'}
-              </button>
+              <div className="flex items-center gap-3">
+                <button className="text-xs font-bold text-info" onClick={printBill}>
+                  طباعة
+                </button>
+                <button
+                  className={`text-xs font-bold ${splitMode ? 'text-danger' : 'text-info'}`}
+                  onClick={() => {
+                    setSplitMode((v) => !v);
+                    setSplitSel(new Set());
+                  }}
+                >
+                  {splitMode ? 'إلغاء التقسيم' : 'تقسيم'}
+                </button>
+              </div>
             </div>
             {detail.orders.length === 0 ? (
               <p className="text-sm text-muted">لا طلبات بعد.</p>
