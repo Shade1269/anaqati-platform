@@ -5,3 +5,8 @@ vite.config.js
 vite.config.d.ts
 
 # NOTE: .env is intentionally committed (publishable key is public by design).
+
+# E2E (Playwright)
+e2e/.env
+playwright-report
+test-results
