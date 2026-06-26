@@ -295,6 +295,11 @@ export interface SessionDetail {
   orders: OrderRow[];
 }
 
+export interface RestaurantSettings {
+  service_pct: number;
+  tax_pct: number;
+}
+
 export interface ShiftZ {
   id: string;
   status: 'open' | 'closed';

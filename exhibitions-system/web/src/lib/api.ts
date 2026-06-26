@@ -46,6 +46,7 @@ import type {
   DiningTable,
   QuickSession,
   ShiftZ,
+  RestaurantSettings,
   SessionDetail,
   KdsOrder,
   NewOrderItem,
@@ -720,12 +721,36 @@ export const restaurantApi = {
   ) =>
     rpc<null>('kds_set_order_status', { p_order_id: orderId, p_status: status, p_token: token }),
 
-  closeBill: (sessionId: string, paymentMethod: 'cash' | 'card', token: string | null = null) =>
-    rpc<{ session_id: string; total: number; delivery_fee?: number; charged?: number; payment_method: string }>('close_table_bill', {
+  closeBill: (
+    sessionId: string,
+    paymentMethod: 'cash' | 'card',
+    opts: { discountType?: 'none' | 'percent' | 'amount'; discountValue?: number; tip?: number } = {},
+    token: string | null = null
+  ) =>
+    rpc<{
+      session_id: string;
+      subtotal?: number;
+      discount?: number;
+      service?: number;
+      tax?: number;
+      tip?: number;
+      delivery_fee?: number;
+      charged?: number;
+      payment_method: string;
+    }>('close_table_bill', {
       p_session_id: sessionId,
       p_payment_method: paymentMethod,
+      p_discount_type: opts.discountType ?? 'none',
+      p_discount_value: opts.discountValue ?? 0,
+      p_tip: opts.tip ?? 0,
       p_token: token,
     }),
+
+  settings: (token: string | null = null) =>
+    rpc<RestaurantSettings>('restaurant_settings', { p_token: token }),
+
+  setSettings: (servicePct: number, taxPct: number) =>
+    rpc<null>('set_restaurant_settings', { p_service_pct: servicePct, p_tax_pct: taxPct }),
 
   transferTable: (sessionId: string, toTableId: string, token: string | null = null) =>
     rpc<null>('transfer_table', { p_session_id: sessionId, p_to_table_id: toTableId, p_token: token }),
