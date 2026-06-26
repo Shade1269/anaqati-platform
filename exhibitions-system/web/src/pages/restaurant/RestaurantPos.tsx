@@ -12,6 +12,8 @@ import {
   Trash2,
   ShoppingBag,
   Truck,
+  Wallet,
+  FileText,
 } from 'lucide-react';
 import { restaurantApi } from '../../lib/api';
 import type {
@@ -20,6 +22,7 @@ import type {
   MenuItem,
   NewOrderItem,
   QuickSession,
+  ShiftZ,
   SessionDetail,
 } from '../../lib/types';
 import {
@@ -101,6 +104,7 @@ export default function RestaurantPos({ token = null }: { token?: string | null 
 
   return (
     <div className="space-y-8">
+      <ShiftBar token={token} />
       <QuickOrders
         token={token}
         quick={quick}
@@ -254,6 +258,264 @@ function QuickOrders({
           </Button>
         </div>
       </Dialog>
+    </div>
+  );
+}
+
+/* ----------------------------- Cashier shift + Z report ----------------------------- */
+
+function fmtTime(s: string): string {
+  try {
+    return new Date(s).toLocaleString('ar', { dateStyle: 'short', timeStyle: 'short' });
+  } catch {
+    return s;
+  }
+}
+
+function ShiftBar({ token }: { token: string | null }) {
+  const [shift, setShift] = useState<ShiftZ | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [openDlg, setOpenDlg] = useState(false);
+  const [closeDlg, setCloseDlg] = useState(false);
+  const [zView, setZView] = useState<ShiftZ | null>(null);
+  const [float, setFloat] = useState('');
+  const [declared, setDeclared] = useState('');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const { profile } = useAdminAuth();
+  const brand = profile?.tenant?.brand_name || profile?.tenant?.name || 'المطعم';
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      setShift(await restaurantApi.shiftCurrent(token));
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, toast]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function doOpen() {
+    setBusy(true);
+    try {
+      const z = await restaurantApi.shiftOpen(Number(float) || 0, token);
+      setShift(z);
+      setOpenDlg(false);
+      setFloat('');
+      toast.success('فُتحت الوردية');
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function refreshZ() {
+    if (!shift) return;
+    try {
+      setZView(await restaurantApi.shiftZ(shift.id, token));
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function doClose() {
+    setBusy(true);
+    try {
+      const z = await restaurantApi.shiftClose(Number(declared) || 0, note.trim() || null, token);
+      setCloseDlg(false);
+      setDeclared('');
+      setNote('');
+      setShift(null);
+      setZView(z);
+      toast.success('أُغلقت الوردية');
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function printZ(z: ShiftZ) {
+    printReceipt({
+      brand,
+      title: 'تقرير وردية (Z)',
+      ref: `${z.status === 'closed' ? 'مغلقة' : 'مفتوحة'} — ${fmtTime(z.opened_at)}`,
+      meta: [
+        { label: 'الرصيد الافتتاحي', value: money(z.opening_float) },
+        { label: 'عدد الفواتير', value: String(z.bills) },
+      ],
+      lines: [
+        { name: 'مبيعات صالة', qty: 1, amount: z.dine_in, note: null },
+        { name: 'مبيعات سفري', qty: 1, amount: z.takeaway, note: null },
+        { name: 'مبيعات توصيل', qty: 1, amount: z.delivery, note: null },
+        { name: 'نقدًا', qty: 1, amount: z.cash_sales, note: null },
+        { name: 'شبكة', qty: 1, amount: z.card_sales, note: null },
+        { name: 'النقد المتوقّع بالدرج', qty: 1, amount: z.expected_cash, note: null },
+        ...(z.declared_cash != null
+          ? [
+              { name: 'النقد المعلن (الجرد)', qty: 1, amount: z.declared_cash, note: null },
+              {
+                name: (z.variance ?? 0) < 0 ? 'عجز' : 'زيادة',
+                qty: 1,
+                amount: Math.abs(z.variance ?? 0),
+                note: null,
+              },
+            ]
+          : []),
+      ],
+      total: z.sales,
+    });
+  }
+
+  if (loading) return null;
+
+  return (
+    <div>
+      {shift ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-success/30 bg-success/8 px-4 py-2.5 text-sm">
+          <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="flex items-center gap-1.5 font-bold text-success">
+              <Wallet size={15} /> وردية مفتوحة
+            </span>
+            <span className="text-muted">منذ {fmtTime(shift.opened_at)}</span>
+            <span className="text-muted">الفواتير: <b className="text-text">{shift.bills}</b></span>
+            <span className="text-muted">المبيعات: <b className="text-gold">{money(shift.sales)}</b></span>
+            <span className="text-muted">نقد: <b className="text-text">{money(shift.cash_sales)}</b></span>
+          </span>
+          <span className="flex gap-2">
+            <Button size="sm" variant="ghost" icon={<FileText size={15} />} onClick={refreshZ}>
+              تقرير Z
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setCloseDlg(true)}>
+              إغلاق الوردية
+            </Button>
+          </span>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm">
+          <span className="flex items-center gap-1.5 text-muted">
+            <Wallet size={15} /> لا توجد وردية مفتوحة
+          </span>
+          <Button size="sm" icon={<Wallet size={15} />} onClick={() => setOpenDlg(true)}>
+            فتح وردية
+          </Button>
+        </div>
+      )}
+
+      <Dialog
+        open={openDlg}
+        onClose={() => setOpenDlg(false)}
+        title="فتح وردية"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpenDlg(false)}>إلغاء</Button>
+            <Button onClick={doOpen} loading={busy}>فتح</Button>
+          </>
+        }
+      >
+        <Field label="الرصيد النقدي الافتتاحي بالدرج">
+          <Input type="number" step="0.01" min="0" value={float} onChange={(e) => setFloat(e.target.value)} autoFocus />
+        </Field>
+      </Dialog>
+
+      <Dialog
+        open={closeDlg}
+        onClose={() => setCloseDlg(false)}
+        title="إغلاق الوردية"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setCloseDlg(false)}>إلغاء</Button>
+            <Button onClick={doClose} loading={busy}>إغلاق وعرض Z</Button>
+          </>
+        }
+      >
+        {shift && (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm">
+              <span className="text-muted">النقد المتوقّع بالدرج: </span>
+              <b className="text-gold">{money(shift.expected_cash)}</b>
+              <span className="block text-[11px] text-muted">
+                (افتتاحي {money(shift.opening_float)} + مبيعات نقد {money(shift.cash_sales)})
+              </span>
+            </div>
+            <Field label="النقد الفعلي المعدود (الجرد)">
+              <Input type="number" step="0.01" min="0" value={declared} onChange={(e) => setDeclared(e.target.value)} autoFocus />
+            </Field>
+            <Field label="ملاحظة (اختياري)">
+              <Input value={note} onChange={(e) => setNote(e.target.value)} />
+            </Field>
+          </div>
+        )}
+      </Dialog>
+
+      <Dialog
+        open={!!zView}
+        onClose={() => setZView(null)}
+        title="تقرير الوردية (Z)"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setZView(null)}>إغلاق</Button>
+            {zView && <Button onClick={() => printZ(zView)}>طباعة</Button>}
+          </>
+        }
+      >
+        {zView && <ZReport z={zView} />}
+      </Dialog>
+    </div>
+  );
+}
+
+function ZRow({ label, value, strong, tone }: { label: string; value: string; strong?: boolean; tone?: string }) {
+  return (
+    <div className="flex items-center justify-between py-1 text-sm">
+      <span className="text-muted">{label}</span>
+      <span className={`${strong ? 'font-extrabold' : 'font-semibold'} ${tone || 'text-text'}`}>{value}</span>
+    </div>
+  );
+}
+
+function ZReport({ z }: { z: ShiftZ }) {
+  return (
+    <div className="divide-y divide-white/8">
+      <div className="pb-2">
+        <ZRow label="الحالة" value={z.status === 'closed' ? 'مغلقة' : 'مفتوحة'} />
+        <ZRow label="فُتحت" value={fmtTime(z.opened_at)} />
+        {z.closed_at && <ZRow label="أُغلقت" value={fmtTime(z.closed_at)} />}
+        <ZRow label="الرصيد الافتتاحي" value={money(z.opening_float)} />
+        <ZRow label="عدد الفواتير" value={String(z.bills)} />
+      </div>
+      <div className="py-2">
+        <ZRow label="مبيعات صالة" value={money(z.dine_in)} />
+        <ZRow label="مبيعات سفري" value={money(z.takeaway)} />
+        <ZRow label="مبيعات توصيل" value={money(z.delivery)} />
+        <ZRow label="إجمالي المبيعات" value={money(z.sales)} strong tone="text-gold" />
+      </div>
+      <div className="py-2">
+        <ZRow label="نقدًا" value={money(z.cash_sales)} />
+        <ZRow label="شبكة" value={money(z.card_sales)} />
+      </div>
+      <div className="pt-2">
+        <ZRow label="النقد المتوقّع بالدرج" value={money(z.expected_cash)} />
+        {z.declared_cash != null && <ZRow label="النقد المعلن (الجرد)" value={money(z.declared_cash)} />}
+        {z.variance != null && (
+          <ZRow
+            label={z.variance < 0 ? 'عجز' : z.variance > 0 ? 'زيادة' : 'مطابق'}
+            value={money(Math.abs(z.variance))}
+            strong
+            tone={z.variance < 0 ? 'text-danger' : z.variance > 0 ? 'text-warning' : 'text-success'}
+          />
+        )}
+      </div>
     </div>
   );
 }
