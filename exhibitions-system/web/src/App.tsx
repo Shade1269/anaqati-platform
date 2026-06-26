@@ -54,6 +54,7 @@ import AdminAudit from './pages/admin/AdminAudit';
 import AdminMonitoring from './pages/admin/AdminMonitoring';
 import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
+import AdminCustomers from './pages/admin/AdminCustomers';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
 import ManagerEmployees from './pages/admin/team/ManagerEmployees';
@@ -120,6 +121,9 @@ export default function App() {
         <Route path="store/settings" element={<RequireCapability caps={['can_manage_store']}><AdminStoreSettings /></RequireCapability>} />
         <Route path="store/products" element={<RequireCapability caps={['can_manage_store']}><AdminStoreProducts /></RequireCapability>} />
         <Route path="store/orders" element={<RequireCapability caps={['can_manage_store']}><AdminStoreOrders /></RequireCapability>} />
+
+        {/* Customers credit ledger (آجل) — owner or delegated store manager */}
+        <Route path="customers" element={<RequireCapability caps={['can_manage_store']}><AdminCustomers /></RequireCapability>} />
 
         {/* Team — owner or delegated employee manager (manager-only page) */}
         <Route path="team" element={<RequireCapability caps={['can_manage_employees']}><ManagerEmployees /></RequireCapability>} />

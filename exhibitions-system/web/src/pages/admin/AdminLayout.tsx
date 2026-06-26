@@ -78,6 +78,8 @@ const navStoreOrders: Item = { to: '/admin/store/orders', label: 'طلبات ا�
 
 const navTeam: Item = { to: '/admin/team', label: 'الموظفون', icon: <Users size={sz} /> };
 
+const navCustomers: Item = { to: '/admin/customers', label: 'العملاء (الدين)', icon: <UserCheck size={sz} /> };
+
 /* ---- Restaurant nav items ---- */
 const navRestPos: Item = { to: '/admin/restaurant/pos', label: 'الطاولات (نقطة البيع)', icon: <LayoutGrid size={sz} /> };
 const navRestKds: Item = { to: '/admin/restaurant/kds', label: 'شاشة المطبخ', icon: <ChefHat size={sz} /> };
@@ -127,6 +129,7 @@ function ownerManufacturingSections(subtype?: string): NavSection[] {
         { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
         { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
         { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+        navCustomers,
       ],
     },
     {
@@ -160,6 +163,7 @@ function ownerRestaurantSections(): NavSection[] {
         { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
         { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
         { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+        navCustomers,
       ],
     },
     {
@@ -211,6 +215,7 @@ function ownerSections(): NavSection[] {
         { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
         { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
         { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+        navCustomers,
         { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} /> },
       ],
     },
@@ -241,6 +246,7 @@ function managerSections(p: Permissions | null, subtype?: string): NavSection[] 
       title: 'المتجر الإلكتروني',
       items: [navStoreSettings, navStoreProducts, navStoreOrders],
     });
+    sections.push({ title: 'العملاء', items: [navCustomers] });
   }
 
   if (p?.can_manage_restaurant) {
