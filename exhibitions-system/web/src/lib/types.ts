@@ -746,6 +746,34 @@ export interface EmployeeConsignmentReport {
   };
 }
 
+/* ----------------------------- Customers (credit ledger / آجل) ----------------------------- */
+
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string | null;
+  note: string | null;
+  is_active: boolean;
+  balance: number;
+}
+
+export interface CustomerEntry {
+  id: string;
+  kind: 'charge' | 'payment';
+  amount: number;
+  method: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export interface CustomerStatement {
+  customer: { id: string; name: string; phone: string | null; note: string | null } | null;
+  entries: CustomerEntry[];
+  total_charged: number;
+  total_paid: number;
+  balance: number;
+}
+
 /* ----------------------------- Suppliers ----------------------------- */
 
 export interface SupplierBalance {

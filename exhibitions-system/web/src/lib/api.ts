@@ -62,6 +62,8 @@ import type {
   MfgWorkOrderRow,
   MfgWorkOrderDetail,
   MfgMold,
+  Customer,
+  CustomerStatement,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -862,6 +864,50 @@ export const marketApi = {
   orderDetail: (id: string) => rpc<MarketOrderDetail>('market_order_detail', { p_order_id: id }),
   setOrderStatus: (id: string, status: 'confirmed' | 'fulfilled' | 'cancelled') =>
     rpc<null>('market_set_order_status', { p_order_id: id, p_status: status }),
+};
+
+/* --------------------------- Customers (credit ledger / آجل) ----------------------------- */
+
+export const customersApi = {
+  list: () => rpc<Customer[]>('customers_list', {}),
+
+  set: (
+    id: string | null,
+    name: string,
+    phone: string | null,
+    note: string | null,
+    active: boolean
+  ) =>
+    rpc<string>('customer_set', {
+      p_id: id,
+      p_name: name,
+      p_phone: phone,
+      p_note: note,
+      p_active: active,
+    }),
+
+  charge: (customerId: string, amount: number, note: string | null) =>
+    rpc<null>('customer_charge', {
+      p_customer_id: customerId,
+      p_amount: amount,
+      p_note: note,
+    }),
+
+  payment: (
+    customerId: string,
+    amount: number,
+    method: 'cash' | 'card',
+    note: string | null
+  ) =>
+    rpc<null>('customer_payment', {
+      p_customer_id: customerId,
+      p_amount: amount,
+      p_method: method,
+      p_note: note,
+    }),
+
+  statement: (customerId: string) =>
+    rpc<CustomerStatement>('customer_statement', { p_customer_id: customerId }),
 };
 
 /* --------------------------- Manufacturing (job-shop) ----------------------------- */
