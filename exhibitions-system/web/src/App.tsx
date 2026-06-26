@@ -60,6 +60,7 @@ import AdminCustomers from './pages/admin/AdminCustomers';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
 import ManagerEmployees from './pages/admin/team/ManagerEmployees';
+import AccountingAbout from './pages/admin/accounting/AccountingAbout';
 import AccountingOverview from './pages/admin/accounting/AccountingOverview';
 import AccountingIncome from './pages/admin/accounting/AccountingIncome';
 import AccountingBalance from './pages/admin/accounting/AccountingBalance';
@@ -162,6 +163,7 @@ export default function App() {
         <Route path="receive-stock" element={<RequireCapability caps={['can_add_stock']}><AdminReceiveStock /></RequireCapability>} />
 
         {/* Accounting — admin only */}
+        <Route path="accounting/about" element={<RequireAdmin><AccountingAbout /></RequireAdmin>} />
         <Route path="accounting" element={<RequireAdmin><AccountingOverview /></RequireAdmin>} />
         <Route path="accounting/income" element={<RequireAdmin><AccountingIncome /></RequireAdmin>} />
         <Route path="accounting/balance" element={<RequireAdmin><AccountingBalance /></RequireAdmin>} />
