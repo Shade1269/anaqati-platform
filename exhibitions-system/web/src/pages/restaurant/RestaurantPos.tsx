@@ -14,6 +14,7 @@ import {
   Truck,
   Wallet,
   FileText,
+  Settings,
 } from 'lucide-react';
 import { restaurantApi } from '../../lib/api';
 import type {
@@ -23,6 +24,7 @@ import type {
   NewOrderItem,
   QuickSession,
   ShiftZ,
+  RestaurantSettings,
   SessionDetail,
 } from '../../lib/types';
 import {
@@ -33,6 +35,7 @@ import {
   Field,
   Input,
   PageHeader,
+  Select,
   Spinner,
   useToast,
 } from '../../components/ui';
@@ -282,6 +285,9 @@ function ShiftBar({ token }: { token: string | null }) {
   const [declared, setDeclared] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [setOpen, setSetOpen] = useState(false);
+  const [svcPct, setSvcPct] = useState('');
+  const [taxPct, setTaxPct] = useState('');
   const toast = useToast();
   const { profile } = useAdminAuth();
   const brand = profile?.tenant?.brand_name || profile?.tenant?.name || 'المطعم';
@@ -342,6 +348,30 @@ function ShiftBar({ token }: { token: string | null }) {
     }
   }
 
+  async function openSettings() {
+    try {
+      const st = await restaurantApi.settings(token);
+      setSvcPct(String(st.service_pct ?? 0));
+      setTaxPct(String(st.tax_pct ?? 0));
+      setSetOpen(true);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function saveSettings() {
+    setBusy(true);
+    try {
+      await restaurantApi.setSettings(Number(svcPct) || 0, Number(taxPct) || 0);
+      setSetOpen(false);
+      toast.success('حُفظت نِسَب الخدمة والضريبة');
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function printZ(z: ShiftZ) {
     printReceipt({
       brand,
@@ -390,6 +420,11 @@ function ShiftBar({ token }: { token: string | null }) {
             <span className="text-muted">نقد: <b className="text-text">{money(shift.cash_sales)}</b></span>
           </span>
           <span className="flex gap-2">
+            {!token && (
+              <Button size="sm" variant="ghost" icon={<Settings size={15} />} onClick={openSettings}>
+                النِسَب
+              </Button>
+            )}
             <Button size="sm" variant="ghost" icon={<FileText size={15} />} onClick={refreshZ}>
               تقرير Z
             </Button>
@@ -403,9 +438,16 @@ function ShiftBar({ token }: { token: string | null }) {
           <span className="flex items-center gap-1.5 text-muted">
             <Wallet size={15} /> لا توجد وردية مفتوحة
           </span>
-          <Button size="sm" icon={<Wallet size={15} />} onClick={() => setOpenDlg(true)}>
-            فتح وردية
-          </Button>
+          <span className="flex gap-2">
+            {!token && (
+              <Button size="sm" variant="ghost" icon={<Settings size={15} />} onClick={openSettings}>
+                النِسَب
+              </Button>
+            )}
+            <Button size="sm" icon={<Wallet size={15} />} onClick={() => setOpenDlg(true)}>
+              فتح وردية
+            </Button>
+          </span>
         </div>
       )}
 
@@ -470,6 +512,29 @@ function ShiftBar({ token }: { token: string | null }) {
         }
       >
         {zView && <ZReport z={zView} />}
+      </Dialog>
+
+      <Dialog
+        open={setOpen}
+        onClose={() => setSetOpen(false)}
+        title="نِسَب الخدمة والضريبة"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setSetOpen(false)}>إلغاء</Button>
+            <Button onClick={saveSettings} loading={busy}>حفظ</Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-xs text-muted">تُطبَّق تلقائيًا على كل فاتورة. اتركها صفرًا لتعطيلها.</p>
+          <Field label="رسم الخدمة %">
+            <Input type="number" step="0.1" min="0" value={svcPct} onChange={(e) => setSvcPct(e.target.value)} />
+          </Field>
+          <Field label="الضريبة %">
+            <Input type="number" step="0.1" min="0" value={taxPct} onChange={(e) => setTaxPct(e.target.value)} />
+          </Field>
+        </div>
       </Dialog>
     </div>
   );
@@ -709,6 +774,10 @@ function SessionView({
   const [optionItem, setOptionItem] = useState<MenuItem | null>(null);
   const [closing, setClosing] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [settings, setSettings] = useState<RestaurantSettings>({ service_pct: 0, tax_pct: 0 });
+  const [discountType, setDiscountType] = useState<'none' | 'percent' | 'amount'>('none');
+  const [discountValue, setDiscountValue] = useState('');
+  const [tip, setTip] = useState('');
   const [moveOpen, setMoveOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [splitMode, setSplitMode] = useState(false);
@@ -730,6 +799,10 @@ function SessionView({
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    restaurantApi.settings(token).then(setSettings).catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     if (!activeCat && menu.length) setActiveCat(menu[0].id);
@@ -784,8 +857,13 @@ function SessionView({
   async function closeBill(pm: 'cash' | 'card') {
     setClosing(true);
     try {
-      const r = await restaurantApi.closeBill(sessionId, pm, token);
-      toast.success(`تم الدفع: ${money(r.charged ?? r.total)}`);
+      const r = await restaurantApi.closeBill(
+        sessionId,
+        pm,
+        { discountType, discountValue: Number(discountValue) || 0, tip: Number(tip) || 0 },
+        token
+      );
+      toast.success(`تم الدفع: ${money(r.charged ?? 0)}`);
       onBack();
     } catch (e) {
       toast.error((e as Error).message);
@@ -837,6 +915,20 @@ function SessionView({
   const isQuick = !s.table_label;
   const deliveryFee = s.delivery_fee || 0;
   const charged = s.total_sar + deliveryFee;
+
+  // معاينة الفاتورة عند الدفع (خصم/خدمة/ضريبة/إكرامية)
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+  const discAmt =
+    discountType === 'percent'
+      ? r2((s.total_sar * (Number(discountValue) || 0)) / 100)
+      : discountType === 'amount'
+      ? Math.min(Number(discountValue) || 0, s.total_sar)
+      : 0;
+  const netAmt = s.total_sar - discAmt;
+  const serviceAmt = r2((netAmt * settings.service_pct) / 100);
+  const taxAmt = r2(((netAmt + serviceAmt) * settings.tax_pct) / 100);
+  const tipAmt = Number(tip) || 0;
+  const grandPay = netAmt + serviceAmt + taxAmt + tipAmt + deliveryFee;
   const heading = isQuick
     ? `${ORDER_TYPE_LABEL[s.order_type]}${s.customer_name ? ` — ${s.customer_name}` : ''}`
     : `طاولة ${s.table_label}`;
@@ -1099,15 +1191,56 @@ function SessionView({
       />
 
       {/* الدفع */}
-      <Dialog open={payOpen} onClose={() => setPayOpen(false)} title={`إقفال الفاتورة — ${money(charged)}`}>
-        <p className="mb-4 text-sm text-muted">اختر طريقة الدفع:</p>
-        <div className="grid grid-cols-2 gap-3">
-          <Button loading={closing} onClick={() => closeBill('cash')}>
-            نقدًا
-          </Button>
-          <Button variant="outline" loading={closing} onClick={() => closeBill('card')}>
-            شبكة
-          </Button>
+      <Dialog open={payOpen} onClose={() => setPayOpen(false)} title="إقفال الفاتورة">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="نوع الخصم">
+              <Select
+                value={discountType}
+                onChange={(e) => setDiscountType(e.target.value as 'none' | 'percent' | 'amount')}
+              >
+                <option value="none">بدون</option>
+                <option value="percent">نسبة %</option>
+                <option value="amount">مبلغ</option>
+              </Select>
+            </Field>
+            <Field label={discountType === 'percent' ? 'نسبة الخصم %' : 'قيمة الخصم'}>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={discountValue}
+                disabled={discountType === 'none'}
+                onChange={(e) => setDiscountValue(e.target.value)}
+              />
+            </Field>
+          </div>
+          <Field label="إكرامية (اختياري)">
+            <Input type="number" step="0.01" min="0" value={tip} onChange={(e) => setTip(e.target.value)} />
+          </Field>
+
+          <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm">
+            <BillRow label="الأصناف" value={money(s.total_sar)} />
+            {discAmt > 0 && <BillRow label="الخصم" value={`- ${money(discAmt)}`} tone="text-danger" />}
+            {serviceAmt > 0 && <BillRow label={`خدمة ${settings.service_pct}%`} value={money(serviceAmt)} />}
+            {taxAmt > 0 && <BillRow label={`ضريبة ${settings.tax_pct}%`} value={money(taxAmt)} />}
+            {deliveryFee > 0 && <BillRow label="توصيل" value={money(deliveryFee)} />}
+            {tipAmt > 0 && <BillRow label="إكرامية" value={money(tipAmt)} />}
+            <div className="mt-1.5 flex items-center justify-between border-t border-white/10 pt-1.5">
+              <span className="font-extrabold text-text">الإجمالي</span>
+              <span className="text-lg font-extrabold text-gold">{money(grandPay)}</span>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted">اختر طريقة الدفع:</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Button loading={closing} onClick={() => closeBill('cash')}>
+              نقدًا
+            </Button>
+            <Button variant="outline" loading={closing} onClick={() => closeBill('card')}>
+              شبكة
+            </Button>
+          </div>
         </div>
       </Dialog>
 
@@ -1145,6 +1278,15 @@ function SessionView({
           </div>
         )}
       </Dialog>
+    </div>
+  );
+}
+
+function BillRow({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="flex items-center justify-between py-0.5">
+      <span className="text-muted">{label}</span>
+      <span className={tone || 'text-text'}>{value}</span>
     </div>
   );
 }
