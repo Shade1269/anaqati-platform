@@ -324,7 +324,7 @@ export default function AdminStoreOrders() {
                             {it.products?.name || '—'}
                           </td>
                           <td>{it.qty}</td>
-                          <td>{sar(it.unit_price || 0)}</td>
+                          <td>{sar(it.unit_price_sar || 0)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -336,7 +336,7 @@ export default function AdminStoreOrders() {
             <div className="flex items-center justify-between border-t border-white/10 pt-3 text-sm">
               <span className="text-muted">رسوم التوصيل</span>
               <span className="font-semibold">
-                {sar(selected.delivery_fee || 0)}
+                {sar(selected.delivery_fee_sar || 0)}
               </span>
             </div>
             <div className="flex items-center justify-between text-base font-extrabold">

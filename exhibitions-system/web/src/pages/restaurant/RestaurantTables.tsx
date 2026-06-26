@@ -12,6 +12,7 @@ import {
   Field,
   Input,
   PageHeader,
+  Select,
   Spinner,
   Table,
   useToast,
@@ -83,6 +84,12 @@ export default function RestaurantTables() {
             </Field>
             <Field label="عدد المقاعد">
               <Input type="number" min={1} value={form.seats} onChange={(e) => setForm({ ...form, seats: e.target.value })} />
+            </Field>
+            <Field label="الحالة">
+              <Select value={form.active ? '1' : '0'} onChange={(e) => setForm({ ...form, active: e.target.value === '1' })}>
+                <option value="1">نشطة</option>
+                <option value="0">مخفية</option>
+              </Select>
             </Field>
             <div className="flex items-end gap-2">
               <Button type="submit" className="flex-1" loading={saving}>

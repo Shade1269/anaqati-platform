@@ -8,7 +8,7 @@ import { money } from '../../lib/format';
 function iso(d: Date) { return d.toISOString().slice(0, 10); }
 function addDays(s: string, n: number) { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return iso(d); }
 function daysBetween(a: string, b: string) { return Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 86400000) + 1; }
-function todayStr() { return iso(new Date()); }
+function todayStr() { return iso(new Date(Date.now() + 10800000)); } // توقيت سوريا UTC+3
 function monthStart() { const d = new Date(); return iso(new Date(d.getFullYear(), d.getMonth(), 1)); }
 
 type Preset = 'today' | 'yesterday' | '7d' | 'month' | 'custom';

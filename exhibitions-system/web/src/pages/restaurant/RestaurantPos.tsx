@@ -1239,7 +1239,9 @@ function SessionView({
               </div>
             )}
             <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
-              <span className="text-base font-extrabold text-text">الإجمالي</span>
+              <span className="text-base font-extrabold text-text">
+                {settings.service_pct > 0 || settings.tax_pct > 0 ? 'المجموع (قبل الخدمة والضريبة)' : 'الإجمالي'}
+              </span>
               <span className="text-left">
                 <span className="text-lg font-extrabold text-gold">{money(charged)}</span>
                 {money2(charged) && <span className="block text-[11px] text-muted">≈ {money2(charged)}</span>}

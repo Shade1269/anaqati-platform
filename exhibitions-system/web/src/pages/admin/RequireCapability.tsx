@@ -43,6 +43,9 @@ export function firstAllowedRoute(perms: Permissions | null | undefined): string
   ) {
     return '/admin/inventory';
   }
+  if (perms.can_manage_restaurant) return '/admin/restaurant/pos';
+  if (perms.can_manage_manufacturing) return '/admin/mfg/work-orders';
+  if (perms.can_manage_market) return '/admin/market/browse';
   if (perms.can_manage_employees) return '/admin/team';
   if (perms.can_manage_store) return '/admin/store/orders';
   return null;
