@@ -24,8 +24,16 @@ import {
   useToast,
 } from '../../components/ui';
 import { sar } from '../../lib/format';
+import { useAdminAuth } from '../../context/AdminAuthContext';
+import RestaurantDashboard from '../restaurant/RestaurantDashboard';
 
 export default function AdminDashboard() {
+  const { profile } = useAdminAuth();
+  if (profile?.tenant?.business_type === 'restaurant') return <RestaurantDashboard />;
+  return <RetailDashboard />;
+}
+
+function RetailDashboard() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [salesToday, setSalesToday] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
