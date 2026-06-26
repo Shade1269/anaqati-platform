@@ -5,6 +5,8 @@ import type { MfgProduct, MfgWorkOrderRow, MfgWorkOrderDetail, MfgEstimate, MfgM
 import { Button, Card, Dialog, EmptyState, Field, Input, PageHeader, Spinner, Table, useToast } from '../../components/ui';
 
 import { money } from '../../lib/format';
+import { printReceipt } from '../../lib/print';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 const statusLabel: Record<string, string> = {
   quote: 'عرض سعر', released: 'صادر', in_progress: 'قيد التنفيذ', done: 'منجز', invoiced: 'مفوتر', cancelled: 'ملغى',
 };
@@ -122,6 +124,25 @@ function DetailDialog({ id, onClose, onChanged }: { id: string; onClose: () => v
   const [lbWc, setLbWc] = useState(''); const [lbOp, setLbOp] = useState(''); const [lbMin, setLbMin] = useState(''); const [lbRate, setLbRate] = useState('');
   const [prod, setProd] = useState(''); const [scrap, setScrap] = useState('');
   const toast = useToast();
+  const { profile } = useAdminAuth();
+
+  function printDoc() {
+    if (!d) return;
+    const brand = profile?.tenant?.brand_name || profile?.tenant?.name || 'مستند';
+    const isQuote = d.status === 'quote';
+    printReceipt({
+      brand,
+      title: isQuote ? 'عرض سعر' : 'فاتورة تصنيع',
+      ref: `${d.wo_no} — ${d.product}`,
+      meta: [
+        ...(d.customer ? [{ label: 'العميل', value: d.customer }] : []),
+        { label: 'الكمية', value: String(d.qty) },
+      ],
+      lines: [{ name: d.product, qty: d.qty, amount: d.est.price }],
+      total: d.est.price,
+      footer: isQuote ? 'هذا عرض سعر' : 'شكرًا لتعاملكم',
+    });
+  }
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -160,6 +181,9 @@ function DetailDialog({ id, onClose, onChanged }: { id: string; onClose: () => v
           <span className="rounded-full bg-surface-2 px-3 py-1 font-bold">{statusLabel[d.status]}</span>
           {d.customer && <span className="text-muted">العميل: {d.customer}</span>}
           <span className="text-muted">هامش {d.markup_pct}%</span>
+          <button className="ms-auto text-xs font-bold text-info" onClick={printDoc}>
+            طباعة {d.status === 'quote' ? 'عرض السعر' : 'الفاتورة'}
+          </button>
         </div>
 
         {/* مقدّر مقابل فعلي */}
