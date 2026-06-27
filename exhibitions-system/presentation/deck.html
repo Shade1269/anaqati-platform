@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>منصّة سندباد — عرض تقديمي</title>
+<style>
+  :root{ --bg:#0d0d10; --bg2:#15151a; --card:#1b1b22; --gold:#C9A24B; --gold2:#e6c578; --text:#f4f1ea; --muted:#9b9690; --line:rgba(255,255,255,.08); --ok:#43c08a; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:radial-gradient(1200px 700px at 80% -10%, #20202a, var(--bg)); color:var(--text); font-family:"Segoe UI","Tajawal","Cairo",system-ui,Arial,sans-serif; overflow:hidden}
+  .deck{height:100vh;width:100vw;position:relative}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;padding:6vh 9vw;text-align:center;animation:fade .5s ease}
+  .slide.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  h1{font-size:clamp(34px,5.2vw,68px);font-weight:800;line-height:1.15;letter-spacing:-.5px}
+  h2{font-size:clamp(26px,3.6vw,46px);font-weight:800;margin-bottom:.3em}
+  .grad{background:linear-gradient(90deg,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  p.lead{font-size:clamp(17px,2vw,24px);color:var(--muted);max-width:60ch;margin-top:.6em;line-height:1.8}
+  .kicker{color:var(--gold);font-weight:700;letter-spacing:2px;font-size:14px;margin-bottom:18px;text-transform:uppercase}
+  .grid{display:grid;gap:18px;margin-top:34px;width:100%;max-width:1100px}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 20px;text-align:right}
+  .card h3{font-size:19px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .card p{color:var(--muted);font-size:15px;line-height:1.7}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block}
+  .big{font-size:clamp(40px,6vw,86px);font-weight:800}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
+  .stat .n{font-size:clamp(28px,4vw,52px);font-weight:800;color:var(--gold2)}
+  .stat .l{color:var(--muted);margin-top:6px;font-size:15px}
+  ul.feat{list-style:none;text-align:right;max-width:900px;margin-top:24px;width:100%}
+  ul.feat li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:10px;font-size:17px;display:flex;gap:10px;align-items:center}
+  ul.feat li b{color:var(--gold2)}
+  .check{color:var(--ok);font-weight:800}
+  table.vs{border-collapse:collapse;width:100%;max-width:900px;margin-top:26px;font-size:16px}
+  table.vs th,table.vs td{border:1px solid var(--line);padding:12px 14px;text-align:center}
+  table.vs th{background:#22222b;color:var(--gold2)}
+  table.vs td:first-child{text-align:right;color:var(--muted)}
+  .logo{width:54px;height:54px;border-radius:14px;background:linear-gradient(135deg,var(--gold),#8a6d2c);display:flex;align-items:center;justify-content:center;font-weight:800;color:#1a1a1a;font-size:24px;margin-bottom:26px}
+  .foot{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 4vw;color:var(--muted);font-size:13px}
+  .bar{height:3px;background:var(--line);position:absolute;top:0;left:0;right:0}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s}
+  .nav{position:absolute;bottom:14px;right:4vw;display:flex;gap:8px}
+  .nav button{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:15px}
+  .nav button:hover{border-color:var(--gold)}
+  .hint{position:absolute;bottom:18px;left:4vw;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="bar"><i id="bar"></i></div>
+<div class="deck" id="deck">
+
+  <!-- 1 -->
+  <section class="slide active">
+    <div class="logo">س</div>
+    <div class="kicker">منصّة أعمال سحابية — وايت ليبل</div>
+    <h1>منصّة <span class="grad">سندباد</span><br/>لإدارة الأعمال الصغيرة والمتوسطة</h1>
+    <p class="lead">نظام سحابي عربي متكامل: نقاط بيع، مطاعم وكافيهات، تصنيع، وسوق بين المشتركين — بمحاسبة قيد مزدوج كاملة. مبنيّ خصيصًا للسوق السوري.</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="kicker">المشكلة</div>
+    <h2>الأنظمة الحالية <span class="grad">مكتبية وقديمة</span></h2>
+    <div class="grid g3">
+      <div class="card"><h3><span class="dot"></span> مكتبية</h3><p>تُثبَّت على جهاز واحد، بلا وصول من أي مكان ولا نسخ سحابية.</p></div>
+      <div class="card"><h3><span class="dot"></span> بلا تكامل</h3><p>المبيعات والمخزون والمحاسبة جزر منفصلة، إدخال يدوي مكرّر.</p></div>
+      <div class="card"><h3><span class="dot"></span> نشاط واحد</h3><p>إمّا مطعم أو متجر — لا منصّة واحدة تخدم عدة أنشطة.</p></div>
+    </div>
+    <p class="lead">المنافس الأبرز (نظام البيان) سطح مكتب — لا سحابة، لا طلب أونلاين، لا QR.</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="kicker">الحل</div>
+    <h2>منصّة <span class="grad">واحدة سحابية</span> متعددة الأنشطة</h2>
+    <div class="grid g4">
+      <div class="card"><h3>🛍️ تجزئة</h3><p>منتجات، معارض، مخزون، جملة، متجر إلكتروني.</p></div>
+      <div class="card"><h3>☕ مطاعم وكافيهات</h3><p>طاولات، مطبخ، سفري/توصيل، QR، ولاء.</p></div>
+      <div class="card"><h3>🏭 تصنيع</h3><p>وصفات، أوامر شغل، تكلفة تصنيع، قوالب.</p></div>
+      <div class="card"><h3>🔄 سوق B2B</h3><p>بيع وشراء بين المشتركين بقيود مزدوجة.</p></div>
+    </div>
+    <p class="lead">كل مشترك يحصل على نظامه بعلامته التجارية ولونه وعملته — معزولًا تمامًا عن غيره.</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <div class="kicker">موديول المطاعم والكافيهات</div>
+    <h2>نقطة بيع <span class="grad">احترافية كاملة</span></h2>
+    <div class="grid g3" style="max-width:1150px">
+      <div class="card"><h3>الطاولات والجلسات</h3><p>فتح/نقل/دمج/تقسيم، فاتورة جارية لكل طاولة.</p></div>
+      <div class="card"><h3>سفري وتوصيل</h3><p>طلبات بلا طاولة + بيانات الزبون ورسوم التوصيل.</p></div>
+      <div class="card"><h3>شاشة المطبخ KDS</h3><p>الطلبات تصل المطبخ لحظيًا بحالات التحضير.</p></div>
+      <div class="card"><h3>منيو QR للطلب الذاتي</h3><p>الزبون يمسح ويطلب من طاولته أو أونلاين.</p></div>
+      <div class="card"><h3>وردية كاشير + تقرير Z</h3><p>افتتاحي، نقد متوقّع مقابل معدود، عجز/زيادة.</p></div>
+      <div class="card"><h3>خصم/خدمة/ضريبة/إكرامية</h3><p>على الفاتورة، بقيود محاسبية متوازنة.</p></div>
+      <div class="card"><h3>مخزون ووصفات</h3><p>خصم المكوّنات تلقائيًا + تكلفة المبيعات (COGS).</p></div>
+      <div class="card"><h3>ولاء ونقاط</h3><p>كسب على كل فاتورة واستبدال خصمًا للزبائن.</p></div>
+      <div class="card"><h3>إلغاء صنف بموافقة المدير</h3><p>بسبب إلزامي وتسجيل تدقيق.</p></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="kicker">المحاسبة</div>
+    <h2>محاسبة <span class="grad">قيد مزدوج</span> حقيقية</h2>
+    <ul class="feat">
+      <li><span class="check">✓</span> دليل حسابات + قيود يومية تلقائية لكل عملية (بيع، شراء، تكلفة، ضريبة، عمولة).</li>
+      <li><span class="check">✓</span> تقارير: قائمة الدخل، الميزانية العمومية، ميزان المراجعة، دفتر الأستاذ، التدفق النقدي.</li>
+      <li><span class="check">✓</span> ذمم العملاء (البيع الآجل) والموردين، رواتب وعمولات وعهد.</li>
+      <li><span class="check">✓</span> عملتان مع سعر صرف، وإقفال فترات.</li>
+    </ul>
+    <p class="lead">كل ريال/ليرة له قيد متوازن — تم التحقق آليًا أن كل المستأجرين متوازنون 0.00.</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="kicker">الأمان والعزل</div>
+    <h2>عزل تام <span class="grad">ومتعدد المستأجرين</span></h2>
+    <div class="grid g2" style="max-width:1000px">
+      <div class="card"><h3>عزل البيانات</h3><p>RLS على كل جدول — كل مشترك يرى بياناته فقط، مستحيل تسرّب بين المشتركين.</p></div>
+      <div class="card"><h3>فصل الأدوار</h3><p>مالك / مدير بصلاحيات دقيقة / موظف بتوكن — كلٌّ يرى ما يخصّه.</p></div>
+      <div class="card"><h3>صلاحيات الموظف الدقيقة</h3><p>بيع، إرجاع، نادل، مطبخ… يفعّلها المالك لكل موظف.</p></div>
+      <div class="card"><h3>تدقيق مستمر</h3><p>سجلّ عمليات + فحوصات أمنية آلية للدوال والصلاحيات.</p></div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <div class="kicker">القرار بالأرقام</div>
+    <h2>تحليلات <span class="grad">حيّة</span> لصاحب العمل</h2>
+    <div class="grid g4">
+      <div class="stat"><div class="n">↑</div><div class="l">مبيعات اليوم ومقارنتها بالأمس</div></div>
+      <div class="stat"><div class="n">★</div><div class="l">الأكثر مبيعًا</div></div>
+      <div class="stat"><div class="n">⏱</div><div class="l">أوقات الذروة (بتوقيت سوريا)</div></div>
+      <div class="stat"><div class="n">👤</div><div class="l">أداء الموظفين</div></div>
+    </div>
+    <p class="lead">لوحة تحكم + تقارير بفترات جاهزة ومقارنة بالفترة السابقة، للمطاعم والتجزئة.</p>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <div class="kicker">لماذا نتفوّق</div>
+    <h2>نحن مقابل <span class="grad">الأنظمة المكتبية</span></h2>
+    <table class="vs">
+      <tr><th>الميزة</th><th>سندباد</th><th>الأنظمة المكتبية</th></tr>
+      <tr><td>سحابي — وصول من أي مكان</td><td class="check">✓</td><td>✕</td></tr>
+      <tr><td>منيو QR وطلب أونلاين</td><td class="check">✓</td><td>✕</td></tr>
+      <tr><td>عدة أنشطة بمنصّة واحدة</td><td class="check">✓</td><td>✕</td></tr>
+      <tr><td>محاسبة قيد مزدوج مدمجة</td><td class="check">✓</td><td>محدود</td></tr>
+      <tr><td>عملتان + تحليلات حيّة</td><td class="check">✓</td><td>✕</td></tr>
+      <tr><td>تحديثات فورية بلا تثبيت</td><td class="check">✓</td><td>✕</td></tr>
+    </table>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <div class="kicker">الجاهزية</div>
+    <h2>جاهز <span class="grad">للإطلاق الآن</span></h2>
+    <div class="grid g3">
+      <div class="stat"><div class="n">✓</div><div class="l">مُختبر شاملًا: مطاعم من الألف للياء + مصفوفة الأدوار</div></div>
+      <div class="stat"><div class="n">0.00</div><div class="l">توازن محاسبي مؤكَّد لكل المستأجرين</div></div>
+      <div class="stat"><div class="n">RLS</div><div class="l">عزل وأمان مُدقَّق على كل الجداول</div></div>
+    </div>
+    <p class="lead">قيد التشغيل فعليًا على أول كافيه. خارطة الطريق: إشعارات SMS، عمل دون اتصال (PWA)، بوابات دفع.</p>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <h1>شكرًا لكم</h1>
+    <p class="lead">منصّة <span class="grad">سندباد</span> — نظام أعمال سحابي عربي، يبدأ من الكافيه ويكبر مع أعمالك.</p>
+    <p class="lead" style="margin-top:8px">www.sindbadsa.com</p>
+  </section>
+
+</div>
+
+<div class="foot"><span>منصّة سندباد</span><span id="counter">1 / 10</span></div>
+<div class="nav"><button onclick="go(-1)">‹ السابق</button><button onclick="go(1)">التالي ›</button></div>
+<div class="hint">استخدم ← → للتنقّل · F لملء الشاشة</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')]; let i=0;
+  const bar=document.getElementById('bar'), counter=document.getElementById('counter');
+  function show(n){ i=Math.max(0,Math.min(slides.length-1,n)); slides.forEach((s,x)=>s.classList.toggle('active',x===i));
+    bar.style.width=((i+1)/slides.length*100)+'%'; counter.textContent=(i+1)+' / '+slides.length; }
+  function go(d){ show(i+d); }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowLeft'||e.key===' ') go(1);          // RTL: يسار = التالي
+    else if(e.key==='ArrowRight') go(-1);
+    else if(e.key.toLowerCase()==='f'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+  });
+  show(0);
+</script>
+</body>
+</html>
