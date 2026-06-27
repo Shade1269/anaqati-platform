@@ -158,7 +158,7 @@ export default function PlatformTenants() {
                     <p className="flex items-center gap-2 text-text">
                       {t.brand_name || t.name}
                       <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-muted">
-                        {t.business_type === 'restaurant' ? 'مطعم' : t.business_type === 'manufacturing' ? 'تصنيع' : 'تجزئة'}
+                        {t.business_type === 'restaurant' ? 'مطعم' : t.business_type === 'manufacturing' ? 'تصنيع' : t.business_type === 'distribution' ? 'مورّد مواد غذائية' : 'تجزئة'}
                       </span>
                     </p>
                     {t.brand_name && t.brand_name !== t.name && (
@@ -282,7 +282,7 @@ function CreateTenantDialog({
   const [adminPassword, setAdminPassword] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#C9A24B');
   const [expires, setExpires] = useState('');
-  const [businessType, setBusinessType] = useState<'retail' | 'restaurant' | 'manufacturing'>('retail');
+  const [businessType, setBusinessType] = useState<'retail' | 'restaurant' | 'manufacturing' | 'distribution'>('retail');
   const [businessSubtype, setBusinessSubtype] = useState<'general' | 'plastics' | 'wood' | 'metal'>('general');
   const [busy, setBusy] = useState(false);
   const toast = useToast();
@@ -354,11 +354,12 @@ function CreateTenantDialog({
         <Field label="نوع النشاط">
           <Select
             value={businessType}
-            onChange={(e) => setBusinessType(e.target.value as 'retail' | 'restaurant')}
+            onChange={(e) => setBusinessType(e.target.value as typeof businessType)}
           >
             <option value="retail">تجزئة / متجر ومعارض</option>
             <option value="restaurant">مطعم / كافيه (طاولات ومطبخ)</option>
             <option value="manufacturing">تصنيع / ورشة (أوامر شغل وتكلفة)</option>
+            <option value="distribution">مورّد مواد غذائية / جملة (توزيع وآجل)</option>
           </Select>
         </Field>
         {businessType === 'manufacturing' && (

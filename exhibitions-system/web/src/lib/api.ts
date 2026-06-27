@@ -258,6 +258,9 @@ export const accountingApi = {
 
   retailReport: (from: string, to: string) =>
     rpc<import('./types').RetailReport>('retail_report', { p_from: from, p_to: to }),
+
+  distributionDashboard: () =>
+    rpc<import('./types').DistributionDashboard>('distribution_dashboard', {}),
 };
 
 /* --------------------------- Admin / IM RPCs ----------------------------- */
@@ -604,7 +607,7 @@ export const platformApi = {
     brandName: string;
     primaryColor: string;
     subscriptionExpires: string | null;
-    businessType?: 'retail' | 'restaurant' | 'manufacturing';
+    businessType?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution';
     businessSubtype?: 'general' | 'plastics' | 'wood' | 'metal';
   }) =>
     rpc<CreateTenantResult>('create_tenant', {

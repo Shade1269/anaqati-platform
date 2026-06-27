@@ -35,7 +35,7 @@ export interface TenantBranding {
   status: string | null;
   subscription_status: string | null;
   subscription_expires_at: string | null;
-  business_type?: 'retail' | 'restaurant' | 'manufacturing';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution';
   business_subtype?: 'general' | 'plastics' | 'wood' | 'metal';
   currency?: string;
   secondary_currency?: string | null;
@@ -175,7 +175,7 @@ export interface PlatformTenant {
   subscription_status: string | null;
   subscription_expires_at: string | null;
   created_at: string | null;
-  business_type?: 'retail' | 'restaurant' | 'manufacturing';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution';
   business_subtype?: 'general' | 'plastics' | 'wood' | 'metal';
   employees: number;
   branches: number;
@@ -203,7 +203,7 @@ export interface EmployeeSession {
   token: string;
   profile_id: string;
   full_name: string;
-  business_type?: 'retail' | 'restaurant' | 'manufacturing';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution';
   currency?: string;
   secondary_currency?: string | null;
   fx_rate?: number | null;
@@ -333,6 +333,16 @@ export interface LoyaltyCustomer {
   points: number;
   redeem_value: number;
   enabled: boolean;
+}
+
+export interface DistributionDashboard {
+  customers_count: number;
+  total_receivable: number;
+  wholesale_month_total: number;
+  wholesale_month_count: number;
+  market_orders_month: number;
+  top_debtors: { name: string; phone: string | null; balance: number }[];
+  recent_wholesale: { customer_name: string | null; total: number; created_at: string }[];
 }
 
 export interface RetailReport {

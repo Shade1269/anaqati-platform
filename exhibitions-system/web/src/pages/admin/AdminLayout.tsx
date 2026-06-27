@@ -153,6 +153,38 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
   if (bizType === 'manufacturing') {
     return [overviewSection, { title: 'التصنيع', items: mfgItemsFor(bizSubtype) }, marketSection, financeSection, systemSection];
   }
+  if (bizType === 'distribution') {
+    // مورّد مواد غذائية: كتالوج + مخزون + بيع جملة بالآجل + سوق B2B + محاسبة
+    return [
+      {
+        title: 'نظرة عامة',
+        items: [
+          { to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
+          { to: '/admin/analytics', label: 'التحليلات', icon: <TrendingUp size={sz} /> },
+          { to: '/admin/monitoring', label: 'مراقبة الموظفين', icon: <UserCheck size={sz} /> },
+        ],
+      },
+      {
+        title: 'الكتالوج والمخزون',
+        items: [
+          { to: '/admin/products', label: 'المنتجات', icon: <Package size={sz} /> },
+          { to: '/admin/catalog', label: 'التصنيفات', icon: <Tags size={sz} /> },
+          navInventory,
+          navReceive,
+        ],
+      },
+      {
+        title: 'المبيعات (جملة)',
+        items: [
+          navWholesale,
+          navCustomers,
+        ],
+      },
+      marketSection,
+      financeSection,
+      systemSection,
+    ];
+  }
   // التجزئة (الافتراضي)
   return [
     {
