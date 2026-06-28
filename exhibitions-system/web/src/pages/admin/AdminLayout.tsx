@@ -71,6 +71,7 @@ const navInventory: Item = { to: '/admin/inventory', label: 'المخزون', ic
 const navReceive: Item = { to: '/admin/receive-stock', label: 'استلام بضاعة', icon: <PackagePlus size={sz} /> };
 const navRequests: Item = { to: '/admin/requests', label: 'طلبات البضاعة', icon: <ClipboardList size={sz} /> };
 const navWholesale: Item = { to: '/admin/wholesale', label: 'الجملة', icon: <ShoppingCart size={sz} /> };
+const navPriceLists: Item = { to: '/admin/price-lists', label: 'قوائم الأسعار', icon: <Tags size={sz} /> };
 
 const navStoreSettings: Item = { to: '/admin/store/settings', label: 'إعدادات المتجر', icon: <Settings size={sz} /> };
 const navStoreProducts: Item = { to: '/admin/store/products', label: 'منتجات المتجر', icon: <ShoppingBag size={sz} /> };
@@ -177,6 +178,7 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
         title: 'المبيعات (جملة)',
         items: [
           navWholesale,
+          navPriceLists,
           navCustomers,
         ],
       },
@@ -205,6 +207,7 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
         navReceive,
         navInventory,
         navWholesale,
+        navPriceLists,
       ],
     },
     { title: 'المتجر الإلكتروني', items: [navStoreSettings, navStoreProducts, navStoreOrders] },
@@ -230,7 +233,7 @@ function managerSections(p: Permissions | null, subtype?: string): NavSection[] 
       title: 'المتجر الإلكتروني',
       items: [navStoreSettings, navStoreProducts, navStoreOrders],
     });
-    sections.push({ title: 'العملاء', items: [navCustomers] });
+    sections.push({ title: 'العملاء والأسعار', items: [navCustomers, navPriceLists] });
   }
 
   if (p?.can_manage_restaurant) {

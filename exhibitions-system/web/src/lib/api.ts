@@ -72,6 +72,8 @@ import type {
   ProductUomList,
   ProductBatch,
   ExpiringBatch,
+  PriceList,
+  PriceListItem,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -348,6 +350,39 @@ export const adminApi = {
       p_request_id: requestId,
       p_action: action,
       p_approvals: approvals,
+    }),
+
+  /* --------------------------- قوائم الأسعار (Pricing) --------------------------- */
+  priceLists: () => rpc<PriceList[]>('price_lists_list', {}),
+
+  priceListItems: (priceListId: string) =>
+    rpc<PriceListItem[]>('price_list_items_list', {
+      p_price_list_id: priceListId,
+    }),
+
+  priceListSet: (id: string | null, name: string, active = true) =>
+    rpc<string>('price_list_set', { p_id: id, p_name: name, p_active: active }),
+
+  priceListItemsSet: (
+    priceListId: string,
+    items: { product_id: string; min_qty: number; unit_price: number }[]
+  ) =>
+    rpc<PriceListItem[]>('price_list_items_set', {
+      p_price_list_id: priceListId,
+      p_items: items,
+    }),
+
+  resolvePrice: (
+    productId: string,
+    uomId: string | null,
+    qty: number,
+    priceListId: string | null
+  ) =>
+    rpc<number>('resolve_price', {
+      p_product_id: productId,
+      p_uom_id: uomId,
+      p_qty: qty,
+      p_price_list_id: priceListId,
     }),
 
   /* ------------------------- الدفعات والصلاحية (FEFO) ------------------------- */

@@ -663,6 +663,25 @@ export interface ProductUomList {
   units: ProductUom[];
 }
 
+/** قائمة أسعار */
+export interface PriceList {
+  id: string;
+  name: string;
+  is_active: boolean;
+  items_count: number;
+}
+
+/** بند قائمة أسعار (سعر للوحدة الأساس + حدّ أدنى للكمية = تدرّج) */
+export interface PriceListItem {
+  id?: string;
+  product_id: string;
+  product_name?: string;
+  product_code?: string;
+  base_unit?: string;
+  min_qty: number;
+  unit_price: number;
+}
+
 export interface Category {
   id: string;
   name: string;

@@ -58,6 +58,7 @@ import AdminMonitoring from './pages/admin/AdminMonitoring';
 import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
 import AdminCustomers from './pages/admin/AdminCustomers';
+import AdminPriceLists from './pages/admin/AdminPriceLists';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
@@ -164,6 +165,7 @@ export default function App() {
         {/* Operations — owner or inventory_manager per permissions */}
         <Route path="requests" element={<RequireCapability caps={['can_approve_requests']}><AdminRequests /></RequireCapability>} />
         <Route path="wholesale" element={<RequireCapability caps={['can_issue_wholesale']}><AdminWholesale /></RequireCapability>} />
+        <Route path="price-lists" element={<RequireCapability caps={['can_manage_store']}><AdminPriceLists /></RequireCapability>} />
         <Route path="inventory" element={<AdminInventory />} />
         <Route path="receive-stock" element={<RequireCapability caps={['can_add_stock']}><AdminReceiveStock /></RequireCapability>} />
 
