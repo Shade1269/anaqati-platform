@@ -66,7 +66,12 @@ export default function AdminReceiveStock() {
       await adminApi.receiveStock(
         warehouseId,
         supplierId,
-        lines.map((l) => ({ product_id: l.product_id, qty: l.qty }))
+        lines.map((l) => ({
+          product_id: l.product_id,
+          qty: l.qty,
+          batch_no: l.batch_no?.trim() || undefined,
+          expiry: l.expiry || undefined,
+        }))
       );
       toast.success('تم استلام البضاعة في المستودع');
       setLines([]);
@@ -117,7 +122,16 @@ export default function AdminReceiveStock() {
           </Field>
         </div>
 
-        <ProductLinePicker products={lineProducts} lines={lines} onChange={setLines} />
+        <ProductLinePicker
+          products={lineProducts}
+          lines={lines}
+          onChange={setLines}
+          withBatch
+        />
+        <p className="text-xs text-muted">
+          رقم الدفعة وتاريخ الصلاحية اختياريان — يُستخدمان لتتبّع الصلاحية وصرف
+          الأقرب انتهاءً أولًا (FEFO).
+        </p>
 
         <Button className="w-full" loading={submitting} onClick={submit}>
           استلام البضاعة

@@ -70,6 +70,8 @@ import type {
   CustomerStatement,
   EmployeePermissions,
   ProductUomList,
+  ProductBatch,
+  ExpiringBatch,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -347,6 +349,13 @@ export const adminApi = {
       p_action: action,
       p_approvals: approvals,
     }),
+
+  /* ------------------------- الدفعات والصلاحية (FEFO) ------------------------- */
+  productBatches: (productId: string) =>
+    rpc<ProductBatch[]>('product_batches', { p_product_id: productId }),
+
+  expiringBatches: (days = 30) =>
+    rpc<ExpiringBatch[]>('expiring_batches', { p_days: days }),
 
   /* ------------------------- وحدات القياس (Multi-UoM) ------------------------- */
   uomList: (productId: string) =>

@@ -33,6 +33,7 @@ interface Form {
   cost_price_sar: string;
   supplier_id: string;
   base_unit: string;
+  track_batches: boolean;
   is_active: boolean;
 }
 
@@ -44,6 +45,7 @@ const emptyForm: Form = {
   cost_price_sar: '',
   supplier_id: '',
   base_unit: 'وحدة',
+  track_batches: false,
   is_active: true,
 };
 
@@ -64,7 +66,7 @@ export default function AdminProducts() {
       supabase
         .from('products')
         .select(
-          'id,product_code,name,category_id,sale_price_ref,cost_price_sar,supplier_id,base_unit,is_active'
+          'id,product_code,name,category_id,sale_price_ref,cost_price_sar,supplier_id,base_unit,track_batches,is_active'
         )
         .order('name'),
       supabase.from('categories').select('id,name,parent_id').order('name'),
@@ -93,6 +95,7 @@ export default function AdminProducts() {
       cost_price_sar: dialog.cost_price_sar ? Number(dialog.cost_price_sar) : null,
       supplier_id: dialog.supplier_id || null,
       base_unit: dialog.base_unit.trim() || 'وحدة',
+      track_batches: dialog.track_batches,
       is_active: dialog.is_active,
     };
     try {
@@ -187,6 +190,7 @@ export default function AdminProducts() {
                           p.cost_price_sar != null ? String(p.cost_price_sar) : '',
                         supplier_id: p.supplier_id || '',
                         base_unit: p.base_unit || 'وحدة',
+                        track_batches: !!p.track_batches,
                         is_active: p.is_active,
                       })
                     }
@@ -289,6 +293,18 @@ export default function AdminProducts() {
                 placeholder="وحدة"
               />
             </Field>
+            <label className="flex cursor-pointer items-center gap-2 sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={dialog.track_batches}
+                onChange={(e) =>
+                  setDialog({ ...dialog, track_batches: e.target.checked })
+                }
+              />
+              <span className="text-sm text-muted">
+                تتبّع الدفعات والصلاحية (FEFO) — للأغذية والمواد القابلة للانتهاء
+              </span>
+            </label>
             <label className="flex cursor-pointer items-center gap-2 sm:col-span-2">
               <input
                 type="checkbox"

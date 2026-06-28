@@ -16,6 +16,9 @@ export interface Line {
   unit_price?: number;
   /** وحدة القياس المختارة؛ null = الوحدة الأساس */
   uom_id?: string | null;
+  /** رقم الدفعة وتاريخ الصلاحية (عند الاستلام للمنتجات المتتبَّعة) */
+  batch_no?: string;
+  expiry?: string;
 }
 
 /** خيار وحدة قياس لمنتج معيّن (الأساس يُمثَّل بـ id=null) */
@@ -35,6 +38,8 @@ interface Props {
   withUom?: boolean;
   /** unit options keyed by product id (loaded lazily by the parent) */
   unitsByProduct?: Record<string, UnitOption[]>;
+  /** show per-line batch number + expiry date (receiving perishables) */
+  withBatch?: boolean;
 }
 
 export default function ProductLinePicker({
@@ -44,6 +49,7 @@ export default function ProductLinePicker({
   withPrice = false,
   withUom = false,
   unitsByProduct = {},
+  withBatch = false,
 }: Props) {
   const [search, setSearch] = useState('');
   const byId = useMemo(
@@ -127,6 +133,8 @@ export default function ProductLinePicker({
                 <th>المنتج</th>
                 {withUom && <th>الوحدة</th>}
                 <th>الكمية</th>
+                {withBatch && <th>رقم الدفعة</th>}
+                {withBatch && <th>الصلاحية</th>}
                 {withPrice && <th>سعر الوحدة</th>}
                 {withPrice && <th>الإجمالي</th>}
                 <th></th>
@@ -177,6 +185,31 @@ export default function ProductLinePicker({
                         }}
                       />
                     </td>
+                    {withBatch && (
+                      <td>
+                        <input
+                          type="text"
+                          className="ax-input w-28"
+                          placeholder="—"
+                          value={l.batch_no ?? ''}
+                          onChange={(e) =>
+                            update(l.product_id, { batch_no: e.target.value })
+                          }
+                        />
+                      </td>
+                    )}
+                    {withBatch && (
+                      <td>
+                        <input
+                          type="date"
+                          className="ax-input w-36"
+                          value={l.expiry ?? ''}
+                          onChange={(e) =>
+                            update(l.product_id, { expiry: e.target.value })
+                          }
+                        />
+                      </td>
+                    )}
                     {withPrice && (
                       <td>
                         <input

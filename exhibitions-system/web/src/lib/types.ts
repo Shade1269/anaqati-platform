@@ -647,6 +647,7 @@ export interface ProductAdmin extends ProductPublic {
   cost_price_sar: number | null;
   supplier_id: string | null;
   base_unit?: string;
+  track_batches?: boolean;
 }
 
 /** وحدة قياس بديلة لمنتج (كرتون/علبة/كيلو) */
@@ -716,6 +717,24 @@ export interface SaleItemInput {
 export interface StockItemInput {
   product_id: string;
   qty: number;
+  batch_no?: string;
+  expiry?: string;
+}
+
+/** دفعة مخزون لمنتج (تتبّع الصلاحية) */
+export interface ProductBatch {
+  id: string;
+  batch_no: string | null;
+  expiry_date: string | null;
+  location_type: string;
+  location_id: string;
+  qty: number;
+}
+
+export interface ExpiringBatch extends ProductBatch {
+  product_name: string;
+  product_code: string;
+  days_left: number;
 }
 
 export interface NotificationRow {
