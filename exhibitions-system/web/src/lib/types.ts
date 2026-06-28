@@ -844,6 +844,55 @@ export interface StockCountDetail {
   items: StockCountItem[];
 }
 
+/** مسار توصيل */
+export interface DeliveryRoute {
+  id: string;
+  name: string;
+  is_active: boolean;
+  rep_id: string | null;
+  rep_name: string | null;
+  stops_count: number;
+}
+
+export interface RouteStop {
+  id: string;
+  customer_id: string;
+  sequence: number;
+  customer_name: string;
+  phone: string | null;
+  balance: number;
+}
+
+export interface RouteDetail {
+  route: {
+    id: string;
+    name: string;
+    is_active: boolean;
+    rep_id: string | null;
+    rep_name: string | null;
+  };
+  stops: RouteStop[];
+}
+
+export interface VanStockRow {
+  product_id: string;
+  name: string;
+  product_code: string;
+  base_unit: string;
+  quantity: number;
+}
+
+export interface DeliveryRow {
+  id: string;
+  payment_method: 'cash' | 'card' | 'credit';
+  total_sar: number;
+  created_at: string;
+  note: string | null;
+  customer_name: string | null;
+  rep_name: string | null;
+  route_name: string | null;
+}
+
 /** صنف تحت نقطة إعادة الطلب */
 export interface LowStockRow {
   id: string;

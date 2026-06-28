@@ -81,6 +81,10 @@ import type {
   ProfitRow,
   StockCount,
   StockCountDetail,
+  DeliveryRoute,
+  RouteDetail,
+  VanStockRow,
+  DeliveryRow,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -449,6 +453,57 @@ export const adminApi = {
       p_count_id: id,
     }),
   countCancel: (id: string) => rpc<null>('stock_count_cancel', { p_count_id: id }),
+
+  /* --------------------------- التوصيل والمندوبون (Van Sales) --------------------------- */
+  routesList: () => rpc<DeliveryRoute[]>('routes_list', {}),
+  routeGet: (id: string) => rpc<RouteDetail>('route_get', { p_route_id: id }),
+  routeSet: (id: string | null, name: string, repId: string | null, active = true) =>
+    rpc<string>('route_set', {
+      p_id: id,
+      p_name: name,
+      p_rep_id: repId,
+      p_active: active,
+    }),
+  routeStopsSet: (routeId: string, customerIds: string[]) =>
+    rpc<null>('route_stops_set', {
+      p_route_id: routeId,
+      p_customer_ids: customerIds,
+    }),
+  vanLoad: (
+    repId: string,
+    warehouseId: string,
+    items: { product_id: string; qty: number }[]
+  ) =>
+    rpc<null>('van_load', {
+      p_rep_id: repId,
+      p_warehouse_id: warehouseId,
+      p_items: items,
+    }),
+  repVanStock: (repId: string) =>
+    rpc<VanStockRow[]>('rep_van_stock', { p_rep_id: repId }),
+  recordDelivery: (
+    routeId: string | null,
+    repId: string,
+    customerId: string | null,
+    paymentMethod: string,
+    items: {
+      product_id: string;
+      qty: number;
+      unit_price: number;
+      uom_id?: string | null;
+    }[],
+    note: string | null
+  ) =>
+    rpc<{ delivery_id: string; total: number; cogs: number }>('record_delivery', {
+      p_route_id: routeId,
+      p_rep_id: repId,
+      p_customer_id: customerId,
+      p_payment_method: paymentMethod,
+      p_items: items,
+      p_note: note,
+    }),
+  deliveriesList: (routeId: string | null = null) =>
+    rpc<DeliveryRow[]>('deliveries_list', { p_route_id: routeId }),
 
   /* ------------------------- الدفعات والصلاحية (FEFO) ------------------------- */
   productBatches: (productId: string) =>

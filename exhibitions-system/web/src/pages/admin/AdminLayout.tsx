@@ -72,6 +72,7 @@ const navInventory: Item = { to: '/admin/inventory', label: 'المخزون', ic
 const navReceive: Item = { to: '/admin/receive-stock', label: 'استلام بضاعة', icon: <PackagePlus size={sz} /> };
 const navPurchaseOrders: Item = { to: '/admin/purchase-orders', label: 'أوامر الشراء', icon: <ClipboardList size={sz} /> };
 const navStockCount: Item = { to: '/admin/stock-count', label: 'الجرد الدوري', icon: <ClipboardCheck size={sz} /> };
+const navDelivery: Item = { to: '/admin/delivery', label: 'التوزيع والمندوبون', icon: <Truck size={sz} /> };
 const navRequests: Item = { to: '/admin/requests', label: 'طلبات البضاعة', icon: <ClipboardList size={sz} /> };
 const navWholesale: Item = { to: '/admin/wholesale', label: 'الجملة', icon: <ShoppingCart size={sz} /> };
 const navPriceLists: Item = { to: '/admin/price-lists', label: 'قوائم الأسعار', icon: <Tags size={sz} /> };
@@ -184,6 +185,7 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
         title: 'المبيعات (جملة)',
         items: [
           navWholesale,
+          navDelivery,
           navPriceLists,
           navCustomers,
         ],
@@ -236,6 +238,7 @@ function managerSections(p: Permissions | null, subtype?: string): NavSection[] 
   if (p?.can_add_stock) ops.push(navStockCount);
   if (p?.can_approve_requests) ops.push(navRequests);
   if (p?.can_issue_wholesale) ops.push(navWholesale);
+  if (p?.can_issue_wholesale) ops.push(navDelivery);
   if (ops.length) sections.push({ title: 'العمليات', items: ops });
 
   if (p?.can_manage_store) {
