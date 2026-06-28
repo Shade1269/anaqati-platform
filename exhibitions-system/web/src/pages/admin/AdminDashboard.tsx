@@ -27,11 +27,13 @@ import { sar } from '../../lib/format';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import RestaurantDashboard from '../restaurant/RestaurantDashboard';
 import DistributionDashboard from './DistributionDashboard';
+import GroceryDashboard from './GroceryDashboard';
 
 export default function AdminDashboard() {
   const { profile } = useAdminAuth();
   if (profile?.tenant?.business_type === 'restaurant') return <RestaurantDashboard />;
   if (profile?.tenant?.business_type === 'distribution') return <DistributionDashboard />;
+  if (profile?.tenant?.business_type === 'grocery') return <GroceryDashboard />;
   return <RetailDashboard />;
 }
 

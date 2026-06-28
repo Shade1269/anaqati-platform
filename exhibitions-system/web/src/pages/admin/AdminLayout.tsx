@@ -8,6 +8,7 @@ import {
   Users,
   ClipboardList,
   ClipboardCheck,
+  ScanLine,
   Upload,
   ShoppingCart,
   Boxes,
@@ -73,6 +74,7 @@ const navInventory: Item = { to: '/admin/inventory', label: 'المخزون', ic
 const navReceive: Item = { to: '/admin/receive-stock', label: 'استلام بضاعة', icon: <PackagePlus size={sz} /> };
 const navPurchaseOrders: Item = { to: '/admin/purchase-orders', label: 'أوامر الشراء', icon: <ClipboardList size={sz} /> };
 const navStockCount: Item = { to: '/admin/stock-count', label: 'الجرد الدوري', icon: <ClipboardCheck size={sz} /> };
+const navCashier: Item = { to: '/admin/cashier', label: 'الكاشير', icon: <ScanLine size={sz} /> };
 const navImport: Item = { to: '/admin/import', label: 'استيراد البيانات', icon: <Upload size={sz} /> };
 const navDelivery: Item = { to: '/admin/delivery', label: 'التوزيع والمندوبون', icon: <Truck size={sz} /> };
 const navRequests: Item = { to: '/admin/requests', label: 'طلبات البضاعة', icon: <ClipboardList size={sz} /> };
@@ -198,6 +200,38 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
       systemSection,
     ];
   }
+  if (bizType === 'grocery') {
+    // بقالة / سوبر ماركت: الكاشير في المقدّمة + كتالوج ومخزون + متجر + مالية
+    return [
+      {
+        title: 'نظرة عامة',
+        items: [
+          { to: '/admin/dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard size={sz} /> },
+          { to: '/admin/analytics', label: 'التحليلات', icon: <TrendingUp size={sz} /> },
+          { to: '/admin/monitoring', label: 'مراقبة الموظفين', icon: <UserCheck size={sz} /> },
+        ],
+      },
+      { title: 'البيع', items: [navCashier] },
+      {
+        title: 'الكتالوج والمخزون',
+        items: [
+          { to: '/admin/products', label: 'المنتجات', icon: <Package size={sz} /> },
+          { to: '/admin/catalog', label: 'الفئات', icon: <Tags size={sz} /> },
+          { to: '/admin/branches', label: 'المتجر/الفروع', icon: <Store size={sz} /> },
+          navPurchaseOrders,
+          navReceive,
+          navInventory,
+          navStockCount,
+          navImport,
+        ],
+      },
+      { title: 'المتجر الإلكتروني', items: [navStoreSettings, navStoreProducts, navStoreOrders] },
+      { title: 'العملاء', items: [navCustomers, navPriceLists] },
+      marketSection,
+      financeSection,
+      systemSection,
+    ];
+  }
   // التجزئة (الافتراضي)
   return [
     {
@@ -247,6 +281,7 @@ function managerSections(p: Permissions | null, subtype?: string): NavSection[] 
   if (ops.length) sections.push({ title: 'العمليات', items: ops });
 
   if (p?.can_manage_store) {
+    sections.push({ title: 'البيع', items: [navCashier] });
     sections.push({
       title: 'المتجر الإلكتروني',
       items: [navStoreSettings, navStoreProducts, navStoreOrders],

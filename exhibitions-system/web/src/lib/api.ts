@@ -435,6 +435,22 @@ export const adminApi = {
   poCancel: (id: string) => rpc<null>('po_cancel', { p_po_id: id }),
   lowStock: () => rpc<LowStockRow[]>('low_stock_report', {}),
 
+  /* --------------------------- البقالة: الكاشير + اللوحة --------------------------- */
+  groceryDashboard: () =>
+    rpc<import('./types').GroceryDashboard>('grocery_dashboard', {}),
+  posLookup: (code: string) =>
+    rpc<import('./types').PosLookup | null>('pos_lookup', { p_code: code }),
+  posSale: (
+    branchId: string,
+    paymentMethod: string,
+    items: { product_id: string; qty: number; unit_price: number; uom_id?: string | null }[]
+  ) =>
+    rpc<{ sale_id: string; total: number }>('pos_sale', {
+      p_branch_id: branchId,
+      p_payment_method: paymentMethod,
+      p_items: items,
+    }),
+
   /* --------------------------- استيراد البيانات (ترحيل نظام كامل) --------------------------- */
   importProducts: (warehouseId: string, rows: ImportRow[]) =>
     rpc<ImportResult>('import_products', {
@@ -807,7 +823,7 @@ export const platformApi = {
     brandName: string;
     primaryColor: string;
     subscriptionExpires: string | null;
-    businessType?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution';
+    businessType?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution' | 'grocery';
     businessSubtype?: 'general' | 'plastics' | 'wood' | 'metal';
   }) =>
     rpc<CreateTenantResult>('create_tenant', {

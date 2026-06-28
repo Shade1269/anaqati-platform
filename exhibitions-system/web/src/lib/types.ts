@@ -35,7 +35,7 @@ export interface TenantBranding {
   status: string | null;
   subscription_status: string | null;
   subscription_expires_at: string | null;
-  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution' | 'grocery';
   business_subtype?: 'general' | 'plastics' | 'wood' | 'metal';
   currency?: string;
   secondary_currency?: string | null;
@@ -175,7 +175,7 @@ export interface PlatformTenant {
   subscription_status: string | null;
   subscription_expires_at: string | null;
   created_at: string | null;
-  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution' | 'grocery';
   business_subtype?: 'general' | 'plastics' | 'wood' | 'metal';
   employees: number;
   branches: number;
@@ -203,7 +203,7 @@ export interface EmployeeSession {
   token: string;
   profile_id: string;
   full_name: string;
-  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution';
+  business_type?: 'retail' | 'restaurant' | 'manufacturing' | 'distribution' | 'grocery';
   currency?: string;
   secondary_currency?: string | null;
   fx_rate?: number | null;
@@ -793,6 +793,27 @@ export interface PurchaseOrderDetail {
     warehouse_name: string | null;
   };
   items: PurchaseOrderItem[];
+}
+
+/** نتيجة بحث الكاشير بالباركود */
+export interface PosLookup {
+  id: string;
+  name: string;
+  product_code: string;
+  base_unit: string;
+  sale_price_ref: number;
+  uom_id: string | null;
+  factor: number;
+}
+
+/** لوحة البقالة */
+export interface GroceryDashboard {
+  sales_today: number;
+  tx_today: number;
+  low_stock: number;
+  expiring: number;
+  products: number;
+  top_products: { name: string; qty: number; revenue: number }[];
 }
 
 /** نتيجة استيراد البيانات الجماعي (موحّدة لكل الكيانات) */
