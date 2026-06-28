@@ -52,7 +52,9 @@ export default function AdminWholesale() {
       setLines((cur) =>
         cur.map((l) => {
           const idx = curLines.findIndex((c) => c.product_id === l.product_id);
-          return idx >= 0 ? { ...l, unit_price: resolved[idx] } : l;
+          const price = idx >= 0 ? resolved[idx] : null;
+          // لا تصفّر السعر اليدوي إذا رجعت القائمة بلا سعر (صفر/فارغ)
+          return price != null && price > 0 ? { ...l, unit_price: price } : l;
         })
       );
     } catch {
