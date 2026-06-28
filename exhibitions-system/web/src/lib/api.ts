@@ -435,12 +435,18 @@ export const adminApi = {
   poCancel: (id: string) => rpc<null>('po_cancel', { p_po_id: id }),
   lowStock: () => rpc<LowStockRow[]>('low_stock_report', {}),
 
-  /* --------------------------- استيراد البيانات (ترحيل) --------------------------- */
+  /* --------------------------- استيراد البيانات (ترحيل نظام كامل) --------------------------- */
   importProducts: (warehouseId: string, rows: ImportRow[]) =>
     rpc<ImportResult>('import_products', {
       p_warehouse_id: warehouseId,
       p_rows: rows,
     }),
+  importCustomers: (rows: ImportRow[]) =>
+    rpc<ImportResult>('import_customers', { p_rows: rows }),
+  importSuppliers: (rows: ImportRow[]) =>
+    rpc<ImportResult>('import_suppliers', { p_rows: rows }),
+  importCategories: (rows: ImportRow[]) =>
+    rpc<ImportResult>('import_categories', { p_rows: rows }),
 
   /* --------------------------- الجرد الدوري (Cycle Count) --------------------------- */
   countList: () => rpc<StockCount[]>('stock_count_list', {}),

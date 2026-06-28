@@ -795,27 +795,18 @@ export interface PurchaseOrderDetail {
   items: PurchaseOrderItem[];
 }
 
-/** نتيجة استيراد البيانات الجماعي */
+/** نتيجة استيراد البيانات الجماعي (موحّدة لكل الكيانات) */
 export interface ImportResult {
   created: number;
   updated: number;
-  stock_set: number;
-  errors: { row: number; code?: string; message: string }[];
+  stock_set?: number;
+  with_opening_balance?: number;
+  skipped?: number;
+  errors: { row?: number; code?: string; name?: string; message: string }[];
 }
 
-/** صف استيراد منتج (من Excel/CSV) */
-export interface ImportRow {
-  code: string;
-  name: string;
-  base_unit?: string;
-  cost?: string;
-  price?: string;
-  qty?: string;
-  reorder?: string;
-  expiry?: string;
-  batch_no?: string;
-  supplier?: string;
-}
+/** صف استيراد عام (مفاتيح مرنة حسب نوع الكيان) */
+export type ImportRow = Record<string, string>;
 
 /** سطر تقرير ربحية (صنف/فرع/موظف/عميل) */
 export interface ProfitRow {
