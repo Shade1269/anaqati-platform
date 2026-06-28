@@ -14,6 +14,15 @@ export interface Line {
   product_id: string;
   qty: number;
   unit_price?: number;
+  /** وحدة القياس المختارة؛ null = الوحدة الأساس */
+  uom_id?: string | null;
+}
+
+/** خيار وحدة قياس لمنتج معيّن (الأساس يُمثَّل بـ id=null) */
+export interface UnitOption {
+  id: string | null;
+  label: string;
+  factor: number;
 }
 
 interface Props {
@@ -22,6 +31,10 @@ interface Props {
   onChange: (lines: Line[]) => void;
   /** show a per-line editable price column */
   withPrice?: boolean;
+  /** show a per-line unit-of-measure selector */
+  withUom?: boolean;
+  /** unit options keyed by product id (loaded lazily by the parent) */
+  unitsByProduct?: Record<string, UnitOption[]>;
 }
 
 export default function ProductLinePicker({
@@ -29,6 +42,8 @@ export default function ProductLinePicker({
   lines,
   onChange,
   withPrice = false,
+  withUom = false,
+  unitsByProduct = {},
 }: Props) {
   const [search, setSearch] = useState('');
   const byId = useMemo(
@@ -110,6 +125,7 @@ export default function ProductLinePicker({
             <thead>
               <tr>
                 <th>المنتج</th>
+                {withUom && <th>الوحدة</th>}
                 <th>الكمية</th>
                 {withPrice && <th>سعر الوحدة</th>}
                 {withPrice && <th>الإجمالي</th>}
@@ -126,17 +142,39 @@ export default function ProductLinePicker({
                       {p?.name}{' '}
                       <span className="text-muted">({p?.code})</span>
                     </td>
+                    {withUom && (
+                      <td>
+                        <select
+                          className="ax-input w-28"
+                          value={l.uom_id ?? ''}
+                          onChange={(e) =>
+                            update(l.product_id, {
+                              uom_id: e.target.value || null,
+                            })
+                          }
+                        >
+                          {(unitsByProduct[l.product_id] ?? []).map((u) => (
+                            <option key={u.id ?? 'base'} value={u.id ?? ''}>
+                              {u.label}
+                              {u.factor !== 1 ? ` (×${u.factor})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
                     <td>
                       <input
                         type="number"
-                        min={1}
+                        min={withUom ? 0 : 1}
+                        step={withUom ? 'any' : 1}
                         className="ax-input w-20"
                         value={l.qty}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const n = Number(e.target.value) || 0;
                           update(l.product_id, {
-                            qty: Math.max(1, Number(e.target.value) || 1),
-                          })
-                        }
+                            qty: withUom ? Math.max(0, n) : Math.max(1, n),
+                          });
+                        }}
                       />
                     </td>
                     {withPrice && (

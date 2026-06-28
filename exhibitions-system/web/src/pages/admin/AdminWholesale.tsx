@@ -6,6 +6,7 @@ import type { ProductPublic, Warehouse } from '../../lib/types';
 import ProductLinePicker, {
   type Line,
   type LineProduct,
+  type UnitOption,
 } from '../../components/ProductLinePicker';
 import {
   Button,
@@ -30,7 +31,37 @@ export default function AdminWholesale() {
   const [warehouseId, setWarehouseId] = useState('');
   const [payment, setPayment] = useState('cash');
   const [lines, setLines] = useState<Line[]>([]);
+  const [unitsByProduct, setUnitsByProduct] = useState<
+    Record<string, UnitOption[]>
+  >({});
   const [submitting, setSubmitting] = useState(false);
+
+  // عند تغيّر الأسطر، حمّل وحدات القياس لأي منتج جديد لم تُحمّل وحداته بعد.
+  function handleLinesChange(next: Line[]) {
+    setLines(next);
+    const missing = next
+      .map((l) => l.product_id)
+      .filter((id) => !(id in unitsByProduct));
+    missing.forEach((id) => {
+      setUnitsByProduct((m) => ({ ...m, [id]: m[id] ?? [] })); // علّمه كمحمّل لتفادي التكرار
+      adminApi
+        .uomList(id)
+        .then((res) => {
+          const opts: UnitOption[] = [
+            { id: null, label: res.base_unit, factor: 1 },
+            ...res.units.map((u) => ({
+              id: u.id,
+              label: u.unit_name,
+              factor: u.factor,
+            })),
+          ];
+          setUnitsByProduct((m) => ({ ...m, [id]: opts }));
+        })
+        .catch(() => {
+          /* الوحدة الأساس فقط عند الفشل */
+        });
+    });
+  }
 
   useEffect(() => {
     Promise.all([
@@ -78,6 +109,7 @@ export default function AdminWholesale() {
           product_id: l.product_id,
           qty: l.qty,
           unit_price: l.unit_price ?? 0,
+          uom_id: l.uom_id ?? null,
         }))
       );
       toast.success(`تم إنشاء طلب الجملة — الإجمالي ${sar(res.total)}`);
@@ -139,8 +171,10 @@ export default function AdminWholesale() {
         <ProductLinePicker
           products={lineProducts}
           lines={lines}
-          onChange={setLines}
+          onChange={handleLinesChange}
           withPrice
+          withUom
+          unitsByProduct={unitsByProduct}
         />
 
         <div className="flex items-center justify-between border-t border-white/10 pt-4">

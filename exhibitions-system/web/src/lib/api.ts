@@ -69,6 +69,7 @@ import type {
   Customer,
   CustomerStatement,
   EmployeePermissions,
+  ProductUomList,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -347,12 +348,32 @@ export const adminApi = {
       p_approvals: approvals,
     }),
 
+  /* ------------------------- وحدات القياس (Multi-UoM) ------------------------- */
+  uomList: (productId: string) =>
+    rpc<ProductUomList>('product_uom_list', { p_product_id: productId }),
+
+  uomSet: (
+    productId: string,
+    baseUnit: string,
+    units: { unit_name: string; factor: number; barcode?: string | null }[]
+  ) =>
+    rpc<ProductUomList>('product_uom_set', {
+      p_product_id: productId,
+      p_base_unit: baseUnit,
+      p_units: units,
+    }),
+
   createWholesaleOrder: (
     customerName: string,
     customerPhone: string,
     warehouseId: string,
     paymentMethod: string,
-    items: { product_id: string; qty: number; unit_price: number }[]
+    items: {
+      product_id: string;
+      qty: number;
+      unit_price: number;
+      uom_id?: string | null;
+    }[]
   ) =>
     rpc<{ order_id: string; total: number }>('create_wholesale_order', {
       p_customer_name: customerName,

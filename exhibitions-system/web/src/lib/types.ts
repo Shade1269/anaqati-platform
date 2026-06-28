@@ -646,6 +646,20 @@ export interface ProductPublic {
 export interface ProductAdmin extends ProductPublic {
   cost_price_sar: number | null;
   supplier_id: string | null;
+  base_unit?: string;
+}
+
+/** وحدة قياس بديلة لمنتج (كرتون/علبة/كيلو) */
+export interface ProductUom {
+  id: string;
+  unit_name: string;
+  factor: number; // كم وحدة أساس في وحدة واحدة منها
+  barcode: string | null;
+}
+
+export interface ProductUomList {
+  base_unit: string;
+  units: ProductUom[];
 }
 
 export interface Category {
