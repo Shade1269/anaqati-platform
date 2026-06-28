@@ -79,6 +79,8 @@ import type {
   PurchaseOrderDetail,
   LowStockRow,
   ProfitRow,
+  StockCount,
+  StockCountDetail,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -426,6 +428,27 @@ export const adminApi = {
   ) => rpc<string>('po_receive', { p_po_id: poId, p_items: items }),
   poCancel: (id: string) => rpc<null>('po_cancel', { p_po_id: id }),
   lowStock: () => rpc<LowStockRow[]>('low_stock_report', {}),
+
+  /* --------------------------- الجرد الدوري (Cycle Count) --------------------------- */
+  countList: () => rpc<StockCount[]>('stock_count_list', {}),
+  countGet: (id: string) => rpc<StockCountDetail>('stock_count_get', { p_count_id: id }),
+  countCreate: (locationType: string, locationId: string, notes: string | null) =>
+    rpc<string>('stock_count_create', {
+      p_location_type: locationType,
+      p_location_id: locationId,
+      p_notes: notes,
+    }),
+  countSetItem: (countId: string, productId: string, counted: number) =>
+    rpc<null>('stock_count_set_item', {
+      p_count_id: countId,
+      p_product_id: productId,
+      p_counted: counted,
+    }),
+  countClose: (id: string) =>
+    rpc<{ count_id: string; adjustments: number }>('stock_count_close', {
+      p_count_id: id,
+    }),
+  countCancel: (id: string) => rpc<null>('stock_count_cancel', { p_count_id: id }),
 
   /* ------------------------- الدفعات والصلاحية (FEFO) ------------------------- */
   productBatches: (productId: string) =>

@@ -807,6 +807,43 @@ export interface ProfitRow {
   margin_pct?: number;
 }
 
+/** جرد دوري (صف القائمة) */
+export interface StockCount {
+  id: string;
+  location_type: string;
+  location_id: string;
+  status: 'open' | 'closed' | 'cancelled';
+  notes: string | null;
+  created_at: string;
+  closed_at: string | null;
+  location_name: string | null;
+  items_count: number;
+}
+
+export interface StockCountItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  product_code: string;
+  base_unit: string;
+  system_qty: number;
+  counted_qty: number | null;
+  variance: number;
+}
+
+export interface StockCountDetail {
+  count: {
+    id: string;
+    location_type: string;
+    location_id: string;
+    status: StockCount['status'];
+    notes: string | null;
+    created_at: string;
+    closed_at: string | null;
+  };
+  items: StockCountItem[];
+}
+
 /** صنف تحت نقطة إعادة الطلب */
 export interface LowStockRow {
   id: string;
