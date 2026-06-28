@@ -427,20 +427,6 @@ export const adminApi = {
 
   supplierBalances: () => rpc<SupplierBalance[]>('supplier_balances', {}),
 
-  /* ----------------------- Supplier registrations (leads) ----------------------- */
-
-  supplierRegistrations: () =>
-    rpc<SupplierRegistration[]>('list_supplier_registrations', {}),
-
-  setSupplierRegistrationStatus: (
-    id: string,
-    status: SupplierRegistrationStatus
-  ) =>
-    rpc<null>('set_supplier_registration_status', {
-      p_id: id,
-      p_status: status,
-    }),
-
   paySupplier: (
     id: string,
     amount: number,
@@ -630,6 +616,20 @@ export const adminStoreApi = {
 
 export const platformApi = {
   listTenants: () => rpc<PlatformTenant[]>('platform_list_tenants', {}),
+
+  /* ----------------------- Supplier registrations (campaign leads) ----------------------- */
+
+  supplierRegistrations: () =>
+    rpc<SupplierRegistration[]>('list_supplier_registrations', {}),
+
+  setSupplierRegistrationStatus: (
+    id: string,
+    status: SupplierRegistrationStatus
+  ) =>
+    rpc<null>('set_supplier_registration_status', {
+      p_id: id,
+      p_status: status,
+    }),
 
   createTenant: (payload: {
     name: string;

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Outlet } from 'react-router-dom';
-import { Building2, LogIn } from 'lucide-react';
+import { Building2, LogIn, UserPlus } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { Spinner } from '../../components/ui';
 import {
@@ -30,6 +30,11 @@ export default function PlatformLayout() {
           label: 'العملاء',
           icon: <Building2 size={sz} />,
           end: true,
+        },
+        {
+          to: '/platform/supplier-leads',
+          label: 'طلبات الموردين',
+          icon: <UserPlus size={sz} />,
         },
       ],
     },

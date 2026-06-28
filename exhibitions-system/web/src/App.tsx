@@ -59,7 +59,6 @@ import AdminAudit from './pages/admin/AdminAudit';
 import AdminMonitoring from './pages/admin/AdminMonitoring';
 import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
-import AdminSupplierLeads from './pages/admin/AdminSupplierLeads';
 import AdminCustomers from './pages/admin/AdminCustomers';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RequireAdmin from './pages/admin/RequireAdmin';
@@ -81,6 +80,7 @@ import AdminStoreOrders from './pages/admin/store/AdminStoreOrders';
 import OwnerLogin from './pages/platform/OwnerLogin';
 import PlatformLayout from './pages/platform/PlatformLayout';
 import PlatformTenants from './pages/platform/PlatformTenants';
+import PlatformSupplierLeads from './pages/platform/PlatformSupplierLeads';
 import RequirePlatform from './pages/platform/RequirePlatform';
 
 export default function App() {
@@ -133,7 +133,6 @@ export default function App() {
         <Route path="monitoring" element={<RequireAdmin><AdminMonitoring /></RequireAdmin>} />
         <Route path="monitoring/:employeeId" element={<RequireAdmin><AdminEmployeeFile /></RequireAdmin>} />
         <Route path="suppliers" element={<RequireAdmin><AdminSuppliers /></RequireAdmin>} />
-        <Route path="supplier-leads" element={<RequireAdmin><AdminSupplierLeads /></RequireAdmin>} />
         <Route path="finance" element={<RequireAdmin><AdminFinance /></RequireAdmin>} />
         <Route path="audit" element={<RequireAdmin><AdminAudit /></RequireAdmin>} />
         <Route path="branding" element={<RequireAdmin><AdminBranding /></RequireAdmin>} />
@@ -199,6 +198,7 @@ export default function App() {
         }
       >
         <Route index element={<PlatformTenants />} />
+        <Route path="supplier-leads" element={<PlatformSupplierLeads />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

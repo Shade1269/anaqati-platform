@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { UserPlus, Download, Search } from 'lucide-react';
-import { adminApi } from '../../lib/api';
+import { platformApi } from '../../lib/api';
 import type {
   SupplierRegistration,
   SupplierRegistrationStatus,
@@ -39,7 +39,7 @@ function fmtDate(iso: string): string {
   }
 }
 
-export default function AdminSupplierLeads() {
+export default function PlatformSupplierLeads() {
   const [rows, setRows] = useState<SupplierRegistration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -53,7 +53,7 @@ export default function AdminSupplierLeads() {
     setLoading(true);
     setError('');
     try {
-      setRows(await adminApi.supplierRegistrations());
+      setRows(await platformApi.supplierRegistrations());
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -97,7 +97,7 @@ export default function AdminSupplierLeads() {
     const prev = rows;
     setRows((rs) => rs.map((r) => (r.id === id ? { ...r, status } : r)));
     try {
-      await adminApi.setSupplierRegistrationStatus(id, status);
+      await platformApi.setSupplierRegistrationStatus(id, status);
     } catch (e) {
       setRows(prev); // rollback
       toast.error((e as Error).message);
