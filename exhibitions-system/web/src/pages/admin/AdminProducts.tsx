@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Package, Plus, Pencil } from 'lucide-react';
+import { Package, Plus, Pencil, Ruler, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import type { Category, ProductAdmin, Supplier } from '../../lib/types';
+import { adminApi } from '../../lib/api';
+import type {
+  Category,
+  ProductAdmin,
+  ProductUom,
+  Supplier,
+} from '../../lib/types';
 import {
   Button,
   Dialog,
@@ -26,6 +32,9 @@ interface Form {
   sale_price_ref: string;
   cost_price_sar: string;
   supplier_id: string;
+  base_unit: string;
+  reorder_level: string;
+  track_batches: boolean;
   is_active: boolean;
 }
 
@@ -36,6 +45,9 @@ const emptyForm: Form = {
   sale_price_ref: '',
   cost_price_sar: '',
   supplier_id: '',
+  base_unit: 'وحدة',
+  reorder_level: '',
+  track_batches: false,
   is_active: true,
 };
 
@@ -47,6 +59,7 @@ export default function AdminProducts() {
   const [error, setError] = useState('');
   const [dialog, setDialog] = useState<Form | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uomFor, setUomFor] = useState<ProductAdmin | null>(null);
   const toast = useToast();
 
   async function load() {
@@ -55,7 +68,7 @@ export default function AdminProducts() {
       supabase
         .from('products')
         .select(
-          'id,product_code,name,category_id,sale_price_ref,cost_price_sar,supplier_id,is_active'
+          'id,product_code,name,category_id,sale_price_ref,cost_price_sar,supplier_id,base_unit,reorder_level,track_batches,is_active'
         )
         .order('name'),
       supabase.from('categories').select('id,name,parent_id').order('name'),
@@ -83,6 +96,9 @@ export default function AdminProducts() {
       sale_price_ref: dialog.sale_price_ref ? Number(dialog.sale_price_ref) : null,
       cost_price_sar: dialog.cost_price_sar ? Number(dialog.cost_price_sar) : null,
       supplier_id: dialog.supplier_id || null,
+      base_unit: dialog.base_unit.trim() || 'وحدة',
+      reorder_level: dialog.reorder_level ? Number(dialog.reorder_level) : 0,
+      track_batches: dialog.track_batches,
       is_active: dialog.is_active,
     };
     try {
@@ -176,11 +192,25 @@ export default function AdminProducts() {
                         cost_price_sar:
                           p.cost_price_sar != null ? String(p.cost_price_sar) : '',
                         supplier_id: p.supplier_id || '',
+                        base_unit: p.base_unit || 'وحدة',
+                        reorder_level:
+                          p.reorder_level != null && p.reorder_level > 0
+                            ? String(p.reorder_level)
+                            : '',
+                        track_batches: !!p.track_batches,
                         is_active: p.is_active,
                       })
                     }
                   >
                     تعديل
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    icon={<Ruler size={13} />}
+                    onClick={() => setUomFor(p)}
+                  >
+                    الوحدات
                   </Button>
                   <Button
                     size="sm"
@@ -263,6 +293,37 @@ export default function AdminProducts() {
                 }
               />
             </Field>
+            <Field label="الوحدة الأساس (وحدة/علبة/كيلو)">
+              <Input
+                value={dialog.base_unit}
+                onChange={(e) => setDialog({ ...dialog, base_unit: e.target.value })}
+                placeholder="وحدة"
+              />
+            </Field>
+            <Field label="نقطة إعادة الطلب (بالوحدة الأساس)">
+              <Input
+                type="number"
+                step="0.001"
+                min="0"
+                value={dialog.reorder_level}
+                onChange={(e) =>
+                  setDialog({ ...dialog, reorder_level: e.target.value })
+                }
+                placeholder="0 = بلا تنبيه"
+              />
+            </Field>
+            <label className="flex cursor-pointer items-center gap-2 sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={dialog.track_batches}
+                onChange={(e) =>
+                  setDialog({ ...dialog, track_batches: e.target.checked })
+                }
+              />
+              <span className="text-sm text-muted">
+                تتبّع الدفعات والصلاحية (FEFO) — للأغذية والمواد القابلة للانتهاء
+              </span>
+            </label>
             <label className="flex cursor-pointer items-center gap-2 sm:col-span-2">
               <input
                 type="checkbox"
@@ -282,6 +343,178 @@ export default function AdminProducts() {
           </form>
         )}
       </Dialog>
+
+      {uomFor && (
+        <UomDialog
+          product={uomFor}
+          onClose={() => setUomFor(null)}
+          onSaved={(base) => {
+            // عكس الوحدة الأساس محليًا في القائمة
+            setProducts((list) =>
+              list.map((x) =>
+                x.id === uomFor.id ? { ...x, base_unit: base } : x
+              )
+            );
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+interface UnitRow {
+  unit_name: string;
+  factor: string;
+  barcode: string;
+}
+
+function UomDialog({
+  product,
+  onClose,
+  onSaved,
+}: {
+  product: ProductAdmin;
+  onClose: () => void;
+  onSaved: (baseUnit: string) => void;
+}) {
+  const toast = useToast();
+  const [baseUnit, setBaseUnit] = useState(product.base_unit || 'وحدة');
+  const [rows, setRows] = useState<UnitRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    adminApi
+      .uomList(product.id)
+      .then((res) => {
+        setBaseUnit(res.base_unit);
+        setRows(
+          res.units.map((u: ProductUom) => ({
+            unit_name: u.unit_name,
+            factor: String(u.factor),
+            barcode: u.barcode || '',
+          }))
+        );
+      })
+      .catch((e) => toast.error((e as Error).message))
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
+
+  function addRow() {
+    setRows((r) => [...r, { unit_name: '', factor: '', barcode: '' }]);
+  }
+  function update(i: number, patch: Partial<UnitRow>) {
+    setRows((r) => r.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  }
+  function remove(i: number) {
+    setRows((r) => r.filter((_, idx) => idx !== i));
+  }
+
+  async function save() {
+    const base = baseUnit.trim();
+    if (!base) return toast.error('الوحدة الأساس مطلوبة');
+    const units: { unit_name: string; factor: number; barcode?: string | null }[] =
+      [];
+    for (const r of rows) {
+      const name = r.unit_name.trim();
+      const factor = Number(r.factor);
+      if (!name) continue;
+      if (!factor || factor <= 0)
+        return toast.error(`معامل التحويل غير صحيح للوحدة «${name}»`);
+      if (name === base)
+        return toast.error('اسم الوحدة لا يجوز أن يساوي الوحدة الأساس');
+      units.push({ unit_name: name, factor, barcode: r.barcode.trim() || null });
+    }
+    setSaving(true);
+    try {
+      await adminApi.uomSet(product.id, base, units);
+      toast.success('تم حفظ وحدات القياس');
+      onSaved(base);
+      onClose();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open onClose={onClose} title={`وحدات القياس — ${product.name}`} size="md">
+      {loading ? (
+        <Spinner />
+      ) : (
+        <div className="space-y-4">
+          <Field label="الوحدة الأساس (يُخزَّن المخزون بها)">
+            <Input
+              value={baseUnit}
+              onChange={(e) => setBaseUnit(e.target.value)}
+              placeholder="وحدة"
+            />
+          </Field>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted">
+                وحدات بديلة (معامل التحويل = كم وحدة أساس في وحدة واحدة)
+              </p>
+              <Button size="sm" variant="outline" icon={<Plus size={13} />} onClick={addRow}>
+                إضافة وحدة
+              </Button>
+            </div>
+            {rows.length === 0 ? (
+              <p className="rounded-lg bg-bg-2 px-3 py-4 text-center text-sm text-muted">
+                لا توجد وحدات بديلة — أضف مثلًا «كرتون» بمعامل 24 إذا كان الكرتون 24 علبة.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {rows.map((r, i) => (
+                  <div key={i} className="flex items-end gap-2">
+                    <Field label="اسم الوحدة" className="flex-1">
+                      <Input
+                        value={r.unit_name}
+                        onChange={(e) => update(i, { unit_name: e.target.value })}
+                        placeholder="كرتون"
+                      />
+                    </Field>
+                    <Field label="المعامل" className="w-24">
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        value={r.factor}
+                        onChange={(e) => update(i, { factor: e.target.value })}
+                        placeholder="24"
+                      />
+                    </Field>
+                    <Field label="باركود (اختياري)" className="flex-1">
+                      <Input
+                        value={r.barcode}
+                        onChange={(e) => update(i, { barcode: e.target.value })}
+                      />
+                    </Field>
+                    <button
+                      type="button"
+                      onClick={() => remove(i)}
+                      className="mb-1 rounded-lg p-2 text-danger transition hover:bg-danger/10"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-white/10 pt-4">
+            <Button variant="ghost" onClick={onClose}>
+              إلغاء
+            </Button>
+            <Button loading={saving} onClick={save}>
+              حفظ الوحدات
+            </Button>
+          </div>
+        </div>
+      )}
+    </Dialog>
   );
 }

@@ -68,7 +68,23 @@ import type {
   MfgMold,
   Customer,
   CustomerStatement,
+  CustomerAging,
   EmployeePermissions,
+  ProductUomList,
+  ProductBatch,
+  ExpiringBatch,
+  PriceList,
+  PriceListItem,
+  PurchaseOrder,
+  PurchaseOrderDetail,
+  LowStockRow,
+  ProfitRow,
+  StockCount,
+  StockCountDetail,
+  DeliveryRoute,
+  RouteDetail,
+  VanStockRow,
+  DeliveryRow,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -179,6 +195,16 @@ function thisMonthRange(): { from: string; to: string } {
 
 export const accountingApi = {
   financialSummary: () => rpc<FinancialSummary>('financial_summary', {}),
+
+  /* تقارير الربحية (للأدمن) */
+  profitByProduct: (from: string | null, to: string | null) =>
+    rpc<ProfitRow[]>('profit_by_product', { p_from: from, p_to: to }),
+  profitByBranch: (from: string | null, to: string | null) =>
+    rpc<ProfitRow[]>('profit_by_branch', { p_from: from, p_to: to }),
+  profitByEmployee: (from: string | null, to: string | null) =>
+    rpc<ProfitRow[]>('profit_by_employee', { p_from: from, p_to: to }),
+  profitByCustomer: (from: string | null, to: string | null) =>
+    rpc<ProfitRow[]>('profit_by_customer', { p_from: from, p_to: to }),
 
   incomeStatement: (from?: string, to?: string) => {
     const r = thisMonthRange();
@@ -347,12 +373,171 @@ export const adminApi = {
       p_approvals: approvals,
     }),
 
+  /* --------------------------- قوائم الأسعار (Pricing) --------------------------- */
+  priceLists: () => rpc<PriceList[]>('price_lists_list', {}),
+
+  priceListItems: (priceListId: string) =>
+    rpc<PriceListItem[]>('price_list_items_list', {
+      p_price_list_id: priceListId,
+    }),
+
+  priceListSet: (id: string | null, name: string, active = true) =>
+    rpc<string>('price_list_set', { p_id: id, p_name: name, p_active: active }),
+
+  priceListItemsSet: (
+    priceListId: string,
+    items: { product_id: string; min_qty: number; unit_price: number }[]
+  ) =>
+    rpc<PriceListItem[]>('price_list_items_set', {
+      p_price_list_id: priceListId,
+      p_items: items,
+    }),
+
+  resolvePrice: (
+    productId: string,
+    uomId: string | null,
+    qty: number,
+    priceListId: string | null
+  ) =>
+    rpc<number>('resolve_price', {
+      p_product_id: productId,
+      p_uom_id: uomId,
+      p_qty: qty,
+      p_price_list_id: priceListId,
+    }),
+
+  /* ----------------------- أوامر الشراء (PO/GRN) + إعادة الطلب ----------------------- */
+  poList: () => rpc<PurchaseOrder[]>('po_list', {}),
+  poGet: (id: string) => rpc<PurchaseOrderDetail>('po_get', { p_po_id: id }),
+  poCreate: (
+    supplierId: string | null,
+    warehouseId: string,
+    notes: string | null,
+    items: {
+      product_id: string;
+      qty: number;
+      unit_cost: number;
+      uom_id?: string | null;
+    }[]
+  ) =>
+    rpc<{ order_id: string; total: number }>('po_create', {
+      p_supplier_id: supplierId,
+      p_warehouse_id: warehouseId,
+      p_notes: notes,
+      p_items: items,
+    }),
+  poReceive: (
+    poId: string,
+    items: { po_item_id: string; qty: number; batch_no?: string; expiry?: string }[]
+  ) => rpc<string>('po_receive', { p_po_id: poId, p_items: items }),
+  poCancel: (id: string) => rpc<null>('po_cancel', { p_po_id: id }),
+  lowStock: () => rpc<LowStockRow[]>('low_stock_report', {}),
+
+  /* --------------------------- الجرد الدوري (Cycle Count) --------------------------- */
+  countList: () => rpc<StockCount[]>('stock_count_list', {}),
+  countGet: (id: string) => rpc<StockCountDetail>('stock_count_get', { p_count_id: id }),
+  countCreate: (locationType: string, locationId: string, notes: string | null) =>
+    rpc<string>('stock_count_create', {
+      p_location_type: locationType,
+      p_location_id: locationId,
+      p_notes: notes,
+    }),
+  countSetItem: (countId: string, productId: string, counted: number) =>
+    rpc<null>('stock_count_set_item', {
+      p_count_id: countId,
+      p_product_id: productId,
+      p_counted: counted,
+    }),
+  countClose: (id: string) =>
+    rpc<{ count_id: string; adjustments: number }>('stock_count_close', {
+      p_count_id: id,
+    }),
+  countCancel: (id: string) => rpc<null>('stock_count_cancel', { p_count_id: id }),
+
+  /* --------------------------- التوصيل والمندوبون (Van Sales) --------------------------- */
+  routesList: () => rpc<DeliveryRoute[]>('routes_list', {}),
+  routeGet: (id: string) => rpc<RouteDetail>('route_get', { p_route_id: id }),
+  routeSet: (id: string | null, name: string, repId: string | null, active = true) =>
+    rpc<string>('route_set', {
+      p_id: id,
+      p_name: name,
+      p_rep_id: repId,
+      p_active: active,
+    }),
+  routeStopsSet: (routeId: string, customerIds: string[]) =>
+    rpc<null>('route_stops_set', {
+      p_route_id: routeId,
+      p_customer_ids: customerIds,
+    }),
+  vanLoad: (
+    repId: string,
+    warehouseId: string,
+    items: { product_id: string; qty: number }[]
+  ) =>
+    rpc<null>('van_load', {
+      p_rep_id: repId,
+      p_warehouse_id: warehouseId,
+      p_items: items,
+    }),
+  repVanStock: (repId: string) =>
+    rpc<VanStockRow[]>('rep_van_stock', { p_rep_id: repId }),
+  recordDelivery: (
+    routeId: string | null,
+    repId: string,
+    customerId: string | null,
+    paymentMethod: string,
+    items: {
+      product_id: string;
+      qty: number;
+      unit_price: number;
+      uom_id?: string | null;
+    }[],
+    note: string | null
+  ) =>
+    rpc<{ delivery_id: string; total: number; cogs: number }>('record_delivery', {
+      p_route_id: routeId,
+      p_rep_id: repId,
+      p_customer_id: customerId,
+      p_payment_method: paymentMethod,
+      p_items: items,
+      p_note: note,
+    }),
+  deliveriesList: (routeId: string | null = null) =>
+    rpc<DeliveryRow[]>('deliveries_list', { p_route_id: routeId }),
+
+  /* ------------------------- الدفعات والصلاحية (FEFO) ------------------------- */
+  productBatches: (productId: string) =>
+    rpc<ProductBatch[]>('product_batches', { p_product_id: productId }),
+
+  expiringBatches: (days = 30) =>
+    rpc<ExpiringBatch[]>('expiring_batches', { p_days: days }),
+
+  /* ------------------------- وحدات القياس (Multi-UoM) ------------------------- */
+  uomList: (productId: string) =>
+    rpc<ProductUomList>('product_uom_list', { p_product_id: productId }),
+
+  uomSet: (
+    productId: string,
+    baseUnit: string,
+    units: { unit_name: string; factor: number; barcode?: string | null }[]
+  ) =>
+    rpc<ProductUomList>('product_uom_set', {
+      p_product_id: productId,
+      p_base_unit: baseUnit,
+      p_units: units,
+    }),
+
   createWholesaleOrder: (
     customerName: string,
     customerPhone: string,
     warehouseId: string,
     paymentMethod: string,
-    items: { product_id: string; qty: number; unit_price: number }[]
+    items: {
+      product_id: string;
+      qty: number;
+      unit_price: number;
+      uom_id?: string | null;
+    }[]
   ) =>
     rpc<{ order_id: string; total: number }>('create_wholesale_order', {
       p_customer_name: customerName,
@@ -1029,7 +1214,9 @@ export const customersApi = {
     name: string,
     phone: string | null,
     note: string | null,
-    active: boolean
+    active: boolean,
+    creditLimit = 0,
+    priceListId: string | null = null
   ) =>
     rpc<string>('customer_set', {
       p_id: id,
@@ -1037,7 +1224,11 @@ export const customersApi = {
       p_phone: phone,
       p_note: note,
       p_active: active,
+      p_credit_limit: creditLimit,
+      p_price_list_id: priceListId,
     }),
+
+  aging: () => rpc<CustomerAging[]>('customers_aging', {}),
 
   charge: (customerId: string, amount: number, note: string | null) =>
     rpc<null>('customer_charge', {

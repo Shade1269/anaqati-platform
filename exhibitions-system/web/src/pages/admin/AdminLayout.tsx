@@ -7,6 +7,7 @@ import {
   Store,
   Users,
   ClipboardList,
+  ClipboardCheck,
   ShoppingCart,
   Boxes,
   PackagePlus,
@@ -69,8 +70,12 @@ function hasAnyInventoryFlag(p: Permissions | null): boolean {
 /* ---- Reusable nav items ---- */
 const navInventory: Item = { to: '/admin/inventory', label: 'المخزون', icon: <Boxes size={sz} /> };
 const navReceive: Item = { to: '/admin/receive-stock', label: 'استلام بضاعة', icon: <PackagePlus size={sz} /> };
+const navPurchaseOrders: Item = { to: '/admin/purchase-orders', label: 'أوامر الشراء', icon: <ClipboardList size={sz} /> };
+const navStockCount: Item = { to: '/admin/stock-count', label: 'الجرد الدوري', icon: <ClipboardCheck size={sz} /> };
+const navDelivery: Item = { to: '/admin/delivery', label: 'التوزيع والمندوبون', icon: <Truck size={sz} /> };
 const navRequests: Item = { to: '/admin/requests', label: 'طلبات البضاعة', icon: <ClipboardList size={sz} /> };
 const navWholesale: Item = { to: '/admin/wholesale', label: 'الجملة', icon: <ShoppingCart size={sz} /> };
+const navPriceLists: Item = { to: '/admin/price-lists', label: 'قوائم الأسعار', icon: <Tags size={sz} /> };
 
 const navStoreSettings: Item = { to: '/admin/store/settings', label: 'إعدادات المتجر', icon: <Settings size={sz} /> };
 const navStoreProducts: Item = { to: '/admin/store/products', label: 'منتجات المتجر', icon: <ShoppingBag size={sz} /> };
@@ -132,6 +137,7 @@ const financeSection: NavSection = {
     { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
     { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
     { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+    { to: '/admin/accounting/profitability', label: 'تقارير الربحية', icon: <TrendingUp size={sz} /> },
     navCustomers,
     { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} /> },
   ],
@@ -170,13 +176,17 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
           { to: '/admin/products', label: 'المنتجات', icon: <Package size={sz} /> },
           { to: '/admin/catalog', label: 'التصنيفات', icon: <Tags size={sz} /> },
           navInventory,
+          navPurchaseOrders,
           navReceive,
+          navStockCount,
         ],
       },
       {
         title: 'المبيعات (جملة)',
         items: [
           navWholesale,
+          navDelivery,
+          navPriceLists,
           navCustomers,
         ],
       },
@@ -202,9 +212,12 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
         { to: '/admin/catalog', label: 'الكتالوج', icon: <Tags size={sz} /> },
         { to: '/admin/branches', label: 'المعارض', icon: <Store size={sz} /> },
         navRequests,
+        navPurchaseOrders,
         navReceive,
         navInventory,
+        navStockCount,
         navWholesale,
+        navPriceLists,
       ],
     },
     { title: 'المتجر الإلكتروني', items: [navStoreSettings, navStoreProducts, navStoreOrders] },
@@ -220,9 +233,12 @@ function managerSections(p: Permissions | null, subtype?: string): NavSection[] 
 
   const ops: Item[] = [];
   if (hasAnyInventoryFlag(p)) ops.push(navInventory);
+  if (p?.can_add_stock) ops.push(navPurchaseOrders);
   if (p?.can_add_stock) ops.push(navReceive);
+  if (p?.can_add_stock) ops.push(navStockCount);
   if (p?.can_approve_requests) ops.push(navRequests);
   if (p?.can_issue_wholesale) ops.push(navWholesale);
+  if (p?.can_issue_wholesale) ops.push(navDelivery);
   if (ops.length) sections.push({ title: 'العمليات', items: ops });
 
   if (p?.can_manage_store) {
@@ -230,7 +246,7 @@ function managerSections(p: Permissions | null, subtype?: string): NavSection[] 
       title: 'المتجر الإلكتروني',
       items: [navStoreSettings, navStoreProducts, navStoreOrders],
     });
-    sections.push({ title: 'العملاء', items: [navCustomers] });
+    sections.push({ title: 'العملاء والأسعار', items: [navCustomers, navPriceLists] });
   }
 
   if (p?.can_manage_restaurant) {

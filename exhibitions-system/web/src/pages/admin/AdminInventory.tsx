@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Boxes, Search } from 'lucide-react';
+import { Boxes, Search, AlertTriangle, PackageX } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import type { ProductPublic } from '../../lib/types';
+import { adminApi } from '../../lib/api';
+import type { ExpiringBatch, LowStockRow, ProductPublic } from '../../lib/types';
 import {
   EmptyState,
   ErrorBanner,
@@ -32,6 +33,8 @@ export default function AdminInventory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [expiring, setExpiring] = useState<ExpiringBatch[]>([]);
+  const [lowStock, setLowStock] = useState<LowStockRow[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -45,6 +48,15 @@ export default function AdminInventory() {
       setProducts((p.data as ProductPublic[]) || []);
       setLoading(false);
     });
+    // دفعات قريبة الانتهاء (خلال 60 يومًا) — تفشل بصمت إن لم تتوفّر الصلاحية.
+    adminApi
+      .expiringBatches(60)
+      .then(setExpiring)
+      .catch(() => setExpiring([]));
+    adminApi
+      .lowStock()
+      .then(setLowStock)
+      .catch(() => setLowStock([]));
   }, []);
 
   const byId = useMemo(
@@ -74,6 +86,88 @@ export default function AdminInventory() {
         icon={<Boxes size={22} />}
       />
       <ErrorBanner message={error} />
+
+      {expiring.length > 0 && (
+        <div className="mb-5 rounded-xl border border-warning/30 bg-warning/5 p-4">
+          <div className="mb-3 flex items-center gap-2 text-warning">
+            <AlertTriangle size={18} />
+            <span className="font-bold">
+              دفعات منتهية أو قريبة الانتهاء ({expiring.length})
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="ax-table">
+              <thead>
+                <tr>
+                  <th>المنتج</th>
+                  <th>الدفعة</th>
+                  <th>الصلاحية</th>
+                  <th>المتبقّي (أيام)</th>
+                  <th>الكمية</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expiring.map((b) => (
+                  <tr key={b.id}>
+                    <td className="font-semibold">
+                      {b.product_name}{' '}
+                      <span className="font-mono text-muted">
+                        ({b.product_code})
+                      </span>
+                    </td>
+                    <td>{b.batch_no || '—'}</td>
+                    <td>{b.expiry_date}</td>
+                    <td>
+                      <Badge tone={b.days_left < 0 ? 'danger' : 'warning'}>
+                        {b.days_left < 0
+                          ? `منتهية منذ ${Math.abs(b.days_left)}`
+                          : `${b.days_left} يوم`}
+                      </Badge>
+                    </td>
+                    <td className="font-bold text-gold">{b.qty}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {lowStock.length > 0 && (
+        <div className="mb-5 rounded-xl border border-danger/30 bg-danger/5 p-4">
+          <div className="mb-3 flex items-center gap-2 text-danger">
+            <PackageX size={18} />
+            <span className="font-bold">
+              أصناف تحت نقطة إعادة الطلب ({lowStock.length})
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="ax-table">
+              <thead>
+                <tr>
+                  <th>المنتج</th>
+                  <th>المتوفّر</th>
+                  <th>نقطة الطلب</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lowStock.map((r) => (
+                  <tr key={r.id}>
+                    <td className="font-semibold">
+                      {r.name}{' '}
+                      <span className="font-mono text-muted">({r.product_code})</span>
+                    </td>
+                    <td className="font-bold text-danger">
+                      {r.on_hand} {r.base_unit}
+                    </td>
+                    <td className="text-muted">{r.reorder_level}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="relative mb-4 max-w-sm">
         <Search

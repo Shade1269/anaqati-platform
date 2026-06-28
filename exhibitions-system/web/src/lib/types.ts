@@ -646,6 +646,41 @@ export interface ProductPublic {
 export interface ProductAdmin extends ProductPublic {
   cost_price_sar: number | null;
   supplier_id: string | null;
+  base_unit?: string;
+  track_batches?: boolean;
+  reorder_level?: number;
+}
+
+/** وحدة قياس بديلة لمنتج (كرتون/علبة/كيلو) */
+export interface ProductUom {
+  id: string;
+  unit_name: string;
+  factor: number; // كم وحدة أساس في وحدة واحدة منها
+  barcode: string | null;
+}
+
+export interface ProductUomList {
+  base_unit: string;
+  units: ProductUom[];
+}
+
+/** قائمة أسعار */
+export interface PriceList {
+  id: string;
+  name: string;
+  is_active: boolean;
+  items_count: number;
+}
+
+/** بند قائمة أسعار (سعر للوحدة الأساس + حدّ أدنى للكمية = تدرّج) */
+export interface PriceListItem {
+  id?: string;
+  product_id: string;
+  product_name?: string;
+  product_code?: string;
+  base_unit?: string;
+  min_qty: number;
+  unit_price: number;
 }
 
 export interface Category {
@@ -702,6 +737,170 @@ export interface SaleItemInput {
 export interface StockItemInput {
   product_id: string;
   qty: number;
+  batch_no?: string;
+  expiry?: string;
+}
+
+/** دفعة مخزون لمنتج (تتبّع الصلاحية) */
+export interface ProductBatch {
+  id: string;
+  batch_no: string | null;
+  expiry_date: string | null;
+  location_type: string;
+  location_id: string;
+  qty: number;
+}
+
+export interface ExpiringBatch extends ProductBatch {
+  product_name: string;
+  product_code: string;
+  days_left: number;
+}
+
+/** أمر شراء (صف القائمة) */
+export interface PurchaseOrder {
+  id: string;
+  status: 'draft' | 'sent' | 'partial' | 'received' | 'cancelled';
+  total_sar: number;
+  notes: string | null;
+  created_at: string;
+  supplier_name: string | null;
+  warehouse_name: string | null;
+  items_count: number;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  product_code: string;
+  qty_ordered: number;
+  qty_received: number;
+  unit_cost: number;
+  uom_name: string | null;
+  uom_factor: number;
+}
+
+export interface PurchaseOrderDetail {
+  order: {
+    id: string;
+    status: PurchaseOrder['status'];
+    total_sar: number;
+    notes: string | null;
+    created_at: string;
+    warehouse_id: string;
+    supplier_name: string | null;
+    warehouse_name: string | null;
+  };
+  items: PurchaseOrderItem[];
+}
+
+/** سطر تقرير ربحية (صنف/فرع/موظف/عميل) */
+export interface ProfitRow {
+  id?: string;
+  name: string;
+  product_code?: string;
+  qty?: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+  margin_pct?: number;
+}
+
+/** جرد دوري (صف القائمة) */
+export interface StockCount {
+  id: string;
+  location_type: string;
+  location_id: string;
+  status: 'open' | 'closed' | 'cancelled';
+  notes: string | null;
+  created_at: string;
+  closed_at: string | null;
+  location_name: string | null;
+  items_count: number;
+}
+
+export interface StockCountItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  product_code: string;
+  base_unit: string;
+  system_qty: number;
+  counted_qty: number | null;
+  variance: number;
+}
+
+export interface StockCountDetail {
+  count: {
+    id: string;
+    location_type: string;
+    location_id: string;
+    status: StockCount['status'];
+    notes: string | null;
+    created_at: string;
+    closed_at: string | null;
+  };
+  items: StockCountItem[];
+}
+
+/** مسار توصيل */
+export interface DeliveryRoute {
+  id: string;
+  name: string;
+  is_active: boolean;
+  rep_id: string | null;
+  rep_name: string | null;
+  stops_count: number;
+}
+
+export interface RouteStop {
+  id: string;
+  customer_id: string;
+  sequence: number;
+  customer_name: string;
+  phone: string | null;
+  balance: number;
+}
+
+export interface RouteDetail {
+  route: {
+    id: string;
+    name: string;
+    is_active: boolean;
+    rep_id: string | null;
+    rep_name: string | null;
+  };
+  stops: RouteStop[];
+}
+
+export interface VanStockRow {
+  product_id: string;
+  name: string;
+  product_code: string;
+  base_unit: string;
+  quantity: number;
+}
+
+export interface DeliveryRow {
+  id: string;
+  payment_method: 'cash' | 'card' | 'credit';
+  total_sar: number;
+  created_at: string;
+  note: string | null;
+  customer_name: string | null;
+  rep_name: string | null;
+  route_name: string | null;
+}
+
+/** صنف تحت نقطة إعادة الطلب */
+export interface LowStockRow {
+  id: string;
+  name: string;
+  product_code: string;
+  base_unit: string;
+  reorder_level: number;
+  on_hand: number;
 }
 
 export interface NotificationRow {
@@ -891,6 +1090,21 @@ export interface Customer {
   note: string | null;
   is_active: boolean;
   balance: number;
+  credit_limit?: number;
+  price_list_id?: string | null;
+}
+
+/** سطر تقادم ذمم عميل (Aged Debtors) */
+export interface CustomerAging {
+  id: string;
+  name: string;
+  phone: string | null;
+  credit_limit: number;
+  balance: number;
+  b0_30: number;
+  b31_60: number;
+  b61_90: number;
+  b90_plus: number;
 }
 
 export interface CustomerEntry {

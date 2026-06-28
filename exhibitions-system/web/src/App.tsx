@@ -59,6 +59,11 @@ import AdminMonitoring from './pages/admin/AdminMonitoring';
 import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
 import AdminCustomers from './pages/admin/AdminCustomers';
+import AdminPriceLists from './pages/admin/AdminPriceLists';
+import AdminPurchaseOrders from './pages/admin/AdminPurchaseOrders';
+import AdminProfitability from './pages/admin/AdminProfitability';
+import AdminStockCount from './pages/admin/AdminStockCount';
+import AdminDelivery from './pages/admin/AdminDelivery';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
@@ -168,8 +173,12 @@ export default function App() {
         {/* Operations — owner or inventory_manager per permissions */}
         <Route path="requests" element={<RequireCapability caps={['can_approve_requests']}><AdminRequests /></RequireCapability>} />
         <Route path="wholesale" element={<RequireCapability caps={['can_issue_wholesale']}><AdminWholesale /></RequireCapability>} />
+        <Route path="price-lists" element={<RequireCapability caps={['can_manage_store']}><AdminPriceLists /></RequireCapability>} />
         <Route path="inventory" element={<AdminInventory />} />
         <Route path="receive-stock" element={<RequireCapability caps={['can_add_stock']}><AdminReceiveStock /></RequireCapability>} />
+        <Route path="purchase-orders" element={<RequireCapability caps={['can_add_stock']}><AdminPurchaseOrders /></RequireCapability>} />
+        <Route path="stock-count" element={<RequireCapability caps={['can_add_stock']}><AdminStockCount /></RequireCapability>} />
+        <Route path="delivery" element={<RequireCapability caps={['can_issue_wholesale']}><AdminDelivery /></RequireCapability>} />
 
         {/* Accounting — admin only */}
         <Route path="accounting" element={<RequireAdmin><AccountingOverview /></RequireAdmin>} />
@@ -179,6 +188,7 @@ export default function App() {
         <Route path="accounting/ledger" element={<RequireAdmin><AccountingLedger /></RequireAdmin>} />
         <Route path="accounting/journal" element={<RequireAdmin><AccountingJournal /></RequireAdmin>} />
         <Route path="accounting/cashflow" element={<RequireAdmin><AccountingCashFlow /></RequireAdmin>} />
+        <Route path="accounting/profitability" element={<RequireAdmin><AdminProfitability /></RequireAdmin>} />
       </Route>
 
       {/* Platform owner (private entrance + panel) */}
