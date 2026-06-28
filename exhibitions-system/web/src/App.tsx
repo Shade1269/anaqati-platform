@@ -60,6 +60,7 @@ import AdminSuppliers from './pages/admin/AdminSuppliers';
 import AdminCustomers from './pages/admin/AdminCustomers';
 import AdminPriceLists from './pages/admin/AdminPriceLists';
 import AdminPurchaseOrders from './pages/admin/AdminPurchaseOrders';
+import AdminProfitability from './pages/admin/AdminProfitability';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
@@ -179,6 +180,7 @@ export default function App() {
         <Route path="accounting/ledger" element={<RequireAdmin><AccountingLedger /></RequireAdmin>} />
         <Route path="accounting/journal" element={<RequireAdmin><AccountingJournal /></RequireAdmin>} />
         <Route path="accounting/cashflow" element={<RequireAdmin><AccountingCashFlow /></RequireAdmin>} />
+        <Route path="accounting/profitability" element={<RequireAdmin><AdminProfitability /></RequireAdmin>} />
       </Route>
 
       {/* Platform owner (private entrance + panel) */}

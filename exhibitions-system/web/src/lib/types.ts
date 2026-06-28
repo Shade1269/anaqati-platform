@@ -795,6 +795,18 @@ export interface PurchaseOrderDetail {
   items: PurchaseOrderItem[];
 }
 
+/** سطر تقرير ربحية (صنف/فرع/موظف/عميل) */
+export interface ProfitRow {
+  id?: string;
+  name: string;
+  product_code?: string;
+  qty?: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+  margin_pct?: number;
+}
+
 /** صنف تحت نقطة إعادة الطلب */
 export interface LowStockRow {
   id: string;

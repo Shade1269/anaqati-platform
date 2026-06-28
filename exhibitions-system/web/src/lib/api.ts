@@ -78,6 +78,7 @@ import type {
   PurchaseOrder,
   PurchaseOrderDetail,
   LowStockRow,
+  ProfitRow,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -188,6 +189,16 @@ function thisMonthRange(): { from: string; to: string } {
 
 export const accountingApi = {
   financialSummary: () => rpc<FinancialSummary>('financial_summary', {}),
+
+  /* تقارير الربحية (للأدمن) */
+  profitByProduct: (from: string | null, to: string | null) =>
+    rpc<ProfitRow[]>('profit_by_product', { p_from: from, p_to: to }),
+  profitByBranch: (from: string | null, to: string | null) =>
+    rpc<ProfitRow[]>('profit_by_branch', { p_from: from, p_to: to }),
+  profitByEmployee: (from: string | null, to: string | null) =>
+    rpc<ProfitRow[]>('profit_by_employee', { p_from: from, p_to: to }),
+  profitByCustomer: (from: string | null, to: string | null) =>
+    rpc<ProfitRow[]>('profit_by_customer', { p_from: from, p_to: to }),
 
   incomeStatement: (from?: string, to?: string) => {
     const r = thisMonthRange();

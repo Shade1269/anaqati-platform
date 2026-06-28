@@ -134,6 +134,7 @@ const financeSection: NavSection = {
     { to: '/admin/accounting/ledger', label: 'دفتر الأستاذ', icon: <BookOpen size={sz} /> },
     { to: '/admin/accounting/journal', label: 'القيود اليومية', icon: <NotebookPen size={sz} /> },
     { to: '/admin/accounting/cashflow', label: 'قائمة التدفق النقدي', icon: <Waves size={sz} /> },
+    { to: '/admin/accounting/profitability', label: 'تقارير الربحية', icon: <TrendingUp size={sz} /> },
     navCustomers,
     { to: '/admin/suppliers', label: 'الموردون', icon: <Truck size={sz} /> },
   ],
