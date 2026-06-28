@@ -68,6 +68,7 @@ import type {
   MfgMold,
   Customer,
   CustomerStatement,
+  CustomerAging,
   EmployeePermissions,
   ProductUomList,
   ProductBatch,
@@ -1094,7 +1095,9 @@ export const customersApi = {
     name: string,
     phone: string | null,
     note: string | null,
-    active: boolean
+    active: boolean,
+    creditLimit = 0,
+    priceListId: string | null = null
   ) =>
     rpc<string>('customer_set', {
       p_id: id,
@@ -1102,7 +1105,11 @@ export const customersApi = {
       p_phone: phone,
       p_note: note,
       p_active: active,
+      p_credit_limit: creditLimit,
+      p_price_list_id: priceListId,
     }),
+
+  aging: () => rpc<CustomerAging[]>('customers_aging', {}),
 
   charge: (customerId: string, amount: number, note: string | null) =>
     rpc<null>('customer_charge', {

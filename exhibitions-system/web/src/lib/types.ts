@@ -943,6 +943,21 @@ export interface Customer {
   note: string | null;
   is_active: boolean;
   balance: number;
+  credit_limit?: number;
+  price_list_id?: string | null;
+}
+
+/** سطر تقادم ذمم عميل (Aged Debtors) */
+export interface CustomerAging {
+  id: string;
+  name: string;
+  phone: string | null;
+  credit_limit: number;
+  balance: number;
+  b0_30: number;
+  b31_60: number;
+  b61_90: number;
+  b90_plus: number;
 }
 
 export interface CustomerEntry {

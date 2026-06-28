@@ -6,9 +6,15 @@ import {
   FileText,
   Banknote,
   Receipt,
+  CalendarClock,
 } from 'lucide-react';
-import { customersApi } from '../../lib/api';
-import type { Customer, CustomerStatement } from '../../lib/types';
+import { customersApi, adminApi } from '../../lib/api';
+import type {
+  Customer,
+  CustomerStatement,
+  CustomerAging,
+  PriceList,
+} from '../../lib/types';
 import {
   Badge,
   Button,
@@ -44,6 +50,7 @@ export default function AdminCustomers() {
   const [chargeTarget, setChargeTarget] = useState<Customer | null>(null);
   const [payTarget, setPayTarget] = useState<Customer | null>(null);
   const [stmtTarget, setStmtTarget] = useState<Customer | null>(null);
+  const [agingOpen, setAgingOpen] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -71,9 +78,18 @@ export default function AdminCustomers() {
         subtitle="حسابات العملاء والبيع الآجل وكشوف الحساب"
         icon={<Users size={22} />}
         action={
-          <Button icon={<Plus size={16} />} onClick={() => setEditTarget('new')}>
-            عميل جديد
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              icon={<CalendarClock size={16} />}
+              onClick={() => setAgingOpen(true)}
+            >
+              تقادم الذمم
+            </Button>
+            <Button icon={<Plus size={16} />} onClick={() => setEditTarget('new')}>
+              عميل جديد
+            </Button>
+          </div>
         }
       />
       <ErrorBanner message={error} />
@@ -97,6 +113,7 @@ export default function AdminCustomers() {
               <th>الهاتف</th>
               <th>الحالة</th>
               <th>الرصيد (الدين)</th>
+              <th>حد الائتمان</th>
               <th></th>
             </>
           }
@@ -122,6 +139,18 @@ export default function AdminCustomers() {
                 }`}
               >
                 {sar(c.balance)}
+              </td>
+              <td>
+                {c.credit_limit && c.credit_limit > 0 ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-muted">{sar(c.credit_limit)}</span>
+                    {c.balance >= c.credit_limit && (
+                      <Badge tone="danger">بلغ الحد</Badge>
+                    )}
+                  </span>
+                ) : (
+                  <span className="text-muted">—</span>
+                )}
               </td>
               <td>
                 <div className="flex flex-wrap gap-2">
@@ -200,6 +229,7 @@ export default function AdminCustomers() {
           onClose={() => setStmtTarget(null)}
         />
       )}
+      {agingOpen && <AgingDialog onClose={() => setAgingOpen(false)} />}
     </div>
   );
 }
@@ -217,8 +247,20 @@ function EditDialog({
   const [phone, setPhone] = useState(customer?.phone || '');
   const [note, setNote] = useState(customer?.note || '');
   const [active, setActive] = useState(customer?.is_active ?? true);
+  const [creditLimit, setCreditLimit] = useState(
+    customer?.credit_limit ? String(customer.credit_limit) : ''
+  );
+  const [priceListId, setPriceListId] = useState(customer?.price_list_id || '');
+  const [priceLists, setPriceLists] = useState<PriceList[]>([]);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
+
+  useEffect(() => {
+    adminApi
+      .priceLists()
+      .then((pl) => setPriceLists(pl.filter((x) => x.is_active)))
+      .catch(() => setPriceLists([]));
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -233,7 +275,9 @@ function EditDialog({
         name.trim(),
         phone.trim() || null,
         note.trim() || null,
-        active
+        active,
+        Number(creditLimit) || 0,
+        priceListId || null
       );
       toast.success(customer ? 'تم تحديث العميل' : 'تم إضافة العميل');
       onSaved();
@@ -284,6 +328,31 @@ function EditDialog({
             placeholder="اختياري"
           />
         </Field>
+        <Field label={`حد الائتمان (${currencyLabel()}) — 0 = بلا حد`}>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={creditLimit}
+            onChange={(e) => setCreditLimit(e.target.value)}
+            placeholder="0"
+          />
+        </Field>
+        {priceLists.length > 0 && (
+          <Field label="قائمة الأسعار">
+            <Select
+              value={priceListId}
+              onChange={(e) => setPriceListId(e.target.value)}
+            >
+              <option value="">— افتراضي —</option>
+              {priceLists.map((pl) => (
+                <option key={pl.id} value={pl.id}>
+                  {pl.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
         <Field label="الحالة">
           <Select
             value={active ? '1' : '0'}
@@ -294,6 +363,104 @@ function EditDialog({
           </Select>
         </Field>
       </form>
+    </Dialog>
+  );
+}
+
+function AgingDialog({ onClose }: { onClose: () => void }) {
+  const [rows, setRows] = useState<CustomerAging[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setRows(await customersApi.aging());
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const totals = rows.reduce(
+    (a, r) => ({
+      b0_30: a.b0_30 + r.b0_30,
+      b31_60: a.b31_60 + r.b31_60,
+      b61_90: a.b61_90 + r.b61_90,
+      b90_plus: a.b90_plus + r.b90_plus,
+      balance: a.balance + r.balance,
+    }),
+    { b0_30: 0, b31_60: 0, b61_90: 0, b90_plus: 0, balance: 0 }
+  );
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title="تقادم ذمم العملاء (Aged Debtors)"
+      size="lg"
+      footer={
+        <Button variant="ghost" onClick={onClose}>
+          إغلاق
+        </Button>
+      }
+    >
+      <ErrorBanner message={error} />
+      {loading ? (
+        <Spinner />
+      ) : rows.length === 0 ? (
+        <EmptyState message="لا توجد ذمم مستحقة" icon={<CalendarClock size={24} />} />
+      ) : (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {[
+              { label: '0–30 يوم', v: totals.b0_30, tone: 'text-success' },
+              { label: '31–60', v: totals.b31_60, tone: 'text-info' },
+              { label: '61–90', v: totals.b61_90, tone: 'text-warning' },
+              { label: '+90', v: totals.b90_plus, tone: 'text-danger' },
+              { label: 'الإجمالي', v: totals.balance, tone: 'text-gold' },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center"
+              >
+                <div className="text-xs text-muted">{s.label}</div>
+                <div className={`font-bold ${s.tone}`}>{sar(s.v)}</div>
+              </div>
+            ))}
+          </div>
+          <Table
+            head={
+              <>
+                <th>العميل</th>
+                <th>0–30</th>
+                <th>31–60</th>
+                <th>61–90</th>
+                <th>+90</th>
+                <th>الرصيد</th>
+              </>
+            }
+          >
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="font-semibold">
+                  {r.name}
+                  {r.credit_limit > 0 && r.balance >= r.credit_limit && (
+                    <Badge tone="danger">بلغ الحد</Badge>
+                  )}
+                </td>
+                <td>{sar(r.b0_30)}</td>
+                <td>{sar(r.b31_60)}</td>
+                <td className="text-warning">{sar(r.b61_90)}</td>
+                <td className="font-semibold text-danger">{sar(r.b90_plus)}</td>
+                <td className="font-bold text-gold">{sar(r.balance)}</td>
+              </tr>
+            ))}
+          </Table>
+        </div>
+      )}
     </Dialog>
   );
 }
