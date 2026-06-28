@@ -81,6 +81,8 @@ import type {
   ProfitRow,
   StockCount,
   StockCountDetail,
+  ImportResult,
+  ImportRow,
   DeliveryRoute,
   RouteDetail,
   VanStockRow,
@@ -432,6 +434,13 @@ export const adminApi = {
   ) => rpc<string>('po_receive', { p_po_id: poId, p_items: items }),
   poCancel: (id: string) => rpc<null>('po_cancel', { p_po_id: id }),
   lowStock: () => rpc<LowStockRow[]>('low_stock_report', {}),
+
+  /* --------------------------- استيراد البيانات (ترحيل) --------------------------- */
+  importProducts: (warehouseId: string, rows: ImportRow[]) =>
+    rpc<ImportResult>('import_products', {
+      p_warehouse_id: warehouseId,
+      p_rows: rows,
+    }),
 
   /* --------------------------- الجرد الدوري (Cycle Count) --------------------------- */
   countList: () => rpc<StockCount[]>('stock_count_list', {}),

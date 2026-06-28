@@ -8,6 +8,7 @@ import {
   Users,
   ClipboardList,
   ClipboardCheck,
+  Upload,
   ShoppingCart,
   Boxes,
   PackagePlus,
@@ -72,6 +73,7 @@ const navInventory: Item = { to: '/admin/inventory', label: 'المخزون', ic
 const navReceive: Item = { to: '/admin/receive-stock', label: 'استلام بضاعة', icon: <PackagePlus size={sz} /> };
 const navPurchaseOrders: Item = { to: '/admin/purchase-orders', label: 'أوامر الشراء', icon: <ClipboardList size={sz} /> };
 const navStockCount: Item = { to: '/admin/stock-count', label: 'الجرد الدوري', icon: <ClipboardCheck size={sz} /> };
+const navImport: Item = { to: '/admin/import', label: 'استيراد البيانات', icon: <Upload size={sz} /> };
 const navDelivery: Item = { to: '/admin/delivery', label: 'التوزيع والمندوبون', icon: <Truck size={sz} /> };
 const navRequests: Item = { to: '/admin/requests', label: 'طلبات البضاعة', icon: <ClipboardList size={sz} /> };
 const navWholesale: Item = { to: '/admin/wholesale', label: 'الجملة', icon: <ShoppingCart size={sz} /> };
@@ -179,6 +181,7 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
           navPurchaseOrders,
           navReceive,
           navStockCount,
+          navImport,
         ],
       },
       {
@@ -216,6 +219,7 @@ function ownerSections(bizType?: string, bizSubtype?: string): NavSection[] {
         navReceive,
         navInventory,
         navStockCount,
+        navImport,
         navWholesale,
         navPriceLists,
       ],
@@ -236,6 +240,7 @@ function managerSections(p: Permissions | null, subtype?: string): NavSection[] 
   if (p?.can_add_stock) ops.push(navPurchaseOrders);
   if (p?.can_add_stock) ops.push(navReceive);
   if (p?.can_add_stock) ops.push(navStockCount);
+  if (p?.can_add_stock) ops.push(navImport);
   if (p?.can_approve_requests) ops.push(navRequests);
   if (p?.can_issue_wholesale) ops.push(navWholesale);
   if (p?.can_issue_wholesale) ops.push(navDelivery);

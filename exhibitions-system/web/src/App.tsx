@@ -64,6 +64,7 @@ import AdminPurchaseOrders from './pages/admin/AdminPurchaseOrders';
 import AdminProfitability from './pages/admin/AdminProfitability';
 import AdminStockCount from './pages/admin/AdminStockCount';
 import AdminDelivery from './pages/admin/AdminDelivery';
+import AdminImport from './pages/admin/AdminImport';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
@@ -178,6 +179,7 @@ export default function App() {
         <Route path="receive-stock" element={<RequireCapability caps={['can_add_stock']}><AdminReceiveStock /></RequireCapability>} />
         <Route path="purchase-orders" element={<RequireCapability caps={['can_add_stock']}><AdminPurchaseOrders /></RequireCapability>} />
         <Route path="stock-count" element={<RequireCapability caps={['can_add_stock']}><AdminStockCount /></RequireCapability>} />
+        <Route path="import" element={<RequireCapability caps={['can_add_stock']}><AdminImport /></RequireCapability>} />
         <Route path="delivery" element={<RequireCapability caps={['can_issue_wholesale']}><AdminDelivery /></RequireCapability>} />
 
         {/* Accounting — admin only */}
