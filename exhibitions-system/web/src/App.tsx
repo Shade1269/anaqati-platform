@@ -59,6 +59,7 @@ import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
 import AdminCustomers from './pages/admin/AdminCustomers';
 import AdminPriceLists from './pages/admin/AdminPriceLists';
+import AdminPurchaseOrders from './pages/admin/AdminPurchaseOrders';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import RequireAdmin from './pages/admin/RequireAdmin';
 import RequireCapability from './pages/admin/RequireCapability';
@@ -168,6 +169,7 @@ export default function App() {
         <Route path="price-lists" element={<RequireCapability caps={['can_manage_store']}><AdminPriceLists /></RequireCapability>} />
         <Route path="inventory" element={<AdminInventory />} />
         <Route path="receive-stock" element={<RequireCapability caps={['can_add_stock']}><AdminReceiveStock /></RequireCapability>} />
+        <Route path="purchase-orders" element={<RequireCapability caps={['can_add_stock']}><AdminPurchaseOrders /></RequireCapability>} />
 
         {/* Accounting — admin only */}
         <Route path="accounting" element={<RequireAdmin><AccountingOverview /></RequireAdmin>} />

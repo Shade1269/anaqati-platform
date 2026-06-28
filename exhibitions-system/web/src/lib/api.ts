@@ -75,6 +75,9 @@ import type {
   ExpiringBatch,
   PriceList,
   PriceListItem,
+  PurchaseOrder,
+  PurchaseOrderDetail,
+  LowStockRow,
 } from './types';
 
 /** Run an rpc and throw the (Arabic) error message on failure. */
@@ -385,6 +388,33 @@ export const adminApi = {
       p_qty: qty,
       p_price_list_id: priceListId,
     }),
+
+  /* ----------------------- أوامر الشراء (PO/GRN) + إعادة الطلب ----------------------- */
+  poList: () => rpc<PurchaseOrder[]>('po_list', {}),
+  poGet: (id: string) => rpc<PurchaseOrderDetail>('po_get', { p_po_id: id }),
+  poCreate: (
+    supplierId: string | null,
+    warehouseId: string,
+    notes: string | null,
+    items: {
+      product_id: string;
+      qty: number;
+      unit_cost: number;
+      uom_id?: string | null;
+    }[]
+  ) =>
+    rpc<{ order_id: string; total: number }>('po_create', {
+      p_supplier_id: supplierId,
+      p_warehouse_id: warehouseId,
+      p_notes: notes,
+      p_items: items,
+    }),
+  poReceive: (
+    poId: string,
+    items: { po_item_id: string; qty: number; batch_no?: string; expiry?: string }[]
+  ) => rpc<string>('po_receive', { p_po_id: poId, p_items: items }),
+  poCancel: (id: string) => rpc<null>('po_cancel', { p_po_id: id }),
+  lowStock: () => rpc<LowStockRow[]>('low_stock_report', {}),
 
   /* ------------------------- الدفعات والصلاحية (FEFO) ------------------------- */
   productBatches: (productId: string) =>

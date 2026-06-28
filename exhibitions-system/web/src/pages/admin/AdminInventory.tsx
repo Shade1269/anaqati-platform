@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Boxes, Search, AlertTriangle } from 'lucide-react';
+import { Boxes, Search, AlertTriangle, PackageX } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { adminApi } from '../../lib/api';
-import type { ExpiringBatch, ProductPublic } from '../../lib/types';
+import type { ExpiringBatch, LowStockRow, ProductPublic } from '../../lib/types';
 import {
   EmptyState,
   ErrorBanner,
@@ -34,6 +34,7 @@ export default function AdminInventory() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [expiring, setExpiring] = useState<ExpiringBatch[]>([]);
+  const [lowStock, setLowStock] = useState<LowStockRow[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -52,6 +53,10 @@ export default function AdminInventory() {
       .expiringBatches(60)
       .then(setExpiring)
       .catch(() => setExpiring([]));
+    adminApi
+      .lowStock()
+      .then(setLowStock)
+      .catch(() => setLowStock([]));
   }, []);
 
   const byId = useMemo(
@@ -120,6 +125,42 @@ export default function AdminInventory() {
                       </Badge>
                     </td>
                     <td className="font-bold text-gold">{b.qty}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {lowStock.length > 0 && (
+        <div className="mb-5 rounded-xl border border-danger/30 bg-danger/5 p-4">
+          <div className="mb-3 flex items-center gap-2 text-danger">
+            <PackageX size={18} />
+            <span className="font-bold">
+              أصناف تحت نقطة إعادة الطلب ({lowStock.length})
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="ax-table">
+              <thead>
+                <tr>
+                  <th>المنتج</th>
+                  <th>المتوفّر</th>
+                  <th>نقطة الطلب</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lowStock.map((r) => (
+                  <tr key={r.id}>
+                    <td className="font-semibold">
+                      {r.name}{' '}
+                      <span className="font-mono text-muted">({r.product_code})</span>
+                    </td>
+                    <td className="font-bold text-danger">
+                      {r.on_hand} {r.base_unit}
+                    </td>
+                    <td className="text-muted">{r.reorder_level}</td>
                   </tr>
                 ))}
               </tbody>

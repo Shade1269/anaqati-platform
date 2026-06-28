@@ -648,6 +648,7 @@ export interface ProductAdmin extends ProductPublic {
   supplier_id: string | null;
   base_unit?: string;
   track_batches?: boolean;
+  reorder_level?: number;
 }
 
 /** وحدة قياس بديلة لمنتج (كرتون/علبة/كيلو) */
@@ -754,6 +755,54 @@ export interface ExpiringBatch extends ProductBatch {
   product_name: string;
   product_code: string;
   days_left: number;
+}
+
+/** أمر شراء (صف القائمة) */
+export interface PurchaseOrder {
+  id: string;
+  status: 'draft' | 'sent' | 'partial' | 'received' | 'cancelled';
+  total_sar: number;
+  notes: string | null;
+  created_at: string;
+  supplier_name: string | null;
+  warehouse_name: string | null;
+  items_count: number;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  product_code: string;
+  qty_ordered: number;
+  qty_received: number;
+  unit_cost: number;
+  uom_name: string | null;
+  uom_factor: number;
+}
+
+export interface PurchaseOrderDetail {
+  order: {
+    id: string;
+    status: PurchaseOrder['status'];
+    total_sar: number;
+    notes: string | null;
+    created_at: string;
+    warehouse_id: string;
+    supplier_name: string | null;
+    warehouse_name: string | null;
+  };
+  items: PurchaseOrderItem[];
+}
+
+/** صنف تحت نقطة إعادة الطلب */
+export interface LowStockRow {
+  id: string;
+  name: string;
+  product_code: string;
+  base_unit: string;
+  reorder_level: number;
+  on_hand: number;
 }
 
 export interface NotificationRow {

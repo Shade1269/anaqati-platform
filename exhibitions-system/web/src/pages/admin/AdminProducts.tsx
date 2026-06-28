@@ -33,6 +33,7 @@ interface Form {
   cost_price_sar: string;
   supplier_id: string;
   base_unit: string;
+  reorder_level: string;
   track_batches: boolean;
   is_active: boolean;
 }
@@ -45,6 +46,7 @@ const emptyForm: Form = {
   cost_price_sar: '',
   supplier_id: '',
   base_unit: 'وحدة',
+  reorder_level: '',
   track_batches: false,
   is_active: true,
 };
@@ -66,7 +68,7 @@ export default function AdminProducts() {
       supabase
         .from('products')
         .select(
-          'id,product_code,name,category_id,sale_price_ref,cost_price_sar,supplier_id,base_unit,track_batches,is_active'
+          'id,product_code,name,category_id,sale_price_ref,cost_price_sar,supplier_id,base_unit,reorder_level,track_batches,is_active'
         )
         .order('name'),
       supabase.from('categories').select('id,name,parent_id').order('name'),
@@ -95,6 +97,7 @@ export default function AdminProducts() {
       cost_price_sar: dialog.cost_price_sar ? Number(dialog.cost_price_sar) : null,
       supplier_id: dialog.supplier_id || null,
       base_unit: dialog.base_unit.trim() || 'وحدة',
+      reorder_level: dialog.reorder_level ? Number(dialog.reorder_level) : 0,
       track_batches: dialog.track_batches,
       is_active: dialog.is_active,
     };
@@ -190,6 +193,10 @@ export default function AdminProducts() {
                           p.cost_price_sar != null ? String(p.cost_price_sar) : '',
                         supplier_id: p.supplier_id || '',
                         base_unit: p.base_unit || 'وحدة',
+                        reorder_level:
+                          p.reorder_level != null && p.reorder_level > 0
+                            ? String(p.reorder_level)
+                            : '',
                         track_batches: !!p.track_batches,
                         is_active: p.is_active,
                       })
@@ -291,6 +298,18 @@ export default function AdminProducts() {
                 value={dialog.base_unit}
                 onChange={(e) => setDialog({ ...dialog, base_unit: e.target.value })}
                 placeholder="وحدة"
+              />
+            </Field>
+            <Field label="نقطة إعادة الطلب (بالوحدة الأساس)">
+              <Input
+                type="number"
+                step="0.001"
+                min="0"
+                value={dialog.reorder_level}
+                onChange={(e) =>
+                  setDialog({ ...dialog, reorder_level: e.target.value })
+                }
+                placeholder="0 = بلا تنبيه"
               />
             </Field>
             <label className="flex cursor-pointer items-center gap-2 sm:col-span-2">
