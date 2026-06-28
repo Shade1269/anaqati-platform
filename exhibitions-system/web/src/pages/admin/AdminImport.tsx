@@ -78,9 +78,10 @@ const ENTITIES: EntityConfig[] = [
     fields: [
       { key: 'name', label: 'الاسم', required: true, aliases: ['الاسم', 'اسم', 'اسمالمورد', 'المورد', 'name', 'supplier', 'vendor'] },
       { key: 'phone', label: 'الهاتف', aliases: ['الهاتف', 'هاتف', 'الجوال', 'جوال', 'phone', 'mobile'] },
+      { key: 'opening_balance', label: 'الرصيد الافتتاحي (له)', aliases: ['الرصيد', 'رصيد', 'الرصيدالافتتاحي', 'له', 'دائن', 'balance', 'opening'] },
       { key: 'note', label: 'ملاحظات', aliases: ['ملاحظات', 'ملاحظة', 'note', 'notes'] },
     ],
-    template: 'الاسم,الهاتف,ملاحظات\nمورد المواد الغذائية,0911000000,\n',
+    template: 'الاسم,الهاتف,الرصيد الافتتاحي,ملاحظات\nمورد المواد الغذائية,0911000000,1200,\n',
     run: (_wh, rows) => adminApi.importSuppliers(rows),
   },
   {
