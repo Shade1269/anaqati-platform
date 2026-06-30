@@ -804,6 +804,48 @@ export interface PosLookup {
   sale_price_ref: number;
   uom_id: string | null;
   factor: number;
+  is_weighed?: boolean;
+  weighed_qty?: number;
+  embedded_price?: number;
+}
+
+/** وردية كاشير البقالة + تقرير Z */
+export interface GroceryShift {
+  id: string;
+  status: 'open' | 'closed';
+  opened_at: string;
+  closed_at: string | null;
+  opening_float: number;
+  opened_by: string | null;
+  closed_by: string | null;
+  bills: number;
+  sales: number;
+  cash_sales: number;
+  card_sales: number;
+  discounts: number;
+  expected_cash: number;
+  declared_cash: number | null;
+  variance: number | null;
+  note: string | null;
+}
+
+export interface HeldSale {
+  id: string;
+  label: string | null;
+  cart: unknown;
+  created_at: string;
+}
+
+export interface PosSaleLookup {
+  sale: { id: string; total_sar: number; created_at: string } | null;
+  items: {
+    id: string;
+    product_id: string;
+    product_name: string;
+    qty: number;
+    unit_sale_price_sar: number;
+    returned: number;
+  }[];
 }
 
 /** لوحة البقالة */

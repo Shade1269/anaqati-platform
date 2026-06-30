@@ -83,6 +83,10 @@ import type {
   StockCountDetail,
   ImportResult,
   ImportRow,
+  GroceryShift,
+  HeldSale,
+  PosSaleLookup,
+  LoyaltyCustomer,
   DeliveryRoute,
   RouteDetail,
   VanStockRow,
@@ -440,16 +444,66 @@ export const adminApi = {
     rpc<import('./types').GroceryDashboard>('grocery_dashboard', {}),
   posLookup: (code: string) =>
     rpc<import('./types').PosLookup | null>('pos_lookup', { p_code: code }),
+
+  /* وردية الكاشير + تقرير Z */
+  gposShiftCurrent: () => rpc<GroceryShift | null>('gpos_shift_current', {}),
+  gposShiftOpen: (openingFloat: number) =>
+    rpc<GroceryShift>('gpos_shift_open', { p_opening_float: openingFloat }),
+  gposShiftClose: (declaredCash: number, note: string | null) =>
+    rpc<GroceryShift>('gpos_shift_close', { p_declared_cash: declaredCash, p_note: note }),
+
+  /* بيع الكاشير الكامل: دفع مقسّم + خصومات + ولاء + وردية */
   posSale: (
     branchId: string,
-    paymentMethod: string,
-    items: { product_id: string; qty: number; unit_price: number; uom_id?: string | null }[]
+    items: { product_id: string; qty: number; unit_price: number; uom_id?: string | null; line_discount?: number }[],
+    payments: { method: 'cash' | 'card'; amount: number }[],
+    invoiceDiscount = 0,
+    customerId: string | null = null,
+    redeemPoints = 0
   ) =>
-    rpc<{ sale_id: string; total: number }>('pos_sale', {
+    rpc<{
+      sale_id: string;
+      total: number;
+      cash: number;
+      card: number;
+      discount: number;
+      shift_id: string | null;
+    }>('pos_sale', {
       p_branch_id: branchId,
-      p_payment_method: paymentMethod,
       p_items: items,
+      p_payments: payments,
+      p_invoice_discount: invoiceDiscount,
+      p_customer_id: customerId,
+      p_redeem_points: redeemPoints,
     }),
+
+  /* مرتجع الكاشير */
+  posSaleLookup: (saleId: string) =>
+    rpc<PosSaleLookup>('pos_sale_lookup', { p_sale_id: saleId }),
+  posReturn: (
+    saleId: string,
+    items: { sale_item_id: string; qty: number }[],
+    refundMethod: 'cash' | 'card' = 'cash'
+  ) =>
+    rpc<{ return_id: string; refund: number }>('pos_return', {
+      p_sale_id: saleId,
+      p_items: items,
+      p_refund_method: refundMethod,
+    }),
+
+  /* تعليق/استئناف الفاتورة */
+  posHold: (branchId: string, label: string | null, cart: unknown) =>
+    rpc<string>('pos_hold', { p_branch_id: branchId, p_label: label, p_cart: cart }),
+  posHeldList: () => rpc<HeldSale[]>('pos_held_list', {}),
+  posHeldDelete: (id: string) => rpc<null>('pos_held_delete', { p_id: id }),
+
+  /* تقرير مبيعات الكاشير بالساعة */
+  posSalesByHour: (date: string | null = null) =>
+    rpc<{ hour: number; bills: number; sales: number }[]>('pos_sales_by_hour', { p_date: date }),
+
+  /* ولاء العميل (للكاشير) */
+  loyaltyCustomer: (phone: string, name: string | null) =>
+    rpc<LoyaltyCustomer>('loyalty_customer', { p_phone: phone, p_name: name, p_token: null }),
 
   /* --------------------------- استيراد البيانات (ترحيل نظام كامل) --------------------------- */
   importProducts: (warehouseId: string, rows: ImportRow[]) =>
