@@ -2,7 +2,7 @@
 
 > هذا الملف هو **المصدر الوحيد للحقيقة** لما هو مبنيّ فعلًا في النظام.
 > يُحدّث مع كل وحدة جديدة. ابدأ أي جلسة عمل بقراءته قبل الاقتراح أو البناء.
-> آخر تحديث: 2026-07-02 — بعد إضافة وحدة CRM + عروض الأسعار (migration 058).
+> آخر تحديث: 2026-07-02 — بعد إضافة محرّك الموافقات (migration 059).
 
 النظام: SaaS محاسبي/ERP متعدد المستأجرين (Arabic/RTL، ثيم غامق+ذهبي) لـ SMEs.
 - قاعدة البيانات: Supabase Postgres، schema `exhibitions`، project `axzqbqzdvtlbgbwzeiry`.
@@ -68,6 +68,7 @@
 - **السوق الداخلي:** `market_listings`, `market_orders`, `market_order_items`
 - **قوائم الأسعار:** `price_lists`, `price_list_items`
 - **CRM/عروض الأسعار:** `leads` (عملاء محتملون بمسار مبيعات), `quotations`, `quotation_items`
+- **الموافقات:** `approval_rules` (نوع+حد), `approval_requests` (صندوق طلبات + قرار)
 - **التوزيع/التوصيل:** `delivery_routes`, `route_stops`, `deliveries`, `delivery_items`
 - **SMS/إعدادات:** `app_config`, `sms_templates`, `sms_log`
 
@@ -99,6 +100,7 @@
 - **السوق:** `market_my_listings`, `market_set/delete_listing`, `market_browse`, `market_place_order`, `market_incoming/outgoing_orders`, `market_order_detail`, `market_set_order_status`
 - **التوزيع:** `route_set`, `route_stops_set`, `routes_list`, `route_get`, `van_load`, `rep_van_stock`, `record_delivery`, `deliveries_list`, `distribution_dashboard`
 - **CRM/عروض الأسعار:** `leads_list`, `lead_set`, `lead_set_stage`, `lead_delete`, `lead_convert_customer`, `quotations_list`, `quotation_get`, `quotation_set`, `quotation_set_status`, `quotation_convert` (→ يُنشئ أمر بيع جملة ويرحّل عبر المحرّك), `crm_dashboard`
+- **الموافقات:** `approval_rules_list`, `approval_rule_set`, `approval_rule_delete`, `approval_required(kind,amount)` (helper للوحدات), `approval_requests_list`, `approval_request_create`, `approval_decide` (عند اعتماد expense يُسجّل المصروف), `expense_submit` (مصروف مربوط بالموافقات). القرار للمالك فقط (`_appr_admin`)
 - **HR/الفروع:** `create_employee`, `employee_login`, `employee_dashboard`, `employee_perms_get/set`, `set_im_permissions`, `record_attendance`, `compute_payroll`, `compute_branch_commission`, `set_commission_status`, `close_branch`, `branch_close_preview`, `reconcile_and_close_branch`, `employee_file`
 - **المنصّة:** `create_tenant`, `platform_list_tenants`, `set_tenant_status`, `update_tenant_branding`, `my_profile`
 
@@ -110,7 +112,7 @@
 
 ### أولوية عالية
 - [x] **CRM + عروض الأسعار:** ✅ (058) `leads` بمسار مبيعات 6 مراحل، `quotations(+_items)`، تحويل العرض → أمر بيع جملة (يرحّل محاسبيًا)، لوحة CRM. الواجهة: `/admin/crm` + `/admin/quotations`.
-- [ ] **محرّك موافقات عام:** جدول `approval_requests` (نوع، كيان، حالة، سلسلة موافقين)، ربطه بالخصومات/المصاريف/الطلبات بدل الموافقات المبرمجة.
+- [x] **محرّك موافقات عام:** ✅ (059) `approval_rules` (نوع+حد) + `approval_requests` (صندوق) + `approval_decide`. مربوط بالمصاريف عبر `expense_submit` (فوق الحد ⇒ موافقة المالك ثم ترحيل). helper `approval_required` جاهز لربط الخصومات/الجملة/الشراء لاحقًا. الواجهة: `/admin/approvals`.
 - [ ] **إجازات + مطالبات نفقات الموظفين:** `leave_requests`, `expense_claims` مع موافقة وترحيل (السُلف موجودة أصلًا).
 
 ### أولوية متوسطة

@@ -37,6 +37,7 @@ import {
   Scissors,
   Users2,
   FileText,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
@@ -157,6 +158,7 @@ const systemSection: NavSection = {
   title: 'النظام',
   items: [
     { to: '/admin/employees', label: 'الموظفون', icon: <Users size={sz} /> },
+    { to: '/admin/approvals', label: 'الموافقات', icon: <ShieldCheck size={sz} /> },
     { to: '/admin/branding', label: 'العلامة التجارية', icon: <Palette size={sz} /> },
     { to: '/admin/audit', label: 'سجل العمليات', icon: <ScrollText size={sz} /> },
   ],

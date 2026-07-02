@@ -953,6 +953,33 @@ export interface CrmDashboard {
   converted_this_month: number;
 }
 
+/* ----------------------------- محرّك الموافقات ----------------------------- */
+
+export type ApprovalKind = 'expense' | 'discount' | 'wholesale' | 'purchase' | 'advance' | 'other';
+
+export interface ApprovalRule {
+  id: string;
+  kind: ApprovalKind;
+  threshold: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  kind: string;
+  title: string | null;
+  amount: number;
+  payload: Record<string, unknown>;
+  status: 'pending' | 'approved' | 'rejected';
+  requested_by_name: string | null;
+  decided_by_name: string | null;
+  decided_at: string | null;
+  note: string | null;
+  result_ref: string | null;
+  created_at: string;
+}
+
 /** سطر تقرير ربحية (صنف/فرع/موظف/عميل) */
 export interface ProfitRow {
   id?: string;

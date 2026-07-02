@@ -7,7 +7,7 @@ import {
   Calculator,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { adminApi } from '../../lib/api';
+import { adminApi, approvalsApi } from '../../lib/api';
 import type { Branch, PayrollResult } from '../../lib/types';
 import {
   Button,
@@ -133,16 +133,23 @@ function Expenses({ branches }: { branches: Branch[] }) {
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await supabase.from('expenses').insert({
-      scope: exp.scope,
-      branch_id: exp.scope === 'branch' ? exp.branch_id || null : null,
-      category: exp.category.trim() || null,
-      amount_sar: Number(exp.amount_sar) || 0,
-      description: exp.description.trim() || null,
-      expense_date: exp.expense_date || null,
-    });
-    if (error) return toast.error(error.message);
-    toast.success('تمت إضافة المصروف');
+    try {
+      const res = await approvalsApi.expenseSubmit(
+        Number(exp.amount_sar) || 0,
+        exp.category.trim() || null,
+        exp.description.trim() || null,
+        exp.scope,
+        exp.scope === 'branch' ? exp.branch_id || null : null,
+        exp.expense_date || null
+      );
+      if (res.status === 'pending') {
+        toast.success('تجاوز المبلغ الحدّ — أُرسل المصروف لموافقة المالك');
+      } else {
+        toast.success('تمت إضافة المصروف');
+      }
+    } catch (err) {
+      return toast.error((err as Error).message);
+    }
     setExp({
       scope: 'general',
       branch_id: '',

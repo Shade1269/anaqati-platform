@@ -91,6 +91,8 @@ import type {
   QuotationRow,
   QuotationDetail,
   CrmDashboard,
+  ApprovalRule,
+  ApprovalRequest,
   DeliveryRoute,
   RouteDetail,
   VanStockRow,
@@ -846,6 +848,47 @@ export const crmApi = {
       p_id: id,
       p_warehouse_id: warehouseId,
       p_payment_method: paymentMethod,
+    }),
+};
+
+/* --------------------------- محرّك الموافقات ----------------------------- */
+
+export const approvalsApi = {
+  rulesList: () => rpc<ApprovalRule[]>('approval_rules_list', {}),
+  ruleSet: (id: string | null, kind: string, threshold: number, active: boolean) =>
+    rpc<string>('approval_rule_set', {
+      p_id: id,
+      p_kind: kind,
+      p_threshold: threshold,
+      p_active: active,
+    }),
+  ruleDelete: (id: string) => rpc<null>('approval_rule_delete', { p_id: id }),
+
+  requestsList: (status: string | null = null) =>
+    rpc<ApprovalRequest[]>('approval_requests_list', { p_status: status }),
+  decide: (id: string, decision: 'approved' | 'rejected', note: string | null = null) =>
+    rpc<{ id: string; status: string; result_ref: string | null }>('approval_decide', {
+      p_id: id,
+      p_decision: decision,
+      p_note: note,
+    }),
+
+  /** تقديم مصروف — يُرحّل فورًا أو يذهب لموافقة حسب القواعد */
+  expenseSubmit: (
+    amount: number,
+    category: string | null,
+    description: string | null,
+    scope: string,
+    branchId: string | null,
+    date: string | null
+  ) =>
+    rpc<{ status: 'pending' | 'posted'; expense_id?: string; request_id?: string }>('expense_submit', {
+      p_amount: amount,
+      p_category: category,
+      p_description: description,
+      p_scope: scope,
+      p_branch_id: branchId,
+      p_date: date,
     }),
 };
 
