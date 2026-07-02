@@ -59,6 +59,8 @@ import AdminMonitoring from './pages/admin/AdminMonitoring';
 import AdminEmployeeFile from './pages/admin/AdminEmployeeFile';
 import AdminSuppliers from './pages/admin/AdminSuppliers';
 import AdminCustomers from './pages/admin/AdminCustomers';
+import AdminCrm from './pages/admin/AdminCrm';
+import AdminQuotations from './pages/admin/AdminQuotations';
 import AdminPriceLists from './pages/admin/AdminPriceLists';
 import AdminPurchaseOrders from './pages/admin/AdminPurchaseOrders';
 import AdminProfitability from './pages/admin/AdminProfitability';
@@ -146,6 +148,10 @@ export default function App() {
 
         {/* Customers credit ledger (آجل) — owner or delegated store manager */}
         <Route path="customers" element={<RequireCapability caps={['can_manage_store']}><AdminCustomers /></RequireCapability>} />
+
+        {/* CRM + quotations — owner or delegated store manager */}
+        <Route path="crm" element={<RequireCapability caps={['can_manage_store']}><AdminCrm /></RequireCapability>} />
+        <Route path="quotations" element={<RequireCapability caps={['can_manage_store']}><AdminQuotations /></RequireCapability>} />
 
         {/* Team — owner or delegated employee manager (manager-only page) */}
         <Route path="team" element={<RequireCapability caps={['can_manage_employees']}><ManagerEmployees /></RequireCapability>} />

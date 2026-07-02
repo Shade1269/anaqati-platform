@@ -2,7 +2,7 @@
 
 > هذا الملف هو **المصدر الوحيد للحقيقة** لما هو مبنيّ فعلًا في النظام.
 > يُحدّث مع كل وحدة جديدة. ابدأ أي جلسة عمل بقراءته قبل الاقتراح أو البناء.
-> آخر تحديث: 2026-07-02 — بعد إكمال كاشير البقالة الاحترافي (migration 057).
+> آخر تحديث: 2026-07-02 — بعد إضافة وحدة CRM + عروض الأسعار (migration 058).
 
 النظام: SaaS محاسبي/ERP متعدد المستأجرين (Arabic/RTL، ثيم غامق+ذهبي) لـ SMEs.
 - قاعدة البيانات: Supabase Postgres، schema `exhibitions`، project `axzqbqzdvtlbgbwzeiry`.
@@ -67,6 +67,7 @@
 - **التصنيع:** `work_centers`, `mfg_materials`, `mfg_material_moves`, `mfg_products`, `mfg_bom`, `mfg_routing`, `mfg_work_orders`, `mfg_wo_materials`, `mfg_wo_labor`, `mfg_molds`
 - **السوق الداخلي:** `market_listings`, `market_orders`, `market_order_items`
 - **قوائم الأسعار:** `price_lists`, `price_list_items`
+- **CRM/عروض الأسعار:** `leads` (عملاء محتملون بمسار مبيعات), `quotations`, `quotation_items`
 - **التوزيع/التوصيل:** `delivery_routes`, `route_stops`, `deliveries`, `delivery_items`
 - **SMS/إعدادات:** `app_config`, `sms_templates`, `sms_log`
 
@@ -97,6 +98,7 @@
 - **التصنيع:** `mfg_material_*`, `mfg_workcenter_*`, `mfg_product_*`, `mfg_bom_*`, `mfg_routing_*`, `mfg_estimate`, `mfg_wo_*`, `mfg_molds_*`
 - **السوق:** `market_my_listings`, `market_set/delete_listing`, `market_browse`, `market_place_order`, `market_incoming/outgoing_orders`, `market_order_detail`, `market_set_order_status`
 - **التوزيع:** `route_set`, `route_stops_set`, `routes_list`, `route_get`, `van_load`, `rep_van_stock`, `record_delivery`, `deliveries_list`, `distribution_dashboard`
+- **CRM/عروض الأسعار:** `leads_list`, `lead_set`, `lead_set_stage`, `lead_delete`, `lead_convert_customer`, `quotations_list`, `quotation_get`, `quotation_set`, `quotation_set_status`, `quotation_convert` (→ يُنشئ أمر بيع جملة ويرحّل عبر المحرّك), `crm_dashboard`
 - **HR/الفروع:** `create_employee`, `employee_login`, `employee_dashboard`, `employee_perms_get/set`, `set_im_permissions`, `record_attendance`, `compute_payroll`, `compute_branch_commission`, `set_commission_status`, `close_branch`, `branch_close_preview`, `reconcile_and_close_branch`, `employee_file`
 - **المنصّة:** `create_tenant`, `platform_list_tenants`, `set_tenant_status`, `update_tenant_branding`, `my_profile`
 
@@ -107,7 +109,7 @@
 > كل بند يتبع القالب الثابت في القسم 1. لا يحتاج إعادة بناء — إضافات تدريجية.
 
 ### أولوية عالية
-- [ ] **CRM + عروض الأسعار:** جداول `leads`, `opportunities` (pipeline stages)، `quotations(+_items)`، تدفّق عرض سعر → يتحوّل لطلب جملة/فاتورة. أكبر فجوة "ما قبل البيع".
+- [x] **CRM + عروض الأسعار:** ✅ (058) `leads` بمسار مبيعات 6 مراحل، `quotations(+_items)`، تحويل العرض → أمر بيع جملة (يرحّل محاسبيًا)، لوحة CRM. الواجهة: `/admin/crm` + `/admin/quotations`.
 - [ ] **محرّك موافقات عام:** جدول `approval_requests` (نوع، كيان، حالة، سلسلة موافقين)، ربطه بالخصومات/المصاريف/الطلبات بدل الموافقات المبرمجة.
 - [ ] **إجازات + مطالبات نفقات الموظفين:** `leave_requests`, `expense_claims` مع موافقة وترحيل (السُلف موجودة أصلًا).
 

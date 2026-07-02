@@ -87,6 +87,10 @@ import type {
   HeldSale,
   PosSaleLookup,
   LoyaltyCustomer,
+  Lead,
+  QuotationRow,
+  QuotationDetail,
+  CrmDashboard,
   DeliveryRoute,
   RouteDetail,
   VanStockRow,
@@ -761,6 +765,87 @@ export const adminApi = {
       p_currency: currency ?? null,
       p_secondary_currency: secondaryCurrency ?? null,
       p_fx_rate: fxRate ?? null,
+    }),
+};
+
+/* --------------------------- CRM + عروض الأسعار ----------------------------- */
+
+export const crmApi = {
+  dashboard: () => rpc<CrmDashboard>('crm_dashboard', {}),
+
+  leadsList: (stage: string | null = null) =>
+    rpc<Lead[]>('leads_list', { p_stage: stage }),
+
+  leadSet: (
+    id: string | null,
+    name: string,
+    phone: string | null,
+    email: string | null,
+    company: string | null,
+    source: string | null,
+    stage: string,
+    estValue: number,
+    assignedTo: string | null,
+    note: string | null
+  ) =>
+    rpc<string>('lead_set', {
+      p_id: id,
+      p_name: name,
+      p_phone: phone,
+      p_email: email,
+      p_company: company,
+      p_source: source,
+      p_stage: stage,
+      p_est_value: estValue,
+      p_assigned_to: assignedTo,
+      p_note: note,
+    }),
+
+  leadSetStage: (id: string, stage: string) =>
+    rpc<null>('lead_set_stage', { p_id: id, p_stage: stage }),
+
+  leadDelete: (id: string) => rpc<null>('lead_delete', { p_id: id }),
+
+  leadConvertCustomer: (id: string) =>
+    rpc<string>('lead_convert_customer', { p_id: id }),
+
+  quotationsList: (status: string | null = null) =>
+    rpc<QuotationRow[]>('quotations_list', { p_status: status }),
+
+  quotationGet: (id: string) =>
+    rpc<QuotationDetail>('quotation_get', { p_id: id }),
+
+  quotationSet: (
+    id: string | null,
+    customerId: string | null,
+    leadId: string | null,
+    customerName: string | null,
+    customerPhone: string | null,
+    validUntil: string | null,
+    discount: number,
+    note: string | null,
+    items: { product_id: string; qty: number; unit_price: number; uom_id?: string | null; line_discount?: number }[]
+  ) =>
+    rpc<string>('quotation_set', {
+      p_id: id,
+      p_customer_id: customerId,
+      p_lead_id: leadId,
+      p_customer_name: customerName,
+      p_customer_phone: customerPhone,
+      p_valid_until: validUntil,
+      p_discount: discount,
+      p_note: note,
+      p_items: items,
+    }),
+
+  quotationSetStatus: (id: string, status: string) =>
+    rpc<null>('quotation_set_status', { p_id: id, p_status: status }),
+
+  quotationConvert: (id: string, warehouseId: string, paymentMethod = 'cash') =>
+    rpc<{ order_id: string; total: number; quote_id: string }>('quotation_convert', {
+      p_id: id,
+      p_warehouse_id: warehouseId,
+      p_payment_method: paymentMethod,
     }),
 };
 

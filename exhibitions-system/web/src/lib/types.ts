@@ -871,6 +871,88 @@ export interface ImportResult {
 /** صف استيراد عام (مفاتيح مرنة حسب نوع الكيان) */
 export type ImportRow = Record<string, string>;
 
+/* ----------------------------- CRM + عروض الأسعار ----------------------------- */
+
+export type LeadStage = 'new' | 'contacted' | 'qualified' | 'proposal' | 'won' | 'lost';
+
+export interface Lead {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  company: string | null;
+  source: string | null;
+  stage: LeadStage;
+  est_value: number;
+  assigned_to: string | null;
+  assigned_name: string | null;
+  customer_id: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type QuotationStatus =
+  | 'draft'
+  | 'sent'
+  | 'accepted'
+  | 'rejected'
+  | 'converted'
+  | 'expired';
+
+export interface QuotationRow {
+  id: string;
+  quote_no: string;
+  customer_id: string | null;
+  customer_name: string | null;
+  lead_id: string | null;
+  status: QuotationStatus;
+  valid_until: string | null;
+  subtotal: number;
+  discount_sar: number;
+  total_sar: number;
+  converted_order_id: string | null;
+  created_at: string;
+  items_count: number;
+}
+
+export interface QuotationDetail {
+  quote: {
+    id: string;
+    quote_no: string;
+    customer_id: string | null;
+    customer_name: string | null;
+    customer_phone: string | null;
+    lead_id: string | null;
+    status: QuotationStatus;
+    valid_until: string | null;
+    subtotal: number;
+    discount_sar: number;
+    total_sar: number;
+    note: string | null;
+    converted_order_id: string | null;
+    created_at: string;
+  } | null;
+  items: {
+    id: string;
+    product_id: string;
+    product_name: string;
+    product_code: string;
+    qty: number;
+    unit_price: number;
+    uom_id: string | null;
+    line_discount: number;
+  }[];
+}
+
+export interface CrmDashboard {
+  pipeline: { stage: LeadStage; ord: number; count: number; value: number }[];
+  open_quotes: number;
+  open_quotes_value: number;
+  won_this_month: number;
+  converted_this_month: number;
+}
+
 /** سطر تقرير ربحية (صنف/فرع/موظف/عميل) */
 export interface ProfitRow {
   id?: string;
